@@ -152,7 +152,9 @@ def admin_add():
             "INSERT INTO products (name, description, price, image, category) VALUES (%s, %s, %s, %s, %s) RETURNING id",
             (name, description, price_val, image_filename, category)
         )
-        pid = cursor.fetchone()[0]
+        # إصلاح الخطأ: استخدام ['id'] بدلاً من [0]
+        result = cursor.fetchone()
+        pid = result['id']
         if files:
             for f in files[:5]:
                 cursor.execute("INSERT INTO product_images (product_id, filename) VALUES (%s, %s)", (pid, f.filename))
@@ -223,7 +225,8 @@ def admin_edit(pid):
             (name, description, price_val, image_filename, category, pid)
         )
         cursor.execute("SELECT COUNT(*) FROM product_images WHERE product_id=%s", (pid,))
-        cnt = cursor.fetchone()[0]
+        cnt_result = cursor.fetchone()
+        cnt = cnt_result['count'] if isinstance(cnt_result, dict) else cnt_result[0]
         slots = max(0, 5 - (cnt or 0))
         if files and slots:
             new_images = files[:slots] if len(files) > 1 else files

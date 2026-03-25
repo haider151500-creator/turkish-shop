@@ -63,7 +63,6 @@
             color: #dc3545;
             margin-right: 4px;
         }
-        /* منطقة رفع الصور */
         .file-upload-area {
             border: 2px dashed #dee2e6;
             border-radius: 15px;
@@ -82,7 +81,6 @@
             color: #6f42c1;
             margin-bottom: 10px;
         }
-        /* معاينة الصور */
         .preview-images {
             display: flex;
             flex-wrap: wrap;
@@ -122,7 +120,6 @@
         .remove-img-btn:hover {
             transform: scale(1.1);
         }
-        /* الفئات */
         .categories-container {
             display: flex;
             flex-wrap: wrap;
@@ -185,7 +182,6 @@
             background: #5a6268;
             transform: translateY(-2px);
         }
-        /* نافذة تأكيد حذف الفئة */
         .confirm-modal {
             position: fixed;
             top: 0;
@@ -222,7 +218,6 @@
             justify-content: center;
             margin-top: 20px;
         }
-        /* خيارات السعر */
         .price-options {
             display: flex;
             gap: 15px;
@@ -321,7 +316,7 @@
                             <input type="number" step="0.01" name="price_usd" class="form-control" placeholder="السعر بالدولار الأمريكي">
                         </div>
                         <div id="iqdPriceGroup" class="price-input-group active">
-                            <input type="number" step="1000" name="price_iqd" class="form-control" placeholder="السعر بالدينار العراقي" required>
+                            <input type="number" step="1000" name="price_iqd" class="form-control" placeholder="السعر بالدينار العراقي">
                         </div>
                         <input type="hidden" name="price" id="finalPrice" value="">
                         <input type="hidden" name="currency" id="selectedCurrency" value="iqd">
@@ -358,15 +353,16 @@
     <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        // ---------- إدارة الفئات مع تأكيد 3 مرات للحذف ----------
+        // ---------- إدارة الفئات ----------
         let categories = [
             {% for cat in categories %}"{{ cat }}"{% if not loop.last %}, {% endif %}{% endfor %}
         ];
         let selectedCategory = null;
-        let deleteConfirmations = {}; // تخزين عدد مرات التأكيد لكل فئة
+        let deleteConfirmations = {};
 
         function renderCategories() {
             const container = document.getElementById('categoriesList');
+            if (!container) return;
             container.innerHTML = '';
             categories.forEach(cat => {
                 const badge = document.createElement('span');
@@ -381,27 +377,21 @@
 
         function selectCategory(cat) {
             selectedCategory = cat;
-            document.getElementById('selectedCategory').value = cat;
+            const hiddenInput = document.getElementById('selectedCategory');
+            if (hiddenInput) hiddenInput.value = cat;
             renderCategories();
         }
 
-        // تأكيد حذف الفئة مع 3 مرات
         function confirmDeleteCategory(cat) {
-            // التحقق من عدد المنتجات في هذه الفئة (محاكاة)
-            // في الواقع يجب استدعاء API لمعرفة عدد المنتجات
-            
             if (!deleteConfirmations[cat]) {
                 deleteConfirmations[cat] = 0;
             }
-            
             deleteConfirmations[cat]++;
             const remaining = 3 - deleteConfirmations[cat];
             
             if (deleteConfirmations[cat] < 3) {
-                // عرض نافذة تأكيد
                 showConfirmModal(cat, remaining);
             } else {
-                // حذف الفئة بعد 3 تأكيدات
                 if (confirm(`⚠️ تحذير نهائي!\n\nسيتم حذف الفئة "${cat}" وجميع المنتجات التابعة لها.\n\nهل أنت متأكد تماماً من حذف هذه الفئة؟`)) {
                     deleteCategory(cat);
                 } else {
@@ -437,7 +427,8 @@
             categories = categories.filter(c => c !== cat);
             if (selectedCategory === cat) {
                 selectedCategory = null;
-                document.getElementById('selectedCategory').value = '';
+                const hiddenInput = document.getElementById('selectedCategory');
+                if (hiddenInput) hiddenInput.value = '';
             }
             deleteConfirmations[cat] = 0;
             renderCategories();
@@ -446,6 +437,7 @@
 
         function addNewCategory() {
             const input = document.getElementById('newCategoryInput');
+            if (!input) return;
             const newCat = input.value.trim();
             if (newCat === '') {
                 alert('الرجاء إدخال اسم الفئة');
@@ -462,19 +454,24 @@
             alert(`✅ تم إضافة الفئة "${newCat}" بنجاح`);
         }
 
-        document.getElementById('addCategoryBtn').addEventListener('click', addNewCategory);
-        document.getElementById('newCategoryInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addNewCategory();
-        });
+        const addBtn = document.getElementById('addCategoryBtn');
+        if (addBtn) addBtn.addEventListener('click', addNewCategory);
+        
+        const newCategoryInput = document.getElementById('newCategoryInput');
+        if (newCategoryInput) {
+            newCategoryInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addNewCategory();
+            });
+        }
 
         // ---------- إدارة العملة والسعر ----------
         let currentCurrency = 'iqd';
         
         function selectCurrency(currency) {
             currentCurrency = currency;
-            document.getElementById('selectedCurrency').value = currency;
+            const selectedCurrency = document.getElementById('selectedCurrency');
+            if (selectedCurrency) selectedCurrency.value = currency;
             
-            // تحديث المظهر
             document.querySelectorAll('.price-option').forEach(opt => {
                 opt.classList.remove('active');
                 if (opt.dataset.currency === currency) {
@@ -482,18 +479,24 @@
                 }
             });
             
-            // تحديث الحقول
-            document.getElementById('usdPriceGroup').classList.remove('active');
-            document.getElementById('iqdPriceGroup').classList.remove('active');
+            const usdGroup = document.getElementById('usdPriceGroup');
+            const iqdGroup = document.getElementById('iqdPriceGroup');
+            
+            if (usdGroup) usdGroup.classList.remove('active');
+            if (iqdGroup) iqdGroup.classList.remove('active');
             
             if (currency === 'usd') {
-                document.getElementById('usdPriceGroup').classList.add('active');
-                document.getElementById('usdPriceGroup').querySelector('input').required = true;
-                document.getElementById('iqdPriceGroup').querySelector('input').required = false;
+                if (usdGroup) usdGroup.classList.add('active');
+                const usdInput = document.querySelector('[name="price_usd"]');
+                if (usdInput) usdInput.required = true;
+                const iqdInput = document.querySelector('[name="price_iqd"]');
+                if (iqdInput) iqdInput.required = false;
             } else {
-                document.getElementById('iqdPriceGroup').classList.add('active');
-                document.getElementById('usdPriceGroup').querySelector('input').required = false;
-                document.getElementById('iqdPriceGroup').querySelector('input').required = true;
+                if (iqdGroup) iqdGroup.classList.add('active');
+                const usdInput = document.querySelector('[name="price_usd"]');
+                if (usdInput) usdInput.required = false;
+                const iqdInput = document.querySelector('[name="price_iqd"]');
+                if (iqdInput) iqdInput.required = true;
             }
         }
         
@@ -503,25 +506,29 @@
         const fileUploadArea = document.getElementById('fileUploadArea');
         let selectedFiles = [];
 
-        fileUploadArea.addEventListener('click', () => fileInput.click());
+        if (fileUploadArea) {
+            fileUploadArea.addEventListener('click', () => fileInput?.click());
 
-        fileUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUploadArea.classList.add('drag-over');
-        });
-        fileUploadArea.addEventListener('dragleave', () => {
-            fileUploadArea.classList.remove('drag-over');
-        });
-        fileUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUploadArea.classList.remove('drag-over');
-            const files = Array.from(e.dataTransfer.files);
-            addFiles(files);
-        });
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.add('drag-over');
+            });
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.classList.remove('drag-over');
+            });
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('drag-over');
+                const files = Array.from(e.dataTransfer.files);
+                addFiles(files);
+            });
+        }
 
-        fileInput.addEventListener('change', (e) => {
-            addFiles(Array.from(e.target.files));
-        });
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                addFiles(Array.from(e.target.files));
+            });
+        }
 
         function addFiles(files) {
             const totalNew = selectedFiles.length + files.length;
@@ -551,6 +558,7 @@
         }
 
         function updatePreview() {
+            if (!previewContainer) return;
             previewContainer.innerHTML = '';
             selectedFiles.forEach((file, idx) => {
                 const reader = new FileReader();
@@ -570,52 +578,59 @@
         }
 
         function updateFileInput() {
+            if (!fileInput) return;
             const dataTransfer = new DataTransfer();
             selectedFiles.forEach(file => dataTransfer.items.add(file));
             fileInput.files = dataTransfer.files;
         }
 
         // التحقق من صحة النموذج قبل الإرسال
-        document.getElementById('addProductForm').addEventListener('submit', function(e) {
-            const name = document.querySelector('[name="name"]').value.trim();
-            const category = document.getElementById('selectedCategory').value;
-            
-            // جمع السعر حسب العملة المختارة
-            let price = 0;
-            if (currentCurrency === 'usd') {
-                price = document.querySelector('[name="price_usd"]').value;
-                if (!price || price <= 0) {
-                    e.preventDefault();
-                    alert('الرجاء إدخال سعر صحيح بالدولار');
-                    return false;
+        const productForm = document.getElementById('addProductForm');
+        if (productForm) {
+            productForm.addEventListener('submit', function(e) {
+                const name = document.querySelector('[name="name"]')?.value.trim();
+                const category = document.getElementById('selectedCategory')?.value;
+                
+                let price = 0;
+                if (currentCurrency === 'usd') {
+                    price = document.querySelector('[name="price_usd"]')?.value;
+                    if (!price || price <= 0) {
+                        e.preventDefault();
+                        alert('الرجاء إدخال سعر صحيح بالدولار');
+                        return false;
+                    }
+                    const finalPrice = document.getElementById('finalPrice');
+                    if (finalPrice) finalPrice.value = price;
+                } else {
+                    price = document.querySelector('[name="price_iqd"]')?.value;
+                    if (!price || price <= 0) {
+                        e.preventDefault();
+                        alert('الرجاء إدخال سعر صحيح بالدينار العراقي');
+                        return false;
+                    }
+                    const finalPrice = document.getElementById('finalPrice');
+                    if (finalPrice) finalPrice.value = price;
                 }
-                document.getElementById('finalPrice').value = price;
-            } else {
-                price = document.querySelector('[name="price_iqd"]').value;
-                if (!price || price <= 0) {
-                    e.preventDefault();
-                    alert('الرجاء إدخال سعر صحيح بالدينار العراقي');
-                    return false;
-                }
-                document.getElementById('finalPrice').value = price;
-            }
 
-            if (!name) {
-                e.preventDefault();
-                alert('الرجاء إدخال اسم المنتج');
-                return false;
-            }
-            if (!category) {
-                e.preventDefault();
-                alert('الرجاء اختيار أو إضافة فئة للمنتج');
-                return false;
-            }
-            return true;
-        });
+                if (!name) {
+                    e.preventDefault();
+                    alert('الرجاء إدخال اسم المنتج');
+                    return false;
+                }
+                if (!category) {
+                    e.preventDefault();
+                    alert('الرجاء اختيار أو إضافة فئة للمنتج');
+                    return false;
+                }
+                return true;
+            });
+        }
 
         // تهيئة الفئات
         if (categories.length > 0) {
             selectCategory(categories[0]);
+        } else {
+            renderCategories();
         }
         
         // تهيئة العملة الافتراضية
