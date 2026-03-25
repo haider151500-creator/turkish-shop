@@ -132,11 +132,14 @@
         .category-badge {
             background: #e9ecef;
             color: #495057;
-            padding: 6px 12px;
-            border-radius: 25px;
+            padding: 8px 16px;
+            border-radius: 30px;
             font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         .category-badge:hover {
             background: #6f42c1;
@@ -147,8 +150,11 @@
             color: white;
         }
         .category-badge i {
-            margin-right: 5px;
             cursor: pointer;
+            font-size: 1rem;
+        }
+        .category-badge i:hover {
+            color: #ff6b6b;
         }
         .add-category-group {
             margin-top: 10px;
@@ -178,6 +184,77 @@
         .btn-secondary-custom:hover {
             background: #5a6268;
             transform: translateY(-2px);
+        }
+        /* نافذة تأكيد حذف الفئة */
+        .confirm-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        .confirm-modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .confirm-modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        /* خيارات السعر */
+        .price-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .price-option {
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        .price-option:hover {
+            border-color: #6f42c1;
+            background: #f8f9fa;
+        }
+        .price-option.active {
+            border-color: #6f42c1;
+            background: linear-gradient(135deg, rgba(111,66,193,0.1), rgba(255,107,107,0.1));
+        }
+        .price-option i {
+            font-size: 24px;
+            color: #6f42c1;
+        }
+        .price-input-group {
+            margin-top: 15px;
+            display: none;
+        }
+        .price-input-group.active {
+            display: block;
         }
         @media (max-width: 768px) {
             .add-body { padding: 20px; }
@@ -214,7 +291,7 @@
                         <label class="form-label required-field">الفئة</label>
                         <div id="categoriesList" class="categories-container">
                             {% for cat in categories %}
-                            <span class="category-badge" data-cat="{{ cat }}">{{ cat }}</span>
+                            <span class="category-badge" data-cat="{{ cat }}">{{ cat }} <i class='bx bx-x' onclick="event.stopPropagation(); confirmDeleteCategory('{{ cat }}')"></i></span>
                             {% endfor %}
                         </div>
                         <input type="hidden" name="category" id="selectedCategory" required>
@@ -222,13 +299,33 @@
                             <input type="text" id="newCategoryInput" class="form-control" placeholder="أضف فئة جديدة">
                             <button type="button" id="addCategoryBtn" class="btn btn-outline-primary">إضافة</button>
                         </div>
-                        <small class="text-muted">اختر فئة موجودة أو أضف فئة جديدة (سيتم حفظها)</small>
+                        <small class="text-muted">اختر فئة موجودة أو أضف فئة جديدة. اضغط على × لحذف فئة (يتطلب تأكيد 3 مرات)</small>
                     </div>
 
-                    <!-- السعر -->
+                    <!-- السعر مع خيار العملة -->
                     <div class="mb-4">
-                        <label class="form-label required-field">السعر (دولار)</label>
-                        <input type="number" step="0.01" name="price" class="form-control" required placeholder="0.00">
+                        <label class="form-label required-field">السعر</label>
+                        <div class="price-options">
+                            <div class="price-option" data-currency="usd" onclick="selectCurrency('usd')">
+                                <i class='bx bx-dollar-circle'></i>
+                                <div>دولار أمريكي</div>
+                                <small>$ USD</small>
+                            </div>
+                            <div class="price-option active" data-currency="iqd" onclick="selectCurrency('iqd')">
+                                <i class='bx bx-money'></i>
+                                <div>دينار عراقي</div>
+                                <small>IQD</small>
+                            </div>
+                        </div>
+                        <div id="usdPriceGroup" class="price-input-group">
+                            <input type="number" step="0.01" name="price_usd" class="form-control" placeholder="السعر بالدولار الأمريكي">
+                        </div>
+                        <div id="iqdPriceGroup" class="price-input-group active">
+                            <input type="number" step="1000" name="price_iqd" class="form-control" placeholder="السعر بالدينار العراقي" required>
+                        </div>
+                        <input type="hidden" name="price" id="finalPrice" value="">
+                        <input type="hidden" name="currency" id="selectedCurrency" value="iqd">
+                        <small class="text-muted">اختر العملة المناسبة للمنتج</small>
                     </div>
 
                     <!-- رفع الصور -->
@@ -261,11 +358,12 @@
     <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
     <script>
-        // ---------- إدارة الفئات ----------
+        // ---------- إدارة الفئات مع تأكيد 3 مرات للحذف ----------
         let categories = [
             {% for cat in categories %}"{{ cat }}"{% if not loop.last %}, {% endif %}{% endfor %}
         ];
         let selectedCategory = null;
+        let deleteConfirmations = {}; // تخزين عدد مرات التأكيد لكل فئة
 
         function renderCategories() {
             const container = document.getElementById('categoriesList');
@@ -275,7 +373,7 @@
                 badge.className = 'category-badge';
                 if (selectedCategory === cat) badge.classList.add('selected');
                 badge.setAttribute('data-cat', cat);
-                badge.innerHTML = `${cat} <i class='bx bx-x' onclick="event.stopPropagation(); deleteCategory('${cat}')" style="margin-right:5px; cursor:pointer;"></i>`;
+                badge.innerHTML = `${cat} <i class='bx bx-x' onclick="event.stopPropagation(); confirmDeleteCategory('${cat}')"></i>`;
                 badge.onclick = () => selectCategory(cat);
                 container.appendChild(badge);
             });
@@ -287,29 +385,81 @@
             renderCategories();
         }
 
-        function deleteCategory(cat) {
-            if (confirm(`هل تريد حذف الفئة "${cat}"؟`)) {
-                categories = categories.filter(c => c !== cat);
-                if (selectedCategory === cat) {
-                    selectedCategory = null;
-                    document.getElementById('selectedCategory').value = '';
-                }
-                renderCategories();
+        // تأكيد حذف الفئة مع 3 مرات
+        function confirmDeleteCategory(cat) {
+            // التحقق من عدد المنتجات في هذه الفئة (محاكاة)
+            // في الواقع يجب استدعاء API لمعرفة عدد المنتجات
+            
+            if (!deleteConfirmations[cat]) {
+                deleteConfirmations[cat] = 0;
             }
+            
+            deleteConfirmations[cat]++;
+            const remaining = 3 - deleteConfirmations[cat];
+            
+            if (deleteConfirmations[cat] < 3) {
+                // عرض نافذة تأكيد
+                showConfirmModal(cat, remaining);
+            } else {
+                // حذف الفئة بعد 3 تأكيدات
+                if (confirm(`⚠️ تحذير نهائي!\n\nسيتم حذف الفئة "${cat}" وجميع المنتجات التابعة لها.\n\nهل أنت متأكد تماماً من حذف هذه الفئة؟`)) {
+                    deleteCategory(cat);
+                } else {
+                    deleteConfirmations[cat] = 0;
+                }
+            }
+        }
+        
+        function showConfirmModal(cat, remaining) {
+            const modal = document.createElement('div');
+            modal.className = 'confirm-modal';
+            modal.innerHTML = `
+                <div class="confirm-modal-content">
+                    <i class='bx bx-error' style="font-size: 48px; color: #ff6b6b;"></i>
+                    <h4 class="mt-3">تأكيد حذف الفئة</h4>
+                    <p class="text-muted">هل أنت متأكد من حذف الفئة <strong>"${cat}"</strong>؟</p>
+                    <p class="text-danger">⚠️ تحتوي هذه الفئة على منتجات!</p>
+                    <p class="text-warning">تأكيدات متبقية: <strong>${remaining}</strong> من 3</p>
+                    <div class="confirm-modal-buttons">
+                        <button class="btn btn-danger" onclick="this.closest('.confirm-modal').remove(); confirmDeleteCategory('${cat}')">
+                            <i class='bx bx-check'></i> تأكيد (${remaining}/3)
+                        </button>
+                        <button class="btn btn-secondary" onclick="this.closest('.confirm-modal').remove()">
+                            <i class='bx bx-x'></i> إلغاء
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function deleteCategory(cat) {
+            categories = categories.filter(c => c !== cat);
+            if (selectedCategory === cat) {
+                selectedCategory = null;
+                document.getElementById('selectedCategory').value = '';
+            }
+            deleteConfirmations[cat] = 0;
+            renderCategories();
+            alert(`✅ تم حذف الفئة "${cat}" بنجاح`);
         }
 
         function addNewCategory() {
             const input = document.getElementById('newCategoryInput');
             const newCat = input.value.trim();
-            if (newCat === '') return;
+            if (newCat === '') {
+                alert('الرجاء إدخال اسم الفئة');
+                return;
+            }
             if (categories.includes(newCat)) {
-                alert('هذه الفئة موجودة بالفعل');
+                alert('⚠️ هذه الفئة موجودة بالفعل');
                 return;
             }
             categories.push(newCat);
             selectCategory(newCat);
             input.value = '';
             renderCategories();
+            alert(`✅ تم إضافة الفئة "${newCat}" بنجاح`);
         }
 
         document.getElementById('addCategoryBtn').addEventListener('click', addNewCategory);
@@ -317,16 +467,44 @@
             if (e.key === 'Enter') addNewCategory();
         });
 
-        // ---------- إدارة الصور (رفع متعدد، معاينة، حذف) ----------
+        // ---------- إدارة العملة والسعر ----------
+        let currentCurrency = 'iqd';
+        
+        function selectCurrency(currency) {
+            currentCurrency = currency;
+            document.getElementById('selectedCurrency').value = currency;
+            
+            // تحديث المظهر
+            document.querySelectorAll('.price-option').forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.dataset.currency === currency) {
+                    opt.classList.add('active');
+                }
+            });
+            
+            // تحديث الحقول
+            document.getElementById('usdPriceGroup').classList.remove('active');
+            document.getElementById('iqdPriceGroup').classList.remove('active');
+            
+            if (currency === 'usd') {
+                document.getElementById('usdPriceGroup').classList.add('active');
+                document.getElementById('usdPriceGroup').querySelector('input').required = true;
+                document.getElementById('iqdPriceGroup').querySelector('input').required = false;
+            } else {
+                document.getElementById('iqdPriceGroup').classList.add('active');
+                document.getElementById('usdPriceGroup').querySelector('input').required = false;
+                document.getElementById('iqdPriceGroup').querySelector('input').required = true;
+            }
+        }
+        
+        // ---------- إدارة الصور ----------
         const fileInput = document.getElementById('fileInput');
         const previewContainer = document.getElementById('previewContainer');
         const fileUploadArea = document.getElementById('fileUploadArea');
         let selectedFiles = [];
 
-        // فتح نافذة الملفات
         fileUploadArea.addEventListener('click', () => fileInput.click());
 
-        // سحب وإفلات
         fileUploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             fileUploadArea.classList.add('drag-over');
@@ -400,17 +578,31 @@
         // التحقق من صحة النموذج قبل الإرسال
         document.getElementById('addProductForm').addEventListener('submit', function(e) {
             const name = document.querySelector('[name="name"]').value.trim();
-            const price = document.querySelector('[name="price"]').value;
             const category = document.getElementById('selectedCategory').value;
+            
+            // جمع السعر حسب العملة المختارة
+            let price = 0;
+            if (currentCurrency === 'usd') {
+                price = document.querySelector('[name="price_usd"]').value;
+                if (!price || price <= 0) {
+                    e.preventDefault();
+                    alert('الرجاء إدخال سعر صحيح بالدولار');
+                    return false;
+                }
+                document.getElementById('finalPrice').value = price;
+            } else {
+                price = document.querySelector('[name="price_iqd"]').value;
+                if (!price || price <= 0) {
+                    e.preventDefault();
+                    alert('الرجاء إدخال سعر صحيح بالدينار العراقي');
+                    return false;
+                }
+                document.getElementById('finalPrice').value = price;
+            }
 
             if (!name) {
                 e.preventDefault();
                 alert('الرجاء إدخال اسم المنتج');
-                return false;
-            }
-            if (!price || price <= 0) {
-                e.preventDefault();
-                alert('الرجاء إدخال سعر صحيح');
                 return false;
             }
             if (!category) {
@@ -421,10 +613,13 @@
             return true;
         });
 
-        // تهيئة الفئات (اختيار أول فئة افتراضياً إذا كانت موجودة)
+        // تهيئة الفئات
         if (categories.length > 0) {
             selectCategory(categories[0]);
         }
+        
+        // تهيئة العملة الافتراضية
+        selectCurrency('iqd');
     </script>
 </body>
 </html>
