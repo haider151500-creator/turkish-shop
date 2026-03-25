@@ -181,36 +181,19 @@
         color: white;
     }
     
-    /* ========== ترقيم الصفحات ========== */
-    .pagination .page-item .page-link {
-        border-radius: 12px;
-        margin: 0 6px;
-        color: var(--primary-color);
-        border: none;
-        padding: 10px 16px;
-        font-weight: 500;
-        transition: var(--transition);
+    /* ========== رسالة عدم وجود منتجات ========== */
+    .no-products-message {
+        display: none;
+        text-align: center;
+        padding: 60px 20px;
         background: white;
-        box-shadow: var(--shadow-sm);
+        border-radius: 24px;
+        margin-top: 20px;
     }
     
-    .pagination .page-item .page-link:hover {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-    }
-    
-    .pagination .page-item.active .page-link {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        box-shadow: var(--shadow-md);
-    }
-    
-    .pagination .page-item.disabled .page-link {
-        background: #f1f5f9;
-        color: #94a3b8;
-        cursor: not-allowed;
+    .no-products-message.show {
+        display: block;
+        animation: fadeInUp 0.5s ease;
     }
     
     /* ========== تأثيرات إضافية ========== */
@@ -270,12 +253,15 @@
     <div class="row justify-content-center mb-5">
         <div class="filter-btns text-center">
             <button class="filter-btn active" data-filter="all">
-                <i class='bx bx-category'></i> الكل
+                <i class='bx bx-category'></i> الكل <span class="badge bg-light text-dark ms-2">{{ products|length }}</span>
             </button>
             {% for c in categories %}
+            {% set count = products|selectattr('category', 'equalto', c)|list|length %}
+            {% if count > 0 %}
             <button class="filter-btn" data-filter="{{ c }}">
-                <i class='bx bx-tag'></i> {{ c }}
+                <i class='bx bx-tag'></i> {{ c }} <span class="badge bg-light text-dark ms-2">{{ count }}</span>
             </button>
+            {% endif %}
             {% endfor %}
         </div>
     </div>
@@ -334,6 +320,13 @@
                 {% endif %}
             </div>
         {% endif %}
+    </div>
+    
+    <!-- رسالة عدم وجود منتجات في الفئة -->
+    <div id="noProductsMessage" class="no-products-message">
+        <i class='bx bx-folder-open bx-lg text-muted'></i>
+        <h4 class="mt-3">لا توجد منتجات في هذه الفئة</h4>
+        <p class="text-muted">جرّب اختيار فئة أخرى</p>
     </div>
     
     <!-- Pagination -->
@@ -406,31 +399,71 @@
 <script src="{{ url_for('static', filename='assets/js/isotope.pkgd.js') }}"></script>
 <script>
     $(document).ready(function() {
-        // Initialize Isotope
-        var $grid = $('#productsGrid').isotope({
+        // التحقق من وجود العناصر
+        var $grid = $('#productsGrid');
+        var $noProductsMsg = $('#noProductsMessage');
+        
+        // تهيئة Isotope
+        $grid.isotope({
             itemSelector: '.product-item',
             layoutMode: 'fitRows',
             transitionDuration: '0.6s'
         });
         
-        // Filter items on button click
+        // تحديث عرض رسالة عدم وجود منتجات
+        function updateNoProductsMessage(filteredCount) {
+            if (filteredCount === 0) {
+                $noProductsMsg.addClass('show');
+                $grid.hide();
+            } else {
+                $noProductsMsg.removeClass('show');
+                $grid.show();
+            }
+        }
+        
+        // فلترة المنتجات عند النقر على الزر
         $('.filter-btn').click(function() {
             var filterValue = $(this).attr('data-filter');
+            var filteredCount = 0;
+            
             if (filterValue === 'all') {
                 $grid.isotope({ filter: '*' });
+                filteredCount = $('.product-item').length;
             } else {
-                $grid.isotope({ filter: '[data-category="' + filterValue + '"]' });
+                $grid.isotope({ filter: function() {
+                    var category = $(this).attr('data-category');
+                    var match = (category === filterValue);
+                    if (match) filteredCount++;
+                    return match;
+                }});
             }
             
-            // Update active button
+            // تحديث عدد العناصر المعروضة
+            setTimeout(function() {
+                var visibleCount = $grid.isotope('getFilteredItemElements').length;
+                updateNoProductsMessage(visibleCount);
+            }, 100);
+            
+            // تحديث الزر النشط
             $('.filter-btn').removeClass('active');
             $(this).addClass('active');
+            
+            // سجل للتصحيح (يمكن إزالته بعد التأكد من العمل)
+            console.log('تم الفلترة:', filterValue, 'عدد المنتجات المعروضة:', filteredCount);
         });
         
-        // Add animation delay to product items
+        // إضافة تأخير للحركة
         $('.product-item').each(function(index) {
             $(this).css('animation-delay', (index * 0.05) + 's');
         });
+        
+        // عرض عدد المنتجات الأولي
+        var initialCount = $('.product-item').length;
+        updateNoProductsMessage(initialCount);
+        console.log('تم تحميل الصفحة. عدد المنتجات:', initialCount);
+        console.log('الفئات الموجودة:', $('.product-item').map(function() {
+            return $(this).attr('data-category');
+        }).get());
     });
 </script>
 {% endblock %}
