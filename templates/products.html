@@ -1,44 +1,436 @@
 {% extends "base.html" %}
+
+{% block title %}المنتجات - متجر المنتجات التركية{% endblock %}
+
+{% block head %}
+<style>
+    /* ========== قسم البطل ========== */
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 80px 0;
+        margin-bottom: 40px;
+        border-radius: 0 0 30px 30px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        animation: move 20s linear infinite;
+    }
+    
+    @keyframes move {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(60px, 60px); }
+    }
+    
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        animation: fadeInUp 0.8s ease;
+    }
+    
+    /* ========== أزرار الفلترة ========== */
+    .filter-btns {
+        background: white;
+        padding: 8px;
+        border-radius: 60px;
+        box-shadow: var(--shadow-lg);
+        display: inline-flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .filter-btn {
+        border-radius: 50px;
+        padding: 10px 28px;
+        margin: 0;
+        transition: var(--transition);
+        font-weight: 600;
+        border: 2px solid transparent;
+        background: transparent;
+        color: var(--dark-color);
+        cursor: pointer;
+    }
+    
+    .filter-btn:hover {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .filter-btn.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* ========== بطاقات المنتجات ========== */
+    .product-card {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        transition: var(--transition);
+        box-shadow: var(--shadow-md);
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .product-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        transform: scaleX(0);
+        transition: var(--transition);
+    }
+    
+    .product-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .product-card:hover {
+        transform: translateY(-12px);
+        box-shadow: var(--shadow-hover);
+    }
+    
+    .product-card img {
+        height: 220px;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+    
+    .product-card:hover img {
+        transform: scale(1.05);
+    }
+    
+    .product-card .card-body {
+        padding: 20px;
+    }
+    
+    .product-card .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--dark-color);
+    }
+    
+    .product-price {
+        font-size: 1.3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .product-category {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #f1f5f9;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+    
+    /* ========== قسم المنتجات المميزة ========== */
+    .featured-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 60px 0;
+        margin-top: 40px;
+    }
+    
+    .featured-card {
+        background: white;
+        border-radius: 24px;
+        padding: 30px;
+        text-align: center;
+        transition: var(--transition);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .featured-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-hover);
+    }
+    
+    .featured-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+    
+    .featured-icon i {
+        font-size: 40px;
+        color: white;
+    }
+    
+    /* ========== ترقيم الصفحات ========== */
+    .pagination .page-item .page-link {
+        border-radius: 12px;
+        margin: 0 6px;
+        color: var(--primary-color);
+        border: none;
+        padding: 10px 16px;
+        font-weight: 500;
+        transition: var(--transition);
+        background: white;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .pagination .page-item .page-link:hover {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        background: #f1f5f9;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    
+    /* ========== تأثيرات إضافية ========== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .product-item {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    @media (max-width: 768px) {
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+        .filter-btn {
+            padding: 6px 16px;
+            font-size: 0.85rem;
+        }
+        .product-card img {
+            height: 180px;
+        }
+        .filter-btns {
+            border-radius: 30px;
+            padding: 8px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container my-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="m-0">جميع المنتجات</h2>
-    <div class="d-flex gap-2 flex-wrap">
-      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('products') }}">الكل</a>
-      {% for c in categories %}
-        <a class="btn btn-outline-secondary btn-sm {% if active_cat==c %}active{% endif %}" href="{{ url_for('products', cat=c) }}">{{ c }}</a>
-      {% endfor %}
-    </div>
-  </div>
-  {% if products and products|length > 0 %}
-  <div class="row g-3">
-    {% for p in products %}
-    <div class="col-6 col-md-4 col-lg-3">
-      <div class="card h-100">
-        {% if p.image %}
-        <img class="card-img-top product-thumb" src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="{{ p.name }}">
-        {% endif %}
-        <div class="card-body p-2">
-          <h6 class="card-title m-0">{{ p.name }}</h6>
-          <div class="d-flex justify-content-between align-items-center mt-1">
-            <span class="fw-bold small">{{ '%.0f'|format(p.price) }}$</span>
-            <a class="btn btn-sm btn-outline-primary" href="{{ url_for('product_detail', pid=p.id) }}">تفاصيل</a>
-          </div>
+<!-- Hero Section -->
+<section class="hero-section text-white text-center">
+    <div class="container position-relative" style="z-index: 2;">
+        <h1 class="display-4 fw-bold mb-3 animate__animated animate__fadeInUp">منتجاتنا التركية</h1>
+        <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">أفضل المنتجات الأصلية من تركيا بأعلى جودة وأفضل الأسعار</p>
+        <div class="mt-4 animate__animated animate__fadeInUp animate__delay-2s">
+            <a href="#products-grid" class="btn btn-light btn-lg px-4 mx-2">
+                <i class='bx bx-shopping-bag'></i> استعرض المنتجات
+            </a>
+            <a href="{{ url_for('contact') }}" class="btn btn-outline-light btn-lg px-4 mx-2">
+                <i class='bx bx-envelope'></i> تواصل معنا
+            </a>
         </div>
-        {% if session.get('is_admin') %}
-        <div class="card-footer d-flex justify-content-between">
-          <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_edit', pid=p.id) }}">تعديل</a>
-          <form method="POST" action="{{ url_for('admin_delete', pid=p.id) }}" onsubmit="return confirm('تأكيد حذف المنتج؟');">
-            <button class="btn btn-sm btn-outline-danger">حذف</button>
-          </form>
-        </div>
-        {% endif %}
-      </div>
     </div>
-    {% endfor %}
-  </div>
-  {% else %}
-    <div class="alert alert-info">لا توجد منتجات بعد.</div>
-  {% endif %}
-</div>
+</section>
+
+<!-- Filter Section -->
+<section class="container py-5">
+    <div class="row justify-content-center mb-5">
+        <div class="filter-btns text-center">
+            <button class="filter-btn active" data-filter="all">
+                <i class='bx bx-category'></i> الكل
+            </button>
+            {% for c in categories %}
+            <button class="filter-btn" data-filter="{{ c }}">
+                <i class='bx bx-tag'></i> {{ c }}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row projects g-4" id="productsGrid">
+        {% if products and products|length > 0 %}
+            {% for p in products %}
+            <div class="col-sm-6 col-lg-4 product-item" data-category="{{ p.category or 'عام' }}">
+                <div class="product-card card h-100">
+                    {% if p.image %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" class="card-img-top" alt="{{ p.name }}">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
+                        <i class='bx bx-image' style="font-size: 48px; color: #ccc;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title mb-0">{{ p.name }}</h5>
+                            <span class="product-category">{{ p.category or 'عام' }}</span>
+                        </div>
+                        <p class="card-text text-muted small mt-2">
+                            {{ p.description[:80] }}{% if p.description and p.description|length > 80 %}...{% endif %}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="product-price">{{ '%.0f'|format(p.price) }} $</span>
+                            <a href="{{ url_for('product_detail', pid=p.id) }}" class="btn btn-primary btn-sm">
+                                <i class='bx bx-show'></i> تفاصيل
+                            </a>
+                        </div>
+                    </div>
+                    {% if session.get('is_admin') %}
+                    <div class="card-footer bg-transparent d-flex gap-2">
+                        <a href="{{ url_for('admin_edit', pid=p.id) }}" class="btn btn-outline-primary btn-sm w-50">
+                            <i class='bx bx-edit-alt'></i> تعديل
+                        </a>
+                        <form method="POST" action="{{ url_for('admin_delete', pid=p.id) }}" class="w-50" onsubmit="return confirm('تأكيد حذف المنتج؟');">
+                            <button class="btn btn-outline-danger btn-sm w-100">
+                                <i class='bx bx-trash'></i> حذف
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <i class='bx bx-package bx-lg text-muted'></i>
+                <h3 class="text-muted mt-3">لا توجد منتجات بعد</h3>
+                {% if session.get('is_admin') %}
+                    <a href="{{ url_for('admin_add') }}" class="btn btn-primary mt-3">
+                        <i class='bx bx-plus'></i> أضف منتج جديد
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if products and products|length > 12 %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">
+                            <i class='bx bx-chevron-right'></i> السابق
+                        </a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">
+                            التالي <i class='bx bx-chevron-left'></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Featured Products Section -->
+<section class="featured-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">لماذا تختار منتجاتنا؟</h2>
+            <p class="text-muted">نقدم أفضل المنتجات التركية الأصلية بجودة عالية</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="featured-card">
+                    <div class="featured-icon">
+                        <i class='bx bx-check-shield'></i>
+                    </div>
+                    <h4 class="mb-3">جودة مضمونة</h4>
+                    <p class="text-muted">جميع منتجاتنا أصلية 100% ومستوردة مباشرة من المصانع التركية</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="featured-card">
+                    <div class="featured-icon">
+                        <i class='bx bx-package'></i>
+                    </div>
+                    <h4 class="mb-3">شحن سريع</h4>
+                    <p class="text-muted">توصيل سريع وآمن لجميع أنحاء العالم مع متابعة مستمرة</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="featured-card">
+                    <div class="featured-icon">
+                        <i class='bx bx-dollar'></i>
+                    </div>
+                    <h4 class="mb-3">أسعار تنافسية</h4>
+                    <p class="text-muted">أفضل الأسعار في السوق مع عروض وخصومات مستمرة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/isotope.pkgd.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize Isotope
+        var $grid = $('#productsGrid').isotope({
+            itemSelector: '.product-item',
+            layoutMode: 'fitRows',
+            transitionDuration: '0.6s'
+        });
+        
+        // Filter items on button click
+        $('.filter-btn').click(function() {
+            var filterValue = $(this).attr('data-filter');
+            if (filterValue === 'all') {
+                $grid.isotope({ filter: '*' });
+            } else {
+                $grid.isotope({ filter: '[data-category="' + filterValue + '"]' });
+            }
+            
+            // Update active button
+            $('.filter-btn').removeClass('active');
+            $(this).addClass('active');
+        });
+        
+        // Add animation delay to product items
+        $('.product-item').each(function(index) {
+            $(this).css('animation-delay', (index * 0.05) + 's');
+        });
+    });
+</script>
 {% endblock %}
