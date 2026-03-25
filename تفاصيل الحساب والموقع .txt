@@ -1,0 +1,44 @@
+
+علي القريشي 
+alisalah1919000@gmail.com
+Alisalah1919000@#$
+
+المتجر 
+https://turkish-shop.onrender.com
+
+
+موقع السيرفر
+
+https://dashboard.render.com/web/srv-d71vflhr0fns738tclo0/deploys/dep-d71vfm1r0fns738tcm9g?r=2026-03-25%4014%3A56%3A28%7E2026-03-25%4015%3A00%3A13
+
+
+https://render.com/migrate-from-heroku
+
+لوحة التحكم 
+
+https://dashboard.render.com/
+
+رابط مباشر لموقع جيت هب 
+https://github.com/haider151500-creator/turkish-shop
+
+github
+https://github.com/settings/installations/118933202
+
+
+اذا اردت التعديل في اي وقت على الموقع 
+
+استخدم بعد التعديل بوابة بور شيل في ملف المشروع  لرفع الملف عبرر بوابة جيت هب 
+بهذه الطريقة 
+
+git add .
+git commit -m "تعديل تصميم الصفحة الرئيسية"
+git push
+
+
+
+
+
+
+
+
+
