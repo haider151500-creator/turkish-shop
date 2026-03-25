@@ -34,9 +34,19 @@ git add .
 git commit -m "تعديل تصميم الصفحة الرئيسية"
 git push
 
+بعدها نعيد النشر 
 
+من خلال الموقع رندر 
 
+https://dashboard.render.com/web/srv-d71vflhr0fns738tclo0/deploys/dep-d7204jpaae7s73a5c3ng
 
+افتح render.com
+
+اختر خدمة turkish-shop
+
+اضغط على "Manual Deploy" → "Deploy latest commit"
+
+ننتظر 2-3 دقائق
 
 
 
