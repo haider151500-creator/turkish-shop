@@ -212,6 +212,11 @@
         animation: fadeInUp 0.6s ease-out forwards;
     }
     
+    /* إخفاء العناصر عند الفلترة */
+    .product-item.hide-item {
+        display: none !important;
+    }
+    
     @media (max-width: 768px) {
         .hero-section h1 {
             font-size: 2rem;
@@ -396,74 +401,76 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='assets/js/isotope.pkgd.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
 <script>
     $(document).ready(function() {
-        // التحقق من وجود العناصر
+        console.log('جاري تهيئة الفلترة...');
+        
         var $grid = $('#productsGrid');
         var $noProductsMsg = $('#noProductsMessage');
+        
+        // تأكد من وجود منتجات
+        if ($grid.find('.product-item').length === 0) {
+            console.log('لا توجد منتجات');
+            return;
+        }
         
         // تهيئة Isotope
         $grid.isotope({
             itemSelector: '.product-item',
             layoutMode: 'fitRows',
-            transitionDuration: '0.6s'
+            transitionDuration: '0.4s'
         });
         
-        // تحديث عرض رسالة عدم وجود منتجات
-        function updateNoProductsMessage(filteredCount) {
-            if (filteredCount === 0) {
-                $noProductsMsg.addClass('show');
-                $grid.hide();
-            } else {
+        console.log('تم تهيئة Isotope بنجاح');
+        
+        // دالة تحديث العرض
+        function filterProducts(category) {
+            if (category === 'all') {
+                $grid.isotope({ filter: '*' });
                 $noProductsMsg.removeClass('show');
                 $grid.show();
+                console.log('عرض جميع المنتجات');
+            } else {
+                $grid.isotope({ filter: '.product-item[data-category="' + category + '"]' });
+                
+                // التحقق من وجود منتجات في الفئة
+                setTimeout(function() {
+                    var visibleCount = $grid.isotope('getFilteredItemElements').length;
+                    if (visibleCount === 0) {
+                        $noProductsMsg.addClass('show');
+                        $grid.hide();
+                        console.log('لا توجد منتجات في الفئة: ' + category);
+                    } else {
+                        $noProductsMsg.removeClass('show');
+                        $grid.show();
+                        console.log('عرض ' + visibleCount + ' منتج في الفئة: ' + category);
+                    }
+                }, 100);
             }
         }
         
-        // فلترة المنتجات عند النقر على الزر
-        $('.filter-btn').click(function() {
-            var filterValue = $(this).attr('data-filter');
-            var filteredCount = 0;
+        // معالج النقر على أزرار الفلترة
+        $('.filter-btn').on('click', function() {
+            var filterValue = $(this).data('filter');
+            console.log('تم النقر على: ' + filterValue);
             
-            if (filterValue === 'all') {
-                $grid.isotope({ filter: '*' });
-                filteredCount = $('.product-item').length;
-            } else {
-                $grid.isotope({ filter: function() {
-                    var category = $(this).attr('data-category');
-                    var match = (category === filterValue);
-                    if (match) filteredCount++;
-                    return match;
-                }});
-            }
-            
-            // تحديث عدد العناصر المعروضة
-            setTimeout(function() {
-                var visibleCount = $grid.isotope('getFilteredItemElements').length;
-                updateNoProductsMessage(visibleCount);
-            }, 100);
+            filterProducts(filterValue);
             
             // تحديث الزر النشط
             $('.filter-btn').removeClass('active');
             $(this).addClass('active');
-            
-            // سجل للتصحيح (يمكن إزالته بعد التأكد من العمل)
-            console.log('تم الفلترة:', filterValue, 'عدد المنتجات المعروضة:', filteredCount);
         });
         
-        // إضافة تأخير للحركة
-        $('.product-item').each(function(index) {
-            $(this).css('animation-delay', (index * 0.05) + 's');
-        });
+        // عرض جميع المنتجات في البداية
+        filterProducts('all');
         
-        // عرض عدد المنتجات الأولي
-        var initialCount = $('.product-item').length;
-        updateNoProductsMessage(initialCount);
-        console.log('تم تحميل الصفحة. عدد المنتجات:', initialCount);
-        console.log('الفئات الموجودة:', $('.product-item').map(function() {
-            return $(this).attr('data-category');
+        // عرض معلومات التصحيح
+        console.log('الفئات المتاحة:', $('.product-item').map(function() {
+            return $(this).data('category');
         }).get());
+        console.log('عدد المنتجات الكلي:', $('.product-item').length);
     });
 </script>
 {% endblock %}
