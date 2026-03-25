@@ -1,426 +1,450 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+{% extends "base.html" %}
 
-<head>
-    <title>أعمالنا - متجر المنتجات التركية</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="تعرف على أعمالنا ومشاريعنا في استيراد وتوزيع المنتجات التركية">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/img/apple-icon.png') }}">
-    <link rel="shortcut icon" href="{{ url_for('static', filename='assets/img/favicon.ico') }}" type="image/x-icon">
-    <!-- Load Require CSS -->
-    <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
-    <!-- Font CSS -->
-    <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- Load Tempalte CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/templatemo.css') }}">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom.css') }}">
+{% block title %}أعمالنا - متجر المنتجات التركية{% endblock %}
+
+{% block head %}
+<style>
+    /* ========== قسم البطل ========== */
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 80px 0;
+        margin-bottom: 40px;
+        border-radius: 0 0 30px 30px;
+        position: relative;
+        overflow: hidden;
+    }
     
-    <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: #f8f9fa;
-            padding-top: 70px;
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        animation: move 20s linear infinite;
+    }
+    
+    @keyframes move {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(60px, 60px); }
+    }
+    
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        animation: fadeInUp 0.8s ease;
+    }
+    
+    /* ========== أزرار الفلترة ========== */
+    .filter-btns {
+        background: white;
+        padding: 8px;
+        border-radius: 60px;
+        box-shadow: var(--shadow-lg);
+        display: inline-flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .filter-btn {
+        border-radius: 50px;
+        padding: 10px 28px;
+        margin: 0;
+        transition: var(--transition);
+        font-weight: 600;
+        border: 2px solid transparent;
+        background: transparent;
+        color: var(--dark-color);
+    }
+    
+    .filter-btn:hover {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .filter-btn.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* ========== بطاقات الأعمال ========== */
+    .work-card {
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        transition: var(--transition);
+        box-shadow: var(--shadow-md);
+        margin-bottom: 30px;
+        position: relative;
+    }
+    
+    .work-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        transform: scaleX(0);
+        transition: var(--transition);
+    }
+    
+    .work-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .work-card:hover {
+        transform: translateY(-12px);
+        box-shadow: var(--shadow-hover);
+    }
+    
+    .work-card img {
+        height: 240px;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+    
+    .work-card:hover img {
+        transform: scale(1.05);
+    }
+    
+    .work-card .card-body {
+        padding: 24px;
+    }
+    
+    .work-card .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--dark-color);
+    }
+    
+    /* ========== قسم الأعمال المميزة ========== */
+    .feature-work {
+        background: white;
+        border-radius: 32px;
+        padding: 50px;
+        margin: 40px 0;
+        box-shadow: var(--shadow-lg);
+        transition: var(--transition);
+    }
+    
+    .feature-work:hover {
+        box-shadow: var(--shadow-xl);
+    }
+    
+    .feature-img {
+        border-radius: 20px;
+        overflow: hidden;
+        transition: var(--transition);
+        cursor: pointer;
+    }
+    
+    .feature-img:hover {
+        transform: scale(1.03);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .feature-img img {
+        transition: var(--transition);
+    }
+    
+    /* ========== ترقيم الصفحات ========== */
+    .pagination .page-item .page-link {
+        border-radius: 12px;
+        margin: 0 6px;
+        color: var(--primary-color);
+        border: none;
+        padding: 10px 16px;
+        font-weight: 500;
+        transition: var(--transition);
+        background: white;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .pagination .page-item .page-link:hover {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .pagination .page-item.disabled .page-link {
+        background: #f1f5f9;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+    
+    /* ========== تأثيرات إضافية ========== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
         }
-        
-        .hero-section {
-            background: linear-gradient(135deg, #6f42c1 0%, #ff6b6b 100%);
-            padding: 80px 0;
-            margin-bottom: 40px;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-        
+    }
+    
+    .project-item {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+    
+    @media (max-width: 768px) {
         .hero-section h1 {
-            font-size: 3rem;
-            font-weight: 700;
+            font-size: 2rem;
         }
-        
-        .filter-btns {
-            background: white;
-            padding: 10px;
-            border-radius: 50px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        
         .filter-btn {
-            border-radius: 30px;
-            padding: 8px 24px;
-            margin: 0 5px;
-            transition: all 0.3s ease;
+            padding: 6px 16px;
+            font-size: 0.85rem;
         }
-        
-        .filter-btn.active {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
-            color: white;
-            border: none;
-        }
-        
-        .work-card {
-            transition: all 0.3s ease;
-            border-radius: 20px;
-            overflow: hidden;
-            border: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            margin-bottom: 30px;
-        }
-        
-        .work-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(111,66,193,0.15);
-        }
-        
         .work-card img {
-            height: 220px;
-            object-fit: cover;
-            transition: transform 0.3s ease;
+            height: 180px;
         }
-        
-        .work-card:hover img {
-            transform: scale(1.05);
-        }
-        
-        .work-card .card-body {
-            padding: 20px;
-        }
-        
-        .work-card .card-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #333;
-        }
-        
         .feature-work {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            margin: 40px 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 25px;
         }
-        
-        .feature-img {
-            border-radius: 15px;
-            overflow: hidden;
-            transition: all 0.3s ease;
+        .filter-btns {
+            border-radius: 30px;
+            padding: 8px;
         }
-        
-        .feature-img:hover {
-            transform: scale(1.02);
-        }
-        
-        .pagination .page-item .page-link {
-            border-radius: 10px;
-            margin: 0 5px;
-            color: #6f42c1;
-        }
-        
-        .pagination .page-item.active .page-link {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
-            border-color: #6f42c1;
-            color: white;
-        }
-        
-        @media (max-width: 768px) {
-            .hero-section h1 {
-                font-size: 2rem;
-            }
-            .filter-btn {
-                padding: 5px 15px;
-                font-size: 0.85rem;
-            }
-            .work-card img {
-                height: 180px;
-            }
-        }
-    </style>
-</head>
+    }
+</style>
+{% endblock %}
 
-<body>
-    <!-- Header -->
-    <nav id="main_nav" class="navbar navbar-expand-lg navbar-light bg-white shadow fixed-top">
-        <div class="container d-flex justify-content-between align-items-center">
-            <a class="navbar-brand h1" href="{{ url_for('index') }}">
-                <i class='bx bx-store-alt bx-sm text-primary'></i>
-                <span class="text-dark h4">متجر</span> <span class="text-primary h4">المنتجات التركية</span>
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-white text-center">
+    <div class="container position-relative" style="z-index: 2;">
+        <h1 class="display-4 fw-bold mb-3 animate__animated animate__fadeInUp">أعمالنا ومشاريعنا</h1>
+        <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">نفتخر بتقديم أفضل المنتجات التركية لعملائنا الكرام</p>
+        <div class="mt-4 animate__animated animate__fadeInUp animate__delay-2s">
+            <a href="{{ url_for('products') }}" class="btn btn-light btn-lg px-4 mx-2">
+                <i class='bx bx-shopping-bag'></i> تسوق الآن
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-toggler-success">
-                <span class="navbar-toggler-icon"></span>
+            <a href="{{ url_for('contact') }}" class="btn btn-outline-light btn-lg px-4 mx-2">
+                <i class='bx bx-envelope'></i> تواصل معنا
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Filter Section -->
+<section class="container py-5">
+    <div class="row justify-content-center mb-5">
+        <div class="filter-btns text-center">
+            <button class="filter-btn active" data-filter="all">
+                <i class='bx bx-category'></i> الكل
             </button>
-
-            <div class="align-self-center collapse navbar-collapse flex-fill d-lg-flex justify-content-lg-between" id="navbar-toggler-success">
-                <div class="flex-fill mx-xl-5 mb-2">
-                    <ul class="nav navbar-nav d-flex justify-content-between mx-xl-5 text-center">
-                        <li class="nav-item">
-                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('index') }}">الرئيسية</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('about') }}">من نحن</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('products') }}">المنتجات</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn-outline-primary rounded-pill px-3 active" href="{{ url_for('work') }}">أعمالنا</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('contact') }}">اتصل بنا</a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="navbar align-self-center d-flex">
-                    {% if session.get('is_admin') %}
-                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class='bx bx-dashboard bx-sm text-primary'></i></a>
-                        <a class="nav-link" href="{{ url_for('admin_logout') }}"><i class='bx bx-log-out bx-sm text-danger'></i></a>
-                    {% else %}
-                        <a class="nav-link" href="{{ url_for('admin_login') }}"><i class='bx bx-lock-alt bx-sm text-primary'></i></a>
-                    {% endif %}
-                </div>
-            </div>
+            <button class="filter-btn" data-filter="clothing">
+                <i class='bx bx-t-shirt'></i> ملابس
+            </button>
+            <button class="filter-btn" data-filter="accessories">
+                <i class='bx bx-diamond'></i> إكسسوارات
+            </button>
+            <button class="filter-btn" data-filter="home">
+                <i class='bx bx-home'></i> منتجات منزلية
+            </button>
+            <button class="filter-btn" data-filter="electronics">
+                <i class='bx bx-laptop'></i> إلكترونيات
+            </button>
         </div>
-    </nav>
-    <!-- Close Header -->
+    </div>
 
-    <!-- Hero Section -->
-    <section class="hero-section text-white text-center">
-        <div class="container">
-            <h1 class="display-4 fw-bold mb-3">أعمالنا ومشاريعنا</h1>
-            <p class="lead">نفتخر بتقديم أفضل المنتجات التركية لعملائنا الكرام</p>
-            <div class="mt-4">
-                <a href="{{ url_for('products') }}" class="btn btn-light btn-lg px-4 mx-2">
-                    <i class='bx bx-shopping-bag'></i> تسوق الآن
-                </a>
-                <a href="{{ url_for('contact') }}" class="btn btn-outline-light btn-lg px-4 mx-2">
-                    <i class='bx bx-envelope'></i> تواصل معنا
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Filter Section -->
-    <section class="container py-4">
-        <div class="row justify-content-center mb-5">
-            <div class="filter-btns text-center">
-                <button class="filter-btn btn btn-outline-primary active" data-filter="all">الكل</button>
-                <button class="filter-btn btn btn-outline-primary" data-filter="clothing">ملابس</button>
-                <button class="filter-btn btn btn-outline-primary" data-filter="accessories">إكسسوارات</button>
-                <button class="filter-btn btn btn-outline-primary" data-filter="home">منتجات منزلية</button>
-                <button class="filter-btn btn btn-outline-primary" data-filter="electronics">إلكترونيات</button>
-            </div>
-        </div>
-
-        <!-- Projects Grid -->
-        <div class="row projects g-4" id="projectsGrid">
-            <div class="col-sm-6 col-lg-4 project-item clothing">
-                <div class="work-card card h-100">
-                    <img src="{{ url_for('static', filename='assets/img/our-work-01.jpg') }}" class="card-img-top" alt="ملابس تركية">
-                    <div class="card-body">
-                        <h5 class="card-title">ملابس تركية فاخرة</h5>
-                        <p class="card-text text-muted">تشكيلة واسعة من الملابس التركية الأصلية بأعلى جودة وأفضل الأسعار.</p>
-                        <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
-                            عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-sm-6 col-lg-4 project-item accessories">
-                <div class="work-card card h-100">
-                    <img src="{{ url_for('static', filename='assets/img/our-work-02.jpg') }}" class="card-img-top" alt="إكسسوارات تركية">
-                    <div class="card-body">
-                        <h5 class="card-title">إكسسوارات تركية</h5>
-                        <p class="card-text text-muted">مجوهرات وساعات وإكسسوارات تركية فاخرة تناسب جميع الأذواق.</p>
-                        <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
-                            عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-sm-6 col-lg-4 project-item home">
-                <div class="work-card card h-100">
-                    <img src="{{ url_for('static', filename='assets/img/our-work-03.jpg') }}" class="card-img-top" alt="منتجات منزلية">
-                    <div class="card-body">
-                        <h5 class="card-title">منتجات منزلية تركية</h5>
-                        <p class="card-text text-muted">أدوات منزلية عالية الجودة من أفضل المصانع التركية.</p>
-                        <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
-                            عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-sm-6 col-lg-4 project-item electronics">
-                <div class="work-card card h-100">
-                    <img src="{{ url_for('static', filename='assets/img/our-work-04.jpg') }}" class="card-img-top" alt="إلكترونيات تركية">
-                    <div class="card-body">
-                        <h5 class="card-title">إلكترونيات تركية</h5>
-                        <p class="card-text text-muted">أحدث الأجهزة الإلكترونية والتكنولوجيا التركية المتطورة.</p>
-                        <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
-                            عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-sm-6 col-lg-4 project-item clothing">
-                <div class="work-card card h-100">
-                    <img src="{{ url_for('static', filename='assets/img/our-work-05.jpg') }}" class="card-img-top" alt="أزياء تركية">
-                    <div class="card-body">
-                        <h5 class="card-title">أزياء تركية عصرية</h5>
-                        <p class="card-text text-muted">أحدث صيحات الموضة التركية بأجود الخامات والتصاميم.</p>
-                        <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
-                            عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-sm-6 col-lg-4 project-item home accessories">
-                <div class="work-card card h-100">
-                    <img src="{{ url_for('static', filename='assets/img/our-work-06.jpg') }}" class="card-img-top" alt="ديكورات تركية">
-                    <div class="card-body">
-                        <h5 class="card-title">ديكورات منزلية تركية</h5>
-                        <p class="card-text text-muted">أفخم الديكورات والتحف التركية لتزيين منزلك.</p>
-                        <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
-                            عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
-                        </a>
-                    </div>
+    <!-- Projects Grid -->
+    <div class="row projects g-4" id="projectsGrid">
+        <div class="col-sm-6 col-lg-4 project-item clothing">
+            <div class="work-card card h-100">
+                <img src="{{ url_for('static', filename='assets/img/our-work-01.jpg') }}" class="card-img-top" alt="ملابس تركية">
+                <div class="card-body">
+                    <h5 class="card-title">ملابس تركية فاخرة</h5>
+                    <p class="card-text text-muted">تشكيلة واسعة من الملابس التركية الأصلية بأعلى جودة وأفضل الأسعار.</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
+                        عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
+                    </a>
                 </div>
             </div>
         </div>
         
-        <!-- Pagination -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-center">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1">السابق</a>
-                        </li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">التالي</a>
-                        </li>
-                    </ul>
-                </nav>
+        <div class="col-sm-6 col-lg-4 project-item accessories">
+            <div class="work-card card h-100">
+                <img src="{{ url_for('static', filename='assets/img/our-work-02.jpg') }}" class="card-img-top" alt="إكسسوارات تركية">
+                <div class="card-body">
+                    <h5 class="card-title">إكسسوارات تركية</h5>
+                    <p class="card-text text-muted">مجوهرات وساعات وإكسسوارات تركية فاخرة تناسب جميع الأذواق.</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
+                        عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
+                    </a>
+                </div>
             </div>
         </div>
-    </section>
-
-    <!-- Feature Work Section -->
-    <section class="bg-light py-5">
-        <div class="container">
-            <div class="feature-work">
-                <div class="row align-items-center">
-                    <div class="col-lg-5 mb-4 mb-lg-0">
-                        <h3 class="text-primary">أعمال مميزة</h3>
-                        <h2 class="display-5 fw-bold mt-2">نحن نقدم الأفضل لعملائنا</h2>
-                        <p class="text-muted mt-3">نعمل مع كبرى المصانع والعلامات التجارية في تركيا لتوفير أفضل المنتجات الأصلية بجودة عالية وأسعار تنافسية.</p>
-                        <p class="text-muted">نضمن لكم تجربة تسوق ممتعة وآمنة مع خدمة عملاء متخصصة للرد على جميع استفساراتكم.</p>
-                        <a href="{{ url_for('contact') }}" class="btn btn-primary mt-3">
-                            <i class='bx bx-chat'></i> تواصل معنا
+        
+        <div class="col-sm-6 col-lg-4 project-item home">
+            <div class="work-card card h-100">
+                <img src="{{ url_for('static', filename='assets/img/our-work-03.jpg') }}" class="card-img-top" alt="منتجات منزلية">
+                <div class="card-body">
+                    <h5 class="card-title">منتجات منزلية تركية</h5>
+                    <p class="card-text text-muted">أدوات منزلية عالية الجودة من أفضل المصانع التركية.</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
+                        عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-4 project-item electronics">
+            <div class="work-card card h-100">
+                <img src="{{ url_for('static', filename='assets/img/our-work-04.jpg') }}" class="card-img-top" alt="إلكترونيات تركية">
+                <div class="card-body">
+                    <h5 class="card-title">إلكترونيات تركية</h5>
+                    <p class="card-text text-muted">أحدث الأجهزة الإلكترونية والتكنولوجيا التركية المتطورة.</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
+                        عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-4 project-item clothing">
+            <div class="work-card card h-100">
+                <img src="{{ url_for('static', filename='assets/img/our-work-05.jpg') }}" class="card-img-top" alt="أزياء تركية">
+                <div class="card-body">
+                    <h5 class="card-title">أزياء تركية عصرية</h5>
+                    <p class="card-text text-muted">أحدث صيحات الموضة التركية بأجود الخامات والتصاميم.</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
+                        عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-sm-6 col-lg-4 project-item home accessories">
+            <div class="work-card card h-100">
+                <img src="{{ url_for('static', filename='assets/img/our-work-06.jpg') }}" class="card-img-top" alt="ديكورات تركية">
+                <div class="card-body">
+                    <h5 class="card-title">ديكورات منزلية تركية</h5>
+                    <p class="card-text text-muted">أفخم الديكورات والتحف التركية لتزيين منزلك.</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-outline-primary btn-sm mt-2">
+                        عرض المنتجات <i class='bx bx-left-arrow-alt'></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">
+                            <i class='bx bx-chevron-right'></i> السابق
                         </a>
-                    </div>
-                    <div class="col-lg-6 offset-lg-1">
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <div class="feature-img">
-                                    <img src="{{ url_for('static', filename='assets/img/feature-work-1.jpg') }}" class="img-fluid rounded-4 w-100" alt="منتج تركي">
-                                </div>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">
+                            التالي <i class='bx bx-chevron-left'></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</section>
+
+<!-- Feature Work Section -->
+<section class="py-5" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+    <div class="container">
+        <div class="feature-work">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-4 mb-lg-0">
+                    <h3 class="text-primary mb-3">
+                        <i class='bx bx-star'></i> أعمال مميزة
+                    </h3>
+                    <h2 class="display-5 fw-bold mt-2">نحن نقدم الأفضل لعملائنا</h2>
+                    <p class="text-muted mt-3">نعمل مع كبرى المصانع والعلامات التجارية في تركيا لتوفير أفضل المنتجات الأصلية بجودة عالية وأسعار تنافسية.</p>
+                    <p class="text-muted">نضمن لكم تجربة تسوق ممتعة وآمنة مع خدمة عملاء متخصصة للرد على جميع استفساراتكم.</p>
+                    <a href="{{ url_for('contact') }}" class="btn btn-primary mt-3">
+                        <i class='bx bx-chat'></i> تواصل معنا
+                        <i class='bx bx-left-arrow-alt'></i>
+                    </a>
+                </div>
+                <div class="col-lg-6 offset-lg-1">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="feature-img">
+                                <img src="{{ url_for('static', filename='assets/img/feature-work-1.jpg') }}" class="img-fluid rounded-4 w-100" alt="منتج تركي">
                             </div>
-                            <div class="col-6">
-                                <div class="feature-img">
-                                    <img src="{{ url_for('static', filename='assets/img/feature-work-2.jpg') }}" class="img-fluid rounded-4 w-100" alt="منتج تركي">
-                                </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-img">
+                                <img src="{{ url_for('static', filename='assets/img/feature-work-2.jpg') }}" class="img-fluid rounded-4 w-100" alt="منتج تركي">
                             </div>
-                            <div class="col-6">
-                                <div class="feature-img">
-                                    <img src="{{ url_for('static', filename='assets/img/feature-work-3.jpg') }}" class="img-fluid rounded-4 w-100" alt="منتج تركي">
-                                </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-img">
+                                <img src="{{ url_for('static', filename='assets/img/feature-work-3.jpg') }}" class="img-fluid rounded-4 w-100" alt="منتج تركي">
                             </div>
-                            <div class="col-6">
-                                <div class="feature-img">
-                                    <img src="{{ url_for('static', filename='assets/img/feature-work-4.jpg') }}" class="img-fluid rounded-4 w-100" alt="منتج تركي">
-                                </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="feature-img">
+                                <img src="{{ url_for('static', filename='assets/img/feature-work-4.jpg') }}" class="img-fluid rounded-4 w-100" alt="منتج تركي">
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
+{% endblock %}
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white pt-5 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-4">
-                    <h5><i class='bx bx-store-alt'></i> متجر المنتجات التركية</h5>
-                    <p class="text-muted mt-3">متجر متخصص في استيراد وتوزيع أفضل المنتجات التركية الأصلية بأعلى جودة وأفضل الأسعار.</p>
-                </div>
-                <div class="col-lg-2 mb-4">
-                    <h6>روابط سريعة</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ url_for('index') }}" class="text-muted text-decoration-none">الرئيسية</a></li>
-                        <li><a href="{{ url_for('about') }}" class="text-muted text-decoration-none">من نحن</a></li>
-                        <li><a href="{{ url_for('products') }}" class="text-muted text-decoration-none">المنتجات</a></li>
-                        <li><a href="{{ url_for('contact') }}" class="text-muted text-decoration-none">اتصل بنا</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-3 mb-4">
-                    <h6>معلومات الاتصال</h6>
-                    <ul class="list-unstyled">
-                        <li class="text-muted"><i class='bx bx-phone'></i> +90 123 456 7890</li>
-                        <li class="text-muted"><i class='bx bx-envelope'></i> info@turkishshop.com</li>
-                        <li class="text-muted"><i class='bx bx-map'></i> اسطنبول، تركيا</li>
-                    </ul>
-                </div>
-                <div class="col-lg-3 mb-4">
-                    <h6>النشرة البريدية</h6>
-                    <p class="text-muted">اشترك لتصلك أحدث العروض</p>
-                    <div class="input-group">
-                        <input type="email" class="form-control" placeholder="بريدك الإلكتروني">
-                        <button class="btn btn-primary" type="button">اشتراك</button>
-                    </div>
-                </div>
-            </div>
-            <hr class="mt-4">
-            <div class="text-center pb-4">
-                <small class="text-muted">© 2024 متجر المنتجات التركية. جميع الحقوق محفوظة</small>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Scripts -->
-    <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='assets/js/isotope.pkgd.js') }}"></script>
-    
-    <script>
-        $(document).ready(function() {
-            // Initialize Isotope
-            var $grid = $('.projects').isotope({
-                itemSelector: '.project-item',
-                layoutMode: 'fitRows'
-            });
-            
-            // Filter items on button click
-            $('.filter-btn').click(function() {
-                var filterValue = $(this).attr('data-filter');
-                if (filterValue === 'all') {
-                    $grid.isotope({ filter: '*' });
-                } else {
-                    $grid.isotope({ filter: '.' + filterValue });
-                }
-                
-                // Update active button
-                $('.filter-btn').removeClass('active');
-                $(this).addClass('active');
-            });
+{% block scripts %}
+<script src="{{ url_for('static', filename='assets/js/isotope.pkgd.js') }}"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize Isotope
+        var $grid = $('.projects').isotope({
+            itemSelector: '.project-item',
+            layoutMode: 'fitRows',
+            transitionDuration: '0.6s'
         });
-    </script>
-</body>
-
-</html>
+        
+        // Filter items on button click
+        $('.filter-btn').click(function() {
+            var filterValue = $(this).attr('data-filter');
+            if (filterValue === 'all') {
+                $grid.isotope({ filter: '*' });
+            } else {
+                $grid.isotope({ filter: '.' + filterValue });
+            }
+            
+            // Update active button
+            $('.filter-btn').removeClass('active');
+            $(this).addClass('active');
+        });
+        
+        // Add animation to project items
+        $('.project-item').each(function(index) {
+            $(this).css('animation-delay', (index * 0.05) + 's');
+        });
+    });
+</script>
+{% endblock %}
