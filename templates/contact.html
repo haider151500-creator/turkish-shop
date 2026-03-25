@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <title>متجر المنتجات التركية - اتصل بنا</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="تواصل معنا للاستفسار عن المنتجات التركية أو طلبات الشراء أو أي استفسار آخر">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/img/apple-icon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='assets/img/favicon.ico') }}" type="image/x-icon">
+    <!-- Load Require CSS -->
+    <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Font CSS -->
+    <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Load Tempalte CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/templatemo.css') }}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom.css') }}">
+    
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f8f9fa;
+            padding-top: 70px;
+        }
+        
+        .contact-header {
+            background: linear-gradient(135deg, #6f42c1 0%, #ff6b6b 100%);
+            border-radius: 30px;
+            padding: 40px;
+            color: white;
+        }
+        
+        .contact-info-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        
+        .contact-info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(111,66,193,0.15);
+        }
+        
+        .contact-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+        
+        .contact-icon i {
+            font-size: 30px;
+            color: white;
+        }
+        
+        .contact-form {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 0.2rem rgba(111,66,193,0.25);
+        }
+        
+        .btn-send {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            border: none;
+            border-radius: 30px;
+            padding: 12px 40px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(111,66,193,0.4);
+        }
+        
+        .map-container {
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+            color: #6f42c1;
+        }
+        
+        .social-link:hover {
+            background: #6f42c1;
+            color: white;
+            transform: translateY(-3px);
+        }
+        
+        /* رسالة التأكيد */
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            animation: slideInRight 0.3s ease;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .contact-form {
+                padding: 20px;
+            }
+            .contact-header {
+                padding: 25px;
+            }
+            .toast-notification {
+                left: 10px;
+                right: 10px;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <nav id="main_nav" class="navbar navbar-expand-lg navbar-light bg-white shadow fixed-top">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand h1" href="{{ url_for('index') }}">
+                <i class='bx bx-store-alt bx-sm text-primary'></i>
+                <span class="text-dark h4">متجر</span> <span class="text-primary h4">المنتجات التركية</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-toggler-success">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="align-self-center collapse navbar-collapse flex-fill d-lg-flex justify-content-lg-between" id="navbar-toggler-success">
+                <div class="flex-fill mx-xl-5 mb-2">
+                    <ul class="nav navbar-nav d-flex justify-content-between mx-xl-5 text-center">
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('index') }}">الرئيسية</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('about') }}">من نحن</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('products') }}">المنتجات</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-primary rounded-pill px-3 active" href="{{ url_for('contact') }}">اتصل بنا</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="navbar align-self-center d-flex">
+                    {% if session.get('is_admin') %}
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class='bx bx-dashboard bx-sm text-primary'></i></a>
+                        <a class="nav-link" href="{{ url_for('admin_logout') }}"><i class='bx bx-log-out bx-sm text-danger'></i></a>
+                    {% else %}
+                        <a class="nav-link" href="{{ url_for('admin_login') }}"><i class='bx bx-lock-alt bx-sm text-primary'></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Close Header -->
+
+    <!-- Hero Section -->
+    <section class="container py-5 mt-4">
+        <div class="contact-header text-center">
+            <h1 class="display-4 fw-bold mb-3">تواصل معنا</h1>
+            <p class="lead mb-0">نحن هنا للإجابة على جميع استفساراتكم، تواصلوا معنا وسنكون سعداء بخدمتكم</p>
+        </div>
+    </section>
+
+    <!-- Contact Info & Form -->
+    <section class="container py-4">
+        <div class="row g-4">
+            <!-- معلومات الاتصال -->
+            <div class="col-lg-5">
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class='bx bx-map'></i>
+                    </div>
+                    <h4 class="mb-2">العنوان</h4>
+                    <p class="text-muted">اسطنبول، تركيا<br>منطقة الفاتح، شارع الاستقلال</p>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class='bx bx-phone'></i>
+                    </div>
+                    <h4 class="mb-2">رقم الهاتف</h4>
+                    <p class="text-muted mb-0">+90 123 456 7890</p>
+                    <p class="text-muted">+90 123 456 7891</p>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class='bx bx-envelope'></i>
+                    </div>
+                    <h4 class="mb-2">البريد الإلكتروني</h4>
+                    <p class="text-muted mb-0">info@turkishshop.com</p>
+                    <p class="text-muted">support@turkishshop.com</p>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class='bx bx-time'></i>
+                    </div>
+                    <h4 class="mb-2">ساعات العمل</h4>
+                    <p class="text-muted mb-0">السبت - الخميس: 9:00 - 21:00</p>
+                    <p class="text-muted">الجمعة: مغلق</p>
+                </div>
+                
+                <div class="contact-info-card">
+                    <h5 class="mb-3">تابعونا على وسائل التواصل</h5>
+                    <div>
+                        <a href="#" class="social-link"><i class='bx bxl-facebook fs-5'></i></a>
+                        <a href="#" class="social-link"><i class='bx bxl-instagram fs-5'></i></a>
+                        <a href="#" class="social-link"><i class='bx bxl-twitter fs-5'></i></a>
+                        <a href="#" class="social-link"><i class='bx bxl-whatsapp fs-5'></i></a>
+                        <a href="#" class="social-link"><i class='bx bxl-telegram fs-5'></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- نموذج الاتصال -->
+            <div class="col-lg-7">
+                <div class="contact-form">
+                    <h3 class="mb-4">أرسل لنا رسالة</h3>
+                    <form id="contactForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">الاسم الكامل *</label>
+                                <input type="text" class="form-control" name="name" required placeholder="أدخل اسمك">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">البريد الإلكتروني *</label>
+                                <input type="email" class="form-control" name="email" required placeholder="example@domain.com">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">رقم الهاتف</label>
+                                <input type="tel" class="form-control" name="phone" placeholder="+90 XXX XXX XXXX">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">الموضوع *</label>
+                                <select class="form-control" name="subject" required>
+                                    <option value="">اختر الموضوع</option>
+                                    <option>استفسار عن منتج</option>
+                                    <option>طلب شراء بالجملة</option>
+                                    <option>شكوى أو اقتراح</option>
+                                    <option>شراكة وتعاون</option>
+                                    <option>أخرى</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">الرسالة *</label>
+                                <textarea class="form-control" name="message" rows="5" required placeholder="اكتب رسالتك هنا..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-send text-white w-100" id="submitBtn">
+                                    <i class='bx bx-send'></i> إرسال الرسالة
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- الخريطة -->
+    <section class="container py-4">
+        <div class="map-container">
+            <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d192698.93785774917!2d28.86830595!3d41.00526725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14caa7040068086b%3A0xe1ccfe98bc01b0d!2s%C4%B0stanbul%2C%20Turkey!5e0!3m2!1sen!2s!4v1700000000000!5m2!1sen!2s" 
+                width="100%" 
+                height="400" 
+                style="border:0;" 
+                allowfullscreen="" 
+                loading="lazy">
+            </iframe>
+        </div>
+    </section>
+    
+    <!-- الأسئلة الشائعة -->
+    <section class="container py-5">
+        <h2 class="text-center mb-5">الأسئلة الشائعة</h2>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="border rounded-3 p-4 h-100">
+                    <h5><i class='bx bx-question-mark text-primary'></i> ما هي مدة التوصيل؟</h5>
+                    <p class="text-muted mt-2">مدة التوصيل تتراوح بين 3-7 أيام عمل حسب موقع العميل.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded-3 p-4 h-100">
+                    <h5><i class='bx bx-question-mark text-primary'></i> هل المنتجات أصلية 100%؟</h5>
+                    <p class="text-muted mt-2">نعم، جميع منتجاتنا أصلية ومستوردة مباشرة من المصانع التركية.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded-3 p-4 h-100">
+                    <h5><i class='bx bx-question-mark text-primary'></i> كيف يمكنني تتبع طلبي؟</h5>
+                    <p class="text-muted mt-2">نرسل رقم تتبع الشحنة عبر البريد الإلكتروني بعد الشحن.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded-3 p-4 h-100">
+                    <h5><i class='bx bx-question-mark text-primary'></i> ما هي طرق الدفع المتاحة؟</h5>
+                    <p class="text-muted mt-2">الدفع عبر البطاقات الائتمانية، التحويل البنكي، أو الدفع عند الاستلام.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white pt-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5><i class='bx bx-store-alt'></i> متجر المنتجات التركية</h5>
+                    <p class="text-muted mt-3">متجر متخصص في استيراد وتوزيع أفضل المنتجات التركية الأصلية بأعلى جودة وأفضل الأسعار.</p>
+                    <div class="mt-3">
+                        <a href="#" class="text-white me-2"><i class='bx bxl-facebook-circle fs-4'></i></a>
+                        <a href="#" class="text-white me-2"><i class='bx bxl-instagram fs-4'></i></a>
+                        <a href="#" class="text-white me-2"><i class='bx bxl-twitter fs-4'></i></a>
+                        <a href="#" class="text-white"><i class='bx bxl-whatsapp fs-4'></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 mb-4">
+                    <h6>روابط سريعة</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('index') }}" class="text-muted text-decoration-none">الرئيسية</a></li>
+                        <li><a href="{{ url_for('about') }}" class="text-muted text-decoration-none">من نحن</a></li>
+                        <li><a href="{{ url_for('products') }}" class="text-muted text-decoration-none">المنتجات</a></li>
+                        <li><a href="{{ url_for('contact') }}" class="text-muted text-decoration-none">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 mb-4">
+                    <h6>معلومات الاتصال</h6>
+                    <ul class="list-unstyled">
+                        <li class="text-muted"><i class='bx bx-phone'></i> +90 123 456 7890</li>
+                        <li class="text-muted"><i class='bx bx-envelope'></i> info@turkishshop.com</li>
+                        <li class="text-muted"><i class='bx bx-map'></i> اسطنبول، تركيا</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 mb-4">
+                    <h6>النشرة البريدية</h6>
+                    <p class="text-muted">اشترك لتصلك أحدث العروض</p>
+                    <div class="input-group">
+                        <input type="email" id="newsletterEmail" class="form-control" placeholder="بريدك الإلكتروني">
+                        <button class="btn btn-primary" type="button" onclick="subscribeNewsletter()">اشتراك</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="text-center pb-4">
+                <small class="text-muted">© 2024 متجر المنتجات التركية. جميع الحقوق محفوظة</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+    
+    <script>
+        // دالة عرض إشعار
+        function showNotification(message, type = 'success') {
+            const bgColor = type === 'success' ? '#28a745' : '#dc3545';
+            const icon = type === 'success' ? 'check-circle' : 'error';
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 12px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                z-index: 9999;
+                min-width: 300px;
+                animation: slideInRight 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+            toast.innerHTML = `
+                <i class='bx bx-${icon}' style="font-size: 24px;"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // حفظ الرسالة في localStorage
+        function saveMessageToStorage(messageData) {
+            let messages = JSON.parse(localStorage.getItem('contactMessages') || '[]');
+            messages.unshift(messageData);
+            localStorage.setItem('contactMessages', JSON.stringify(messages));
+        }
+        
+        // معالجة نموذج الاتصال
+        document.getElementById('contactForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> جاري الإرسال...';
+            
+            // جمع البيانات
+            const formData = {
+                id: Date.now(),
+                name: document.querySelector('[name="name"]').value,
+                email: document.querySelector('[name="email"]').value,
+                phone: document.querySelector('[name="phone"]').value || '',
+                subject: document.querySelector('[name="subject"]').value,
+                message: document.querySelector('[name="message"]').value,
+                date: new Date().toISOString(),
+                read: false
+            };
+            
+            // التحقق من صحة البيانات
+            if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+                showNotification('الرجاء تعبئة جميع الحقول المطلوبة', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bx bx-send"></i> إرسال الرسالة';
+                return;
+            }
+            
+            // حفظ الرسالة في localStorage
+            saveMessageToStorage(formData);
+            
+            // عرض رسالة نجاح
+            showNotification('تم إرسال رسالتك بنجاح! سنتواصل معك قريباً', 'success');
+            
+            // إعادة تعيين النموذج
+            this.reset();
+            
+            // إعادة زر الإرسال
+            setTimeout(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bx bx-send"></i> إرسال الرسالة';
+            }, 2000);
+        });
+        
+        // النشرة البريدية
+        function subscribeNewsletter() {
+            const email = document.getElementById('newsletterEmail').value;
+            if (!email) {
+                showNotification('الرجاء إدخال بريدك الإلكتروني', 'error');
+                return;
+            }
+            
+            // حفظ الاشتراك في localStorage
+            let subscribers = JSON.parse(localStorage.getItem('newsletterSubscribers') || '[]');
+            if (!subscribers.includes(email)) {
+                subscribers.push(email);
+                localStorage.setItem('newsletterSubscribers', JSON.stringify(subscribers));
+                showNotification('تم الاشتراك في النشرة البريدية بنجاح!', 'success');
+                document.getElementById('newsletterEmail').value = '';
+            } else {
+                showNotification('هذا البريد مشترك بالفعل', 'error');
+            }
+        }
+        
+        // تأثيرات التحميل
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.contact-info-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+            
+            // إضافة نمط للحركة
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideInRight {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                .contact-info-card {
+                    opacity: 0;
+                    transform: translateY(20px);
+                    transition: all 0.5s ease;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+        
+        // عرض عدد الرسائل في الكونسول (للتطوير)
+        console.log('نظام الرسائل جاهز! سيتم حفظ الرسائل في localStorage');
+    </script>
+</body>
+
+</html>

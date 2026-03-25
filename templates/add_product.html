@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>إضافة منتج جديد - متجر المنتجات التركية</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}">
+    <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+        .add-card {
+            background: white;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .add-header {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            padding: 25px 30px;
+            color: white;
+        }
+        .add-header h2 {
+            margin: 0;
+            font-weight: 700;
+        }
+        .add-header p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+        .add-body {
+            padding: 30px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 0.2rem rgba(111,66,193,0.25);
+        }
+        .required-field::after {
+            content: "*";
+            color: #dc3545;
+            margin-right: 4px;
+        }
+        /* منطقة رفع الصور */
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        .file-upload-area:hover, .file-upload-area.drag-over {
+            border-color: #6f42c1;
+            background: #f5f0ff;
+        }
+        .file-upload-icon {
+            font-size: 48px;
+            color: #6f42c1;
+            margin-bottom: 10px;
+        }
+        /* معاينة الصور */
+        .preview-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .preview-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .remove-img-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .remove-img-btn:hover {
+            transform: scale(1.1);
+        }
+        /* الفئات */
+        .categories-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .category-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 6px 12px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .category-badge:hover {
+            background: #6f42c1;
+            color: white;
+        }
+        .category-badge.selected {
+            background: #6f42c1;
+            color: white;
+        }
+        .category-badge i {
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        .add-category-group {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(111,66,193,0.4);
+        }
+        .btn-secondary-custom {
+            background: #6c757d;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary-custom:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        @media (max-width: 768px) {
+            .add-body { padding: 20px; }
+            .btn-primary-custom, .btn-secondary-custom {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="max-width: 800px;">
+        <div class="add-card">
+            <div class="add-header">
+                <h2><i class='bx bx-plus-circle'></i> إضافة منتج جديد</h2>
+                <p>أدخل بيانات المنتج وأضف صوره</p>
+            </div>
+            <div class="add-body">
+                <form method="POST" enctype="multipart/form-data" id="addProductForm">
+                    <!-- اسم المنتج -->
+                    <div class="mb-4">
+                        <label class="form-label required-field">اسم المنتج</label>
+                        <input type="text" name="name" class="form-control" required placeholder="أدخل اسم المنتج">
+                    </div>
+
+                    <!-- الوصف -->
+                    <div class="mb-4">
+                        <label class="form-label">الوصف</label>
+                        <textarea name="description" class="form-control" rows="5" placeholder="أدخل وصفاً مفصلاً للمنتج..."></textarea>
+                    </div>
+
+                    <!-- الفئة -->
+                    <div class="mb-4">
+                        <label class="form-label required-field">الفئة</label>
+                        <div id="categoriesList" class="categories-container">
+                            {% for cat in categories %}
+                            <span class="category-badge" data-cat="{{ cat }}">{{ cat }}</span>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="category" id="selectedCategory" required>
+                        <div class="add-category-group">
+                            <input type="text" id="newCategoryInput" class="form-control" placeholder="أضف فئة جديدة">
+                            <button type="button" id="addCategoryBtn" class="btn btn-outline-primary">إضافة</button>
+                        </div>
+                        <small class="text-muted">اختر فئة موجودة أو أضف فئة جديدة (سيتم حفظها)</small>
+                    </div>
+
+                    <!-- السعر -->
+                    <div class="mb-4">
+                        <label class="form-label required-field">السعر (دولار)</label>
+                        <input type="number" step="0.01" name="price" class="form-control" required placeholder="0.00">
+                    </div>
+
+                    <!-- رفع الصور -->
+                    <div class="mb-4">
+                        <label class="form-label">الصور (حتى 5 صور)</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <i class='bx bx-cloud-upload file-upload-icon'></i>
+                            <p class="mb-1">اسحب الصور هنا أو انقر للاختيار</p>
+                            <small class="text-muted">يمكنك اختيار ما يصل إلى 5 صور (jpg, png, gif)</small>
+                            <input type="file" name="images" id="fileInput" class="d-none" multiple accept="image/*">
+                        </div>
+                        <div id="previewContainer" class="preview-images"></div>
+                        <small class="text-muted mt-2 d-block">* يمكنك إزالة الصور قبل الرفع بالضغط على علامة ×</small>
+                    </div>
+
+                    <!-- أزرار التحكم -->
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-primary-custom text-white flex-grow-1">
+                            <i class='bx bx-save'></i> حفظ المنتج
+                        </button>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary-custom text-white">
+                            <i class='bx bx-x'></i> إلغاء
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // ---------- إدارة الفئات ----------
+        let categories = [
+            {% for cat in categories %}"{{ cat }}"{% if not loop.last %}, {% endif %}{% endfor %}
+        ];
+        let selectedCategory = null;
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesList');
+            container.innerHTML = '';
+            categories.forEach(cat => {
+                const badge = document.createElement('span');
+                badge.className = 'category-badge';
+                if (selectedCategory === cat) badge.classList.add('selected');
+                badge.setAttribute('data-cat', cat);
+                badge.innerHTML = `${cat} <i class='bx bx-x' onclick="event.stopPropagation(); deleteCategory('${cat}')" style="margin-right:5px; cursor:pointer;"></i>`;
+                badge.onclick = () => selectCategory(cat);
+                container.appendChild(badge);
+            });
+        }
+
+        function selectCategory(cat) {
+            selectedCategory = cat;
+            document.getElementById('selectedCategory').value = cat;
+            renderCategories();
+        }
+
+        function deleteCategory(cat) {
+            if (confirm(`هل تريد حذف الفئة "${cat}"؟`)) {
+                categories = categories.filter(c => c !== cat);
+                if (selectedCategory === cat) {
+                    selectedCategory = null;
+                    document.getElementById('selectedCategory').value = '';
+                }
+                renderCategories();
+            }
+        }
+
+        function addNewCategory() {
+            const input = document.getElementById('newCategoryInput');
+            const newCat = input.value.trim();
+            if (newCat === '') return;
+            if (categories.includes(newCat)) {
+                alert('هذه الفئة موجودة بالفعل');
+                return;
+            }
+            categories.push(newCat);
+            selectCategory(newCat);
+            input.value = '';
+            renderCategories();
+        }
+
+        document.getElementById('addCategoryBtn').addEventListener('click', addNewCategory);
+        document.getElementById('newCategoryInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addNewCategory();
+        });
+
+        // ---------- إدارة الصور (رفع متعدد، معاينة، حذف) ----------
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        let selectedFiles = [];
+
+        // فتح نافذة الملفات
+        fileUploadArea.addEventListener('click', () => fileInput.click());
+
+        // سحب وإفلات
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('drag-over');
+        });
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('drag-over');
+        });
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files);
+            addFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            addFiles(Array.from(e.target.files));
+        });
+
+        function addFiles(files) {
+            const totalNew = selectedFiles.length + files.length;
+            if (totalNew > 5) {
+                alert('لا يمكن إضافة أكثر من 5 صور');
+                return;
+            }
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) {
+                    alert(`الملف ${file.name} ليس صورة`);
+                    return;
+                }
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`حجم الصورة ${file.name} يتجاوز 5 ميجابايت`);
+                    return;
+                }
+                selectedFiles.push(file);
+            });
+            updatePreview();
+            updateFileInput();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updatePreview();
+            updateFileInput();
+        }
+
+        function updatePreview() {
+            previewContainer.innerHTML = '';
+            selectedFiles.forEach((file, idx) => {
+                const reader = new FileReader();
+                const previewDiv = document.createElement('div');
+                previewDiv.className = 'preview-item';
+                reader.onload = (e) => {
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="معاينة">
+                        <button type="button" class="remove-img-btn" onclick="removeFile(${idx})">
+                            <i class='bx bx-x'></i>
+                        </button>
+                    `;
+                };
+                reader.readAsDataURL(file);
+                previewContainer.appendChild(previewDiv);
+            });
+        }
+
+        function updateFileInput() {
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+        }
+
+        // التحقق من صحة النموذج قبل الإرسال
+        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+            const name = document.querySelector('[name="name"]').value.trim();
+            const price = document.querySelector('[name="price"]').value;
+            const category = document.getElementById('selectedCategory').value;
+
+            if (!name) {
+                e.preventDefault();
+                alert('الرجاء إدخال اسم المنتج');
+                return false;
+            }
+            if (!price || price <= 0) {
+                e.preventDefault();
+                alert('الرجاء إدخال سعر صحيح');
+                return false;
+            }
+            if (!category) {
+                e.preventDefault();
+                alert('الرجاء اختيار أو إضافة فئة للمنتج');
+                return false;
+            }
+            return true;
+        });
+
+        // تهيئة الفئات (اختيار أول فئة افتراضياً إذا كانت موجودة)
+        if (categories.length > 0) {
+            selectCategory(categories[0]);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>لوحة تحكم الأدمن - متجر المنتجات التركية</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}">
+    <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background: #f0f2f5;
+            padding: 0;
+            margin: 0;
+        }
+        
+        /* الشريط الجانبي */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+            color: white;
+            padding: 20px 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar .logo {
+            padding: 20px 25px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .sidebar .logo h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .sidebar .logo h3 span {
+            color: #ff6b6b;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 25px;
+            margin: 5px 0;
+            transition: all 0.3s ease;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .sidebar .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding-right: 30px;
+        }
+        
+        .sidebar .nav-link.active {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            color: white;
+            border-right: 4px solid #ff6b6b;
+        }
+        
+        .sidebar .nav-link i {
+            font-size: 1.3rem;
+            width: 30px;
+        }
+        
+        /* المحتوى الرئيسي */
+        .main-content {
+            margin-right: 280px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        /* بطاقات الإحصائيات */
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            border-bottom: 3px solid #6f42c1;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #6f42c1;
+            margin-bottom: 5px;
+        }
+        
+        /* بطاقات المنتجات */
+        .product-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .product-card .card-img-top {
+            height: 180px;
+            object-fit: cover;
+        }
+        
+        .product-card .card-body {
+            padding: 15px;
+        }
+        
+        .product-card .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        /* صندوق الرسائل */
+        .messages-panel {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .messages-header {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .message-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .message-item:hover {
+            background: #f8f9fa;
+            transform: translateX(-5px);
+        }
+        
+        .message-item.unread {
+            background: #fff3e0;
+            border-right: 4px solid #ff6b6b;
+        }
+        
+        .message-subject {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .message-info {
+            font-size: 0.85rem;
+            color: #666;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .message-preview {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .message-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        
+        /* نافذة عرض الرسالة */
+        .modal-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .modal-message.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: auto;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .reply-form {
+            margin-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+                right: -280px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+                right: 0;
+            }
+            .main-content {
+                margin-right: 0;
+            }
+            .menu-toggle {
+                display: block;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1001;
+                background: #6f42c1;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 10px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none;
+            }
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(111,66,193,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<!-- زر القائمة للجوال -->
+<button class="menu-toggle btn btn-primary-custom" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<!-- الشريط الجانبي -->
+<div class="sidebar" id="sidebar">
+    <div class="logo">
+        <h3>متجر <span>تركي</span></h3>
+        <small class="text-muted">لوحة التحكم</small>
+    </div>
+    <div class="nav flex-column">
+        <a class="nav-link active" href="{{ url_for('admin_dashboard') }}">
+            <i class='bx bx-dashboard'></i> الرئيسية
+        </a>
+        <a class="nav-link" href="#" onclick="showSection('products')">
+            <i class='bx bx-package'></i> المنتجات
+        </a>
+        <a class="nav-link" href="#" onclick="showSection('messages')">
+            <i class='bx bx-envelope'></i> الرسائل
+            <span class="badge bg-danger ms-auto" id="unreadCount">0</span>
+        </a>
+        <a class="nav-link" href="{{ url_for('products') }}">
+            <i class='bx bx-store'></i> المتجر
+        </a>
+        <a class="nav-link" href="{{ url_for('admin_logout') }}">
+            <i class='bx bx-log-out'></i> خروج
+        </a>
+    </div>
+</div>
+
+<!-- المحتوى الرئيسي -->
+<div class="main-content">
+    <!-- قسم الإحصائيات -->
+    <div class="row g-3 mb-4" id="statsSection">
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <i class='bx bx-package bx-lg text-primary'></i>
+                <h3>{{ products|length }}</h3>
+                <p class="text-muted mb-0">إجمالي المنتجات</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <i class='bx bx-envelope bx-lg text-primary'></i>
+                <h3 id="totalMessages">0</h3>
+                <p class="text-muted mb-0">الرسائل الواردة</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <i class='bx bx-star bx-lg text-primary'></i>
+                <h3 id="unreadMessages">0</h3>
+                <p class="text-muted mb-0">رسائل غير مقروءة</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <i class='bx bx-trending-up bx-lg text-primary'></i>
+                <h3>+25%</h3>
+                <p class="text-muted mb-0">نمو المبيعات</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم المنتجات -->
+    <div id="productsSection">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class='bx bx-package'></i> إدارة المنتجات</h3>
+            <a class="btn btn-primary-custom" href="{{ url_for('admin_add') }}">
+                <i class='bx bx-plus'></i> إضافة منتج
+            </a>
+        </div>
+        
+        {% if products|length == 0 %}
+            <div class="alert alert-info">لا توجد منتجات بعد. قم بإضافة منتج جديد!</div>
+        {% else %}
+            <div class="row g-3">
+                {% for p in products %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="product-card card">
+                        {% if p.image %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" class="card-img-top" alt="{{ p.name }}">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                            <i class='bx bx-image' style="font-size: 48px; color: #ccc;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ p.name }}</h5>
+                            <p class="card-text text-muted small">{{ p.description[:80] }}{% if p.description|length > 80 %}...{% endif %}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-primary">{{ '%.0f'|format(p.price) }} $</span>
+                                <span class="badge bg-secondary">{{ p.category or 'عام' }}</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-primary w-50" href="{{ url_for('admin_edit', pid=p.id) }}">
+                                <i class='bx bx-edit-alt'></i> تعديل
+                            </a>
+                            <form method="POST" action="{{ url_for('admin_delete', pid=p.id) }}" class="w-50" onsubmit="return confirm('تأكيد حذف المنتج؟');">
+                                <button class="btn btn-sm btn-outline-danger w-100">
+                                    <i class='bx bx-trash'></i> حذف
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- قسم الرسائل -->
+    <div id="messagesSection" style="display: none;">
+        <div class="messages-panel">
+            <div class="messages-header">
+                <h5 class="mb-0"><i class='bx bx-envelope'></i> صندوق الوارد</h5>
+                <button class="btn btn-sm btn-light" onclick="refreshMessages()">
+                    <i class='bx bx-refresh'></i> تحديث
+                </button>
+            </div>
+            <div id="messagesList">
+                <!-- سيتم عرض الرسائل هنا عبر JavaScript -->
+                <div class="text-center p-5 text-muted">
+                    <i class='bx bx-loader-alt bx-spin bx-lg'></i>
+                    <p>جاري تحميل الرسائل...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة عرض الرسالة -->
+<div id="messageModal" class="modal-message">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="mb-0" id="modalSubject"></h5>
+            <button class="btn-close btn-close-white" onclick="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <strong>من:</strong> <span id="modalName"></span><br>
+                <strong>البريد:</strong> <span id="modalEmail"></span><br>
+                <strong>الهاتف:</strong> <span id="modalPhone"></span><br>
+                <strong>التاريخ:</strong> <span id="modalDate"></span>
+            </div>
+            <hr>
+            <div class="mb-3">
+                <strong>الرسالة:</strong>
+                <p class="mt-2" id="modalMessage" style="white-space: pre-wrap;"></p>
+            </div>
+            <div class="reply-form">
+                <h6>الرد على الرسالة:</h6>
+                <textarea id="replyText" class="form-control mb-2" rows="3" placeholder="اكتب ردك هنا..."></textarea>
+                <button class="btn btn-primary-custom" onclick="sendReply()">
+                    <i class='bx bx-send'></i> إرسال الرد
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+
+<script>
+// بيانات الرسائل (ستُخزن في localStorage مؤقتاً)
+let messages = [];
+
+// تحميل الرسائل المحفوظة
+function loadMessages() {
+    const saved = localStorage.getItem('contactMessages');
+    if (saved) {
+        messages = JSON.parse(saved);
+    } else {
+        // رسائل تجريبية
+        messages = [
+            {
+                id: 1,
+                name: 'أحمد محمد',
+                email: 'ahmed@example.com',
+                phone: '0551234567',
+                subject: 'استفسار عن منتج',
+                message: 'السلام عليكم، أود الاستفسار عن إمكانية شراء منتجات بالجملة وبأي أسعار؟',
+                date: new Date().toISOString(),
+                read: false
+            },
+            {
+                id: 2,
+                name: 'سارة علي',
+                email: 'sara@example.com',
+                phone: '0557654321',
+                subject: 'طلب شراء',
+                message: 'مرحباً، أريد شراء المنتج رقم 3، هل هو متوفر؟',
+                date: new Date(Date.now() - 86400000).toISOString(),
+                read: true
+            },
+            {
+                id: 3,
+                name: 'محمد خالد',
+                email: 'mohamed@example.com',
+                phone: '0501234567',
+                subject: 'شكوى',
+                message: 'لم تصلني الطلبية بعد، الرجاء التواصل معي',
+                date: new Date(Date.now() - 172800000).toISOString(),
+                read: false
+            }
+        ];
+        saveMessages();
+    }
+    updateMessagesDisplay();
+}
+
+// حفظ الرسائل
+function saveMessages() {
+    localStorage.setItem('contactMessages', JSON.stringify(messages));
+    updateStats();
+}
+
+// تحديث الإحصائيات
+function updateStats() {
+    const total = messages.length;
+    const unread = messages.filter(m => !m.read).length;
+    document.getElementById('totalMessages').innerText = total;
+    document.getElementById('unreadMessages').innerText = unread;
+    document.getElementById('unreadCount').innerText = unread;
+}
+
+// عرض الرسائل في الصفحة
+function updateMessagesDisplay() {
+    const container = document.getElementById('messagesList');
+    if (!container) return;
+    
+    if (messages.length === 0) {
+        container.innerHTML = `
+            <div class="text-center p-5 text-muted">
+                <i class='bx bx-inbox bx-lg'></i>
+                <p class="mt-2">لا توجد رسائل بعد</p>
+            </div>
+        `;
+        updateStats();
+        return;
+    }
+    
+    let html = '';
+    messages.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    messages.forEach(msg => {
+        const date = new Date(msg.date).toLocaleDateString('ar-SA');
+        const isUnread = !msg.read;
+        html += `
+            <div class="message-item ${isUnread ? 'unread' : ''}" onclick="openMessage(${msg.id})">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="message-subject">
+                            ${msg.subject}
+                            ${isUnread ? '<span class="message-badge ms-2">جديد</span>' : ''}
+                        </div>
+                        <div class="message-info">
+                            <span><i class='bx bx-user'></i> ${msg.name}</span>
+                            <span><i class='bx bx-envelope'></i> ${msg.email}</span>
+                            <span><i class='bx bx-calendar'></i> ${date}</span>
+                        </div>
+                        <div class="message-preview">
+                            ${msg.message.substring(0, 80)}${msg.message.length > 80 ? '...' : ''}
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        ${!msg.read ? '<i class="bx bx-envelope text-primary"></i>' : '<i class="bx bx-check-circle text-success"></i>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    updateStats();
+}
+
+// فتح عرض الرسالة
+let currentMessageId = null;
+
+function openMessage(id) {
+    const msg = messages.find(m => m.id === id);
+    if (!msg) return;
+    
+    currentMessageId = id;
+    
+    // تحديث حالة القراءة
+    if (!msg.read) {
+        msg.read = true;
+        saveMessages();
+        updateMessagesDisplay();
+    }
+    
+    document.getElementById('modalSubject').innerText = msg.subject;
+    document.getElementById('modalName').innerText = msg.name;
+    document.getElementById('modalEmail').innerText = msg.email;
+    document.getElementById('modalPhone').innerText = msg.phone || 'غير متوفر';
+    document.getElementById('modalDate').innerText = new Date(msg.date).toLocaleString('ar-SA');
+    document.getElementById('modalMessage').innerText = msg.message;
+    
+    document.getElementById('messageModal').classList.add('active');
+}
+
+// إغلاق النافذة
+function closeModal() {
+    document.getElementById('messageModal').classList.remove('active');
+}
+
+// إرسال الرد
+function sendReply() {
+    const reply = document.getElementById('replyText').value;
+    if (!reply.trim()) {
+        alert('الرجاء كتابة الرد أولاً');
+        return;
+    }
+    
+    const msg = messages.find(m => m.id === currentMessageId);
+    if (msg) {
+        // هنا يمكن إضافة كود إرسال الرد عبر البريد الإلكتروني
+        alert(`تم إرسال الرد إلى ${msg.email}\n\nالرد: ${reply}`);
+        document.getElementById('replyText').value = '';
+        closeModal();
+    }
+}
+
+// إضافة رسالة جديدة (يمكن استدعاؤها من نموذج الاتصال)
+function addMessage(name, email, phone, subject, message) {
+    const newMessage = {
+        id: Date.now(),
+        name: name,
+        email: email,
+        phone: phone || '',
+        subject: subject,
+        message: message,
+        date: new Date().toISOString(),
+        read: false
+    };
+    messages.unshift(newMessage);
+    saveMessages();
+    updateMessagesDisplay();
+    alert('تم استلام رسالتك بنجاح! سنتواصل معك قريباً.');
+}
+
+// تحديث الرسائل
+function refreshMessages() {
+    updateMessagesDisplay();
+}
+
+// تبديل الأقسام
+function showSection(section) {
+    const productsDiv = document.getElementById('productsSection');
+    const messagesDiv = document.getElementById('messagesSection');
+    const statsDiv = document.getElementById('statsSection');
+    
+    if (section === 'products') {
+        productsDiv.style.display = 'block';
+        messagesDiv.style.display = 'none';
+        statsDiv.style.display = 'flex';
+        // تحديث الروابط النشطة
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.sidebar .nav-link')[0].classList.add('active');
+    } else if (section === 'messages') {
+        productsDiv.style.display = 'none';
+        messagesDiv.style.display = 'block';
+        statsDiv.style.display = 'none';
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
+        document.querySelectorAll('.sidebar .nav-link')[2].classList.add('active');
+        refreshMessages();
+    }
+}
+
+// تبديل القائمة للجوال
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+// تحميل البيانات عند فتح الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    loadMessages();
+});
+
+// عند النقر خارج النافذة لإغلاقها
+document.getElementById('messageModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+
+</body>
+</html>

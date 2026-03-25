@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+/* Lightbox */
+.lb{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:1050}
+.lb.show{display:flex}
+.lb-img{max-width:90vw;max-height:90vh;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#fff}
+.lb-close{position:absolute;top:16px;right:20px;border:0;background:#fff;border-radius:999px;width:40px;height:40px;font-size:28px;line-height:40px;cursor:pointer}
+.lb-prev,.lb-next{position:absolute;top:50%;transform:translateY(-50%);border:0;background:rgba(255,255,255,.9);width:44px;height:44px;border-radius:999px;font-size:22px;cursor:pointer}
+.lb-prev{left:20px}
+.lb-next{right:20px}
+
+/* Thumbs */
+.gallery-thumbs{gap:.5rem;flex-wrap:wrap}
+.gallery-thumbs button{background:none;border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:2px;cursor:pointer}
+.gallery-thumbs img{width:70px;height:70px;object-fit:cover;border-radius:6px;display:block}
+</style>
+
+<div class="container my-4">
+  {% if p %}
+  <div class="row g-4">
+    <div class="col-md-6">
+      {% if main_image %}
+      <div class="card border-0 shadow-sm rounded-4 mb-3">
+        <div class="ratio ratio-1x1">
+          <img src="{{ url_for('uploaded_file', filename=main_image) }}" alt="{{ p.name }}" class="main-img object-fit-contain p-3 rounded-4" style="width:100%;height:100%;cursor:zoom-in;">
+        </div>
+      </div>
+      {% else %}
+      <div class="text-muted text-center py-5">لا توجد صورة</div>
+      {% endif %}
+
+      {% if images and images|length > 0 %}
+      <div class="d-flex gallery-thumbs">
+        {% for im in images %}
+        <button type="button" class="thumb" data-src="{{ url_for('uploaded_file', filename=im.filename) }}">
+          <img src="{{ url_for('uploaded_file', filename=im.filename) }}" alt="">
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-md-6">
+      <h2 class="mb-2">{{ p.name }}</h2>
+      <div class="mb-2 text-muted">{{ p.category or '—' }}</div>
+      <div class="h4">{{ '%.0f'|format(p.price) }}$</div>
+      {% if p.description %}<p class="mt-3">{{ p.description }}</p>{% endif %}
+
+      {% if session.get('is_admin') %}
+      <div class="mt-3 d-flex gap-2">
+        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_edit', pid=p.id) }}">تعديل</a>
+        <form method="POST" action="{{ url_for('admin_delete', pid=p.id) }}" onsubmit="return confirm('تأكيد حذف المنتج؟');">
+          <button class="btn btn-sm btn-outline-danger">حذف</button>
+        </form>
+      </div>
+      {% endif %}
+
+      <a class="btn btn-outline-secondary mt-3" href="{{ url_for('products') }}">رجوع للمنتجات</a>
+    </div>
+  </div>
+  {% else %}
+    <div class="alert alert-danger">المنتج غير موجود.</div>
+  {% endif %}
+</div>
+
+<!-- Lightbox Overlay -->
+<div id="lightbox" class="lb" aria-hidden="true">
+  <div class="lb-backdrop" data-action="close" style="position:absolute;inset:0;"></div>
+  <img class="lb-img" alt="">
+  <button class="lb-close" title="إغلاق" data-action="close">&times;</button>
+  <button class="lb-prev" title="السابق" data-action="prev">&#10094;</button>
+  <button class="lb-next" title="التالي" data-action="next">&#10095;</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const lb = document.getElementById('lightbox');
+  const imgEl = lb.querySelector('.lb-img');
+  const btnPrev = lb.querySelector('.lb-prev');
+  const btnNext = lb.querySelector('.lb-next');
+  const btnClose = lb.querySelector('.lb-close');
+  const main = document.querySelector('img.main-img');
+  const thumbs = Array.from(document.querySelectorAll('button.thumb'));
+  let gallery = [];
+  let current = -1;
+
+  function buildGallery(){
+    gallery = [];
+    if(main && main.src) gallery.push(main.src);
+    thumbs.forEach(b => {
+      const s = b.dataset.src;
+      if(s && !gallery.includes(s)) gallery.push(s);
+    });
+  }
+  buildGallery();
+
+  function openAt(idx){
+    if(idx < 0 || idx >= gallery.length) return;
+    current = idx;
+    imgEl.src = gallery[current];
+    lb.classList.add('show');
+    lb.setAttribute('aria-hidden','false');
+  }
+  function closeLb(){
+    lb.classList.remove('show');
+    lb.setAttribute('aria-hidden','true');
+    imgEl.removeAttribute('src');
+  }
+  function prev(){
+    if(gallery.length < 2) return;
+    current = (current - 1 + gallery.length) % gallery.length;
+    imgEl.src = gallery[current];
+  }
+  function next(){
+    if(gallery.length < 2) return;
+    current = (current + 1) % gallery.length;
+    imgEl.src = gallery[current];
+  }
+
+  btnClose.addEventListener('click', closeLb);
+  lb.addEventListener('click', (e)=>{ if(e.target.dataset.action==='close') closeLb(); });
+  btnPrev.addEventListener('click', prev);
+  btnNext.addEventListener('click', next);
+
+  if(main){ main.addEventListener('click', (e)=>{ e.preventDefault(); openAt(0); }); }
+  thumbs.forEach((b, i)=>{
+    b.addEventListener('click', (e)=>{ e.preventDefault(); openAt(i+1); }); // +1 لأن الصورة الرئيسية في 0
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if(!lb.classList.contains('show')) return;
+    if(e.key==='Escape') closeLb();
+    if(e.key==='ArrowLeft') prev();
+    if(e.key==='ArrowRight') next();
+  });
+
+  // منع فتح تبويب جديد لو بقي أي رابط للصورة
+  document.addEventListener('click', function(e){
+    const a = e.target.closest('a'); if(!a) return;
+    const href = a.getAttribute('href') || '';
+    if(href.includes('/uploads/')){
+      e.preventDefault();
+      const idx = gallery.findIndex(src => src.includes(href));
+      openAt(idx > -1 ? idx : 0);
+    }
+  }, true);
+})();
+</script>
+{% endblock %}

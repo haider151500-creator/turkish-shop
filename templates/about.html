@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <title>متجر المنتجات التركية - من نحن</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="متجر متخصص في استيراد وتوزيع أفضل المنتجات التركية الأصلية بأعلى جودة وأفضل الأسعار">
+    <meta name="keywords" content="منتجات تركية, استيراد من تركيا, ملابس تركية, اكسسوارات تركية, مستلزمات منزلية تركية">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/img/apple-icon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='assets/img/favicon.ico') }}" type="image/x-icon">
+    <!-- Load Require CSS -->
+    <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Font CSS -->
+    <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Load Tempalte CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/templatemo.css') }}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom.css') }}">
+    
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #f8f9fa;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #6f42c1 0%, #ff6b6b 100%);
+            border-radius: 0 0 30px 30px;
+            padding: 60px 0;
+            margin-bottom: 40px;
+        }
+        
+        .hero-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(111,66,193,0.15);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        
+        .feature-icon i {
+            font-size: 40px;
+            color: white;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+        }
+        
+        .partner-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .partner-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .partner-logo {
+            font-size: 4rem;
+            color: #6f42c1;
+        }
+        
+        .value-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid #6f42c1;
+        }
+        
+        .value-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .testimonial-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .testimonial-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 1.8rem;
+            }
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <nav id="main_nav" class="navbar navbar-expand-lg navbar-light bg-white shadow fixed-top">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand h1" href="{{ url_for('index') }}">
+                <i class='bx bx-store-alt bx-sm text-primary'></i>
+                <span class="text-dark h4">متجر</span> <span class="text-primary h4">المنتجات التركية</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-toggler-success">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="align-self-center collapse navbar-collapse flex-fill d-lg-flex justify-content-lg-between" id="navbar-toggler-success">
+                <div class="flex-fill mx-xl-5 mb-2">
+                    <ul class="nav navbar-nav d-flex justify-content-between mx-xl-5 text-center">
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('index') }}">الرئيسية</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-primary rounded-pill px-3 active" href="{{ url_for('about') }}">من نحن</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('products') }}">المنتجات</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-outline-primary rounded-pill px-3" href="{{ url_for('contact') }}">اتصل بنا</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="navbar align-self-center d-flex">
+                    {% if session.get('is_admin') %}
+                        <a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class='bx bx-dashboard bx-sm text-primary'></i></a>
+                        <a class="nav-link" href="{{ url_for('admin_logout') }}"><i class='bx bx-log-out bx-sm text-danger'></i></a>
+                    {% else %}
+                        <a class="nav-link" href="{{ url_for('admin_login') }}"><i class='bx bx-lock-alt bx-sm text-primary'></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Close Header -->
+
+    <!-- Hero Section -->
+    <section class="hero-section text-white" style="margin-top: 70px;">
+        <div class="container">
+            <div class="row d-flex align-items-center">
+                <div class="col-lg-6 text-end" data-aos="fade-right">
+                    <h1 class="display-4 fw-bold mb-4">من نحن؟</h1>
+                    <p class="lead mb-4">نحن متجر متخصص في استيراد وتوزيع أفضل المنتجات التركية الأصلية بأعلى جودة وأفضل الأسعار في السوق.</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-light btn-lg px-4">
+                        <i class='bx bx-shopping-bag'></i> تسوق الآن
+                    </a>
+                </div>
+                <div class="col-lg-6 text-center" data-aos="fade-left">
+                    <img src="{{ url_for('static', filename='assets/img/banner-img-02.svg') }}" class="img-fluid" alt="متجر المنتجات التركية">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- قصتنا -->
+    <section class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4" data-aos="fade-right">
+                <h2 class="display-5 fw-bold mb-4">قصتنا</h2>
+                <p class="lead text-muted">بدأت رحلتنا منذ عام 2020 بهدف بسيط: جلب أفضل المنتجات التركية إلى العملاء في العالم العربي.</p>
+                <p class="text-muted">نحن نؤمن بأن الجودة التركية تستحق أن تكون متاحة للجميع. لذلك قمنا ببناء شبكة قوية من الموردين الموثوقين في تركيا لنقدم لكم تشكيلة مميزة من المنتجات الأصلية بأسعار تنافسية.</p>
+                <p class="text-muted">من الملابس والأزياء إلى المستلزمات المنزلية والإلكترونيات، نضمن لكم الحصول على منتجات عالية الجودة مع خدمة عملاء ممتازة.</p>
+            </div>
+            <div class="col-lg-6" data-aos="fade-left">
+                <img src="{{ url_for('static', filename='assets/img/feature-work-1-large.jpg') }}" class="img-fluid rounded-4 shadow-lg" alt="قصتنا">
+            </div>
+        </div>
+    </section>
+
+    <!-- إحصائيات -->
+    <section class="container py-5">
+        <div class="row g-4">
+            <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-card">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">منتج مميز</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-card">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">علامة تجارية تركية</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-card">
+                    <div class="stat-number">1000+</div>
+                    <div class="stat-label">عميل سعيد</div>
+                </div>
+            </div>
+            <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+                <div class="stat-card">
+                    <div class="stat-number">98%</div>
+                    <div class="stat-label">رضا العملاء</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- مميزاتنا -->
+    <section class="bg-light py-5">
+        <div class="container py-4">
+            <h2 class="text-center display-5 fw-bold mb-5" data-aos="fade-up">لماذا تختار متجر المنتجات التركية؟</h2>
+            <div class="row g-4">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class='bx bx-check-shield'></i>
+                        </div>
+                        <h4>جودة مضمونة</h4>
+                        <p class="text-muted">جميع منتجاتنا أصلية 100% مع ضمان الجودة العالية المميزة للمنتجات التركية</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class='bx bx-package'></i>
+                        </div>
+                        <h4>شحن سريع</h4>
+                        <p class="text-muted">توصيل سريع وآمن لجميع أنحاء العالم مع متابعة مستمرة للشحنة</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class='bx bx-dollar'></i>
+                        </div>
+                        <h4>أسعار تنافسية</h4>
+                        <p class="text-muted">أفضل الأسعار في السوق مع عروض وخصومات مستمرة</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class='bx bx-headphone'></i>
+                        </div>
+                        <h4>دعم فني متواصل</h4>
+                        <p class="text-muted">فريق خدمة عملاء متخصص للرد على استفساراتكم 24/7</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="500">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class='bx bx-refresh'></i>
+                        </div>
+                        <h4>استبدال واسترجاع</h4>
+                        <p class="text-muted">سياسة مرنة لاستبدال واسترجاع المنتجات خلال 14 يوماً</p>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class='bx bx-lock'></i>
+                        </div>
+                        <h4>دفع آمن</h4>
+                        <p class="text-muted">بوابات دفع إلكترونية آمنة لحماية معلوماتك</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- قيمنا -->
+    <section class="container py-5">
+        <h2 class="text-center display-5 fw-bold mb-5" data-aos="fade-up">قيمنا التي نؤمن بها</h2>
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="value-card">
+                    <i class='bx bx-heart display-4 text-primary'></i>
+                    <h4 class="mt-3">الثقة والشفافية</h4>
+                    <p class="text-muted">نعمل بشفافية كاملة مع عملائنا ونبني علاقات مبنية على الثقة</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="value-card">
+                    <i class='bx bx-star display-4 text-primary'></i>
+                    <h4 class="mt-3">الجودة أولاً</h4>
+                    <p class="text-muted">نختار بعناية أفضل المنتجات التركية لضمان أعلى معايير الجودة</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="value-card">
+                    <i class='bx bx-group display-4 text-primary'></i>
+                    <h4 class="mt-3">رضا العميل</h4>
+                    <p class="text-muted">نسعى دائماً لتحقيق أعلى مستويات رضا العملاء</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- شركاؤنا -->
+    <section class="bg-light py-5">
+        <div class="container py-4">
+            <h2 class="text-center display-5 fw-bold mb-5" data-aos="fade-up">شركاؤنا في تركيا</h2>
+            <div class="row g-4">
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="partner-card">
+                        <i class='bx bxs-buildings partner-logo'></i>
+                        <h5 class="mt-3">مجموعة إسطنبول</h5>
+                        <p class="text-muted small">منذ 1998</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="partner-card">
+                        <i class='bx bxs-check-shield partner-logo'></i>
+                        <h5 class="mt-3">ماركات تركية</h5>
+                        <p class="text-muted small">أفضل العلامات</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+                    <div class="partner-card">
+                        <i class='bx bxs-bolt-circle partner-logo'></i>
+                        <h5 class="mt-3">شحن سريع</h5>
+                        <p class="text-muted small">خدمات لوجستية</p>
+                    </div>
+                </div>
+                <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
+                    <div class="partner-card">
+                        <i class='bx bxs-spa partner-logo'></i>
+                        <h5 class="mt-3">منتجات طبيعية</h5>
+                        <p class="text-muted small">عضوية وطبيعية</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- آراء العملاء -->
+    <section class="container py-5">
+        <h2 class="text-center display-5 fw-bold mb-5" data-aos="fade-up">ماذا يقول عملاؤنا؟</h2>
+        <div class="row g-4">
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                <div class="testimonial-card text-center">
+                    <img src="{{ url_for('static', filename='assets/img/team-01.jpg') }}" class="testimonial-img" alt="عميل">
+                    <h5>أحمد محمد</h5>
+                    <div class="text-warning mb-2">
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                    </div>
+                    <p class="text-muted">"منتجات رائعة وجودة عالية، شكراً لكم على الخدمة الممتازة!"</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                <div class="testimonial-card text-center">
+                    <img src="{{ url_for('static', filename='assets/img/team-02.jpg') }}" class="testimonial-img" alt="عميلة">
+                    <h5>سارة علي</h5>
+                    <div class="text-warning mb-2">
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star-half'></i>
+                    </div>
+                    <p class="text-muted">"تجربة تسوق ممتازة، أنصح الجميع بالتعامل مع هذا المتجر الرائع"</p>
+                </div>
+            </div>
+            <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="testimonial-card text-center">
+                    <img src="{{ url_for('static', filename='assets/img/team-03.jpg') }}" class="testimonial-img" alt="عميل">
+                    <h5>محمد خالد</h5>
+                    <div class="text-warning mb-2">
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                        <i class='bx bxs-star'></i>
+                    </div>
+                    <p class="text-muted">"شكراً لكم على المنتجات الرائعة والأسعار المنافسة"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white pt-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h5><i class='bx bx-store-alt'></i> متجر المنتجات التركية</h5>
+                    <p class="text-muted mt-3">متجر متخصص في استيراد وتوزيع أفضل المنتجات التركية الأصلية بأعلى جودة وأفضل الأسعار.</p>
+                    <div class="mt-3">
+                        <a href="#" class="text-white me-2"><i class='bx bxl-facebook-circle fs-4'></i></a>
+                        <a href="#" class="text-white me-2"><i class='bx bxl-instagram fs-4'></i></a>
+                        <a href="#" class="text-white me-2"><i class='bx bxl-twitter fs-4'></i></a>
+                        <a href="#" class="text-white"><i class='bx bxl-whatsapp fs-4'></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 mb-4">
+                    <h6>روابط سريعة</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('index') }}" class="text-muted text-decoration-none">الرئيسية</a></li>
+                        <li><a href="{{ url_for('about') }}" class="text-muted text-decoration-none">من نحن</a></li>
+                        <li><a href="{{ url_for('products') }}" class="text-muted text-decoration-none">المنتجات</a></li>
+                        <li><a href="{{ url_for('contact') }}" class="text-muted text-decoration-none">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 mb-4">
+                    <h6>معلومات الاتصال</h6>
+                    <ul class="list-unstyled">
+                        <li class="text-muted"><i class='bx bx-phone'></i> +90 123 456 7890</li>
+                        <li class="text-muted"><i class='bx bx-envelope'></i> info@turkishshop.com</li>
+                        <li class="text-muted"><i class='bx bx-map'></i> اسطنبول، تركيا</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 mb-4">
+                    <h6>النشرة البريدية</h6>
+                    <p class="text-muted">اشترك لتصلك أحدث العروض</p>
+                    <div class="input-group">
+                        <input type="email" class="form-control" placeholder="بريدك الإلكتروني">
+                        <button class="btn btn-primary" type="button">اشتراك</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="text-center pb-4">
+                <small class="text-muted">© 2024 متجر المنتجات التركية. جميع الحقوق محفوظة</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/templatemo.js') }}"></script>
+    
+    <script>
+        // تأثيرات التحميل
+        document.addEventListener('DOMContentLoaded', function() {
+            // إضافة تأثير Fade In للعناصر
+            const elements = document.querySelectorAll('[data-aos]');
+            elements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+
+</html>

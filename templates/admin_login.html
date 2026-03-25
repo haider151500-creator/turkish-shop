@@ -1,0 +1,7 @@
+<!DOCTYPE html><html lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تسجيل دخول الأدمن</title><link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}"></head>
+<body class="p-4"><div class="container" style="max-width:480px;"><h2 class="mb-4">تسجيل دخول الأدمن</h2>
+<form method="POST"><div class="mb-3"><label class="form-label">كلمة المرور</label>
+<input type="password" class="form-control" name="password" placeholder="1234"></div>
+<button class="btn btn-primary w-100">دخول</button></form>
+<div class="mt-3"><a href="{{ url_for('index') }}">الصفحة الرئيسية</a></div></div></body></html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>تعديل منتج - متجر المنتجات التركية</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}">
+    <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+        
+        .edit-card {
+            background: white;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .edit-header {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            padding: 25px 30px;
+            color: white;
+        }
+        
+        .edit-header h2 {
+            margin: 0;
+            font-weight: 700;
+        }
+        
+        .edit-header p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+        
+        .edit-body {
+            padding: 30px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 0.2rem rgba(111,66,193,0.25);
+        }
+        
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
+        
+        .image-preview {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+            border: 2px dashed #dee2e6;
+            text-align: center;
+        }
+        
+        .current-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+        }
+        
+        .image-badge {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .remove-image-btn {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .remove-image-btn:hover {
+            transform: scale(1.1);
+            background: #c82333;
+        }
+        
+        .preview-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .preview-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            border: none;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(111,66,193,0.4);
+        }
+        
+        .btn-secondary-custom {
+            background: #6c757d;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary-custom:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #6f42c1;
+            background: #f5f0ff;
+        }
+        
+        .file-upload-area.drag-over {
+            border-color: #6f42c1;
+            background: #e9ecef;
+        }
+        
+        .file-upload-icon {
+            font-size: 48px;
+            color: #6f42c1;
+            margin-bottom: 10px;
+        }
+        
+        .required-field::after {
+            content: "*";
+            color: #dc3545;
+            margin-right: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .edit-body {
+                padding: 20px;
+            }
+            .btn-primary-custom, .btn-secondary-custom {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="max-width: 800px;">
+        <div class="edit-card">
+            <div class="edit-header">
+                <h2><i class='bx bx-edit-alt'></i> تعديل المنتج</h2>
+                <p>قم بتحديث معلومات المنتج</p>
+            </div>
+            
+            <div class="edit-body">
+                <form method="POST" enctype="multipart/form-data" id="editProductForm">
+                    <!-- اسم المنتج -->
+                    <div class="mb-4">
+                        <label class="form-label required-field">اسم المنتج</label>
+                        <input type="text" name="name" class="form-control" value="{{ p.name }}" required 
+                               placeholder="أدخل اسم المنتج">
+                        <div class="invalid-feedback">الرجاء إدخال اسم المنتج</div>
+                    </div>
+                    
+                    <!-- الفئة -->
+                    <div class="mb-4">
+                        <label class="form-label required-field">الفئة</label>
+                        <input type="text" name="category" value="{{ p.category or '' }}" class="form-control" required
+                               placeholder="مثال: ملابس، إلكترونيات، مستلزمات منزلية">
+                    </div>
+                    
+                    <!-- السعر -->
+                    <div class="mb-4">
+                        <label class="form-label required-field">السعر (دولار)</label>
+                        <input type="number" step="0.01" name="price" class="form-control" value="{{ p.price }}" required
+                               placeholder="0.00">
+                    </div>
+                    
+                    <!-- الوصف -->
+                    <div class="mb-4">
+                        <label class="form-label">الوصف</label>
+                        <textarea name="description" class="form-control" rows="5" 
+                                  placeholder="أدخل وصفاً مفصلاً للمنتج...">{{ p.description }}</textarea>
+                    </div>
+                    
+                    <!-- الصورة الحالية -->
+                    {% if p.image %}
+                    <div class="mb-4">
+                        <label class="form-label">الصورة الحالية</label>
+                        <div class="image-preview">
+                            <div class="image-badge">
+                                <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" 
+                                     alt="{{ p.name }}" class="current-image">
+                                <button type="button" class="remove-image-btn" onclick="removeCurrentImage()" title="حذف الصورة">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">اضغط على زر الحذف لإزالة الصورة</small>
+                            <input type="hidden" name="remove_image" id="remove_image" value="0">
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- رفع صور جديدة -->
+                    <div class="mb-4">
+                        <label class="form-label">إضافة صور جديدة (حتى 5 صور)</label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <i class='bx bx-cloud-upload file-upload-icon'></i>
+                            <p class="mb-1">اسحب الصور هنا أو انقر للاختيار</p>
+                            <small class="text-muted">يمكنك اختيار ما يصل إلى 5 صور</small>
+                            <input type="file" name="images" id="fileInput" class="form-control d-none" multiple accept="image/*">
+                        </div>
+                        
+                        <!-- معاينة الصور المختارة -->
+                        <div id="previewContainer" class="preview-images"></div>
+                        <small class="text-muted mt-2 d-block">* الصور الجديدة ستضاف إلى معرض المنتج</small>
+                    </div>
+                    
+                    <!-- أزرار التحكم -->
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-primary-custom text-white flex-grow-1">
+                            <i class='bx bx-save'></i> تحديث المنتج
+                        </button>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary-custom text-white">
+                            <i class='bx bx-x'></i> إلغاء
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
+    
+    <script>
+        // معاينة الصور المختارة
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        
+        // فتح نافذة اختيار الملفات عند النقر على منطقة الرفع
+        fileUploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // سحب وإفلات الملفات
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('drag-over');
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('drag-over');
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        });
+        
+        function handleFiles(files) {
+            // التحقق من عدد الملفات (حد أقصى 5)
+            const currentFiles = previewContainer.children.length;
+            const remainingSlots = 5 - currentFiles;
+            
+            if (files.length > remainingSlots) {
+                alert(`يمكنك إضافة ${remainingSlots} صور فقط إضافية`);
+                files = files.slice(0, remainingSlots);
+            }
+            
+            files.forEach((file, index) => {
+                // التحقق من نوع الملف
+                if (!file.type.startsWith('image/')) {
+                    alert(`الملف ${file.name} ليس صورة`);
+                    return;
+                }
+                
+                // التحقق من حجم الملف (حد أقصى 5 ميجابايت)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`حجم الصورة ${file.name} يتجاوز 5 ميجابايت`);
+                    return;
+                }
+                
+                const reader = new FileReader();
+                const previewId = `preview_${Date.now()}_${index}`;
+                
+                reader.onload = (e) => {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'preview-item';
+                    previewDiv.id = previewId;
+                    previewDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="معاينة">
+                        <button type="button" class="remove-image-btn" onclick="removePreview('${previewId}')" style="top: -5px; right: -5px; width: 25px; height: 25px;">
+                            <i class='bx bx-x'></i>
+                        </button>
+                    `;
+                    previewContainer.appendChild(previewDiv);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            // تحديث DataTransfer لرفع الملفات
+            updateFileInput();
+        }
+        
+        function removePreview(previewId) {
+            const previewDiv = document.getElementById(previewId);
+            if (previewDiv) {
+                previewDiv.remove();
+                updateFileInput();
+            }
+        }
+        
+        function updateFileInput() {
+            // إعادة إنشاء FileList من الملفات المتبقية
+            const dataTransfer = new DataTransfer();
+            const files = fileInput.files;
+            const remainingPreviews = previewContainer.children.length;
+            
+            // إضافة الملفات المتبقية فقط
+            for (let i = 0; i < files.length && i < remainingPreviews; i++) {
+                dataTransfer.items.add(files[i]);
+            }
+            fileInput.files = dataTransfer.files;
+        }
+        
+        // حذف الصورة الحالية
+        function removeCurrentImage() {
+            if (confirm('هل أنت متأكد من حذف هذه الصورة؟')) {
+                document.getElementById('remove_image').value = '1';
+                const imagePreview = document.querySelector('.image-preview');
+                if (imagePreview) {
+                    imagePreview.style.opacity = '0.5';
+                    imagePreview.style.pointerEvents = 'none';
+                }
+                alert('سيتم حذف الصورة بعد حفظ التغييرات');
+            }
+        }
+        
+        // التحقق من صحة النموذج قبل الإرسال
+        document.getElementById('editProductForm').addEventListener('submit', function(e) {
+            const name = document.querySelector('[name="name"]').value.trim();
+            const category = document.querySelector('[name="category"]').value.trim();
+            const price = document.querySelector('[name="price"]').value;
+            
+            if (!name) {
+                e.preventDefault();
+                alert('الرجاء إدخال اسم المنتج');
+                return false;
+            }
+            
+            if (!category) {
+                e.preventDefault();
+                alert('الرجاء إدخال الفئة');
+                return false;
+            }
+            
+            if (!price || price <= 0) {
+                e.preventDefault();
+                alert('الرجاء إدخال سعر صحيح');
+                return false;
+            }
+            
+            // عرض رسالة تأكيد
+            return confirm('هل أنت متأكد من حفظ التغييرات؟');
+        });
+        
+        // تأثيرات إضافية
+        document.addEventListener('DOMContentLoaded', function() {
+            // إضافة تأثيرات عند التركيز على الحقول
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('focused');
+                });
+            });
+            
+            // تحسين عرض السعر
+            const priceInput = document.querySelector('[name="price"]');
+            if (priceInput) {
+                priceInput.addEventListener('input', function() {
+                    if (this.value < 0) this.value = 0;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
