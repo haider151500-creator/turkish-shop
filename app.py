@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
 import sqlite3, os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from functools import wraps
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -12,41 +14,44 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    database_url = os.environ.get('DATABASE_URL')
+    
+    if database_url:
+        # استخدام PostgreSQL في الإنتاج
+        conn = psycopg2.connect(database_url)
+        conn.cursor_factory = RealDictCursor
+        return conn
+    else:
+        # استخدام SQLite في التطوير المحلي
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def init_db():
     conn = get_db()
-    c = conn.cursor()
-    c.execute(
-        '''
+    cursor = conn.cursor()
+    
+    # إنشاء جدول المنتجات (صيغة PostgreSQL)
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             description TEXT,
             price REAL NOT NULL,
             image TEXT,
             category TEXT DEFAULT 'عام'
-        );
-        '''
-    )
-    # جدول صور متعددة لكل منتج
-    c.execute(
-        '''
+        )
+    """)
+    
+    # إنشاء جدول الصور
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS product_images (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             product_id INTEGER NOT NULL,
-            filename TEXT NOT NULL,
-            FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE
-        );
-        '''
-    )
-    # محاولة إضافة العمود عند وجود قواعد بيانات قديمة
-    try:
-        c.execute("ALTER TABLE products ADD COLUMN category TEXT DEFAULT 'عام'")
-    except Exception:
-        pass
+            filename TEXT NOT NULL
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -60,7 +65,6 @@ def admin_required(f):
     return wrapper
 
 # ========== تم حذف الصفحة الرئيسية (index) ==========
-# الصفحة الرئيسية الآن تعيد توجيه إلى صفحة المنتجات
 @app.route("/")
 def index():
     return redirect(url_for("products"))
@@ -68,8 +72,11 @@ def index():
 @app.route("/product/<int:pid>")
 def product_detail(pid):
     conn = get_db()
-    item = conn.execute("SELECT * FROM products WHERE id=?", (pid,)).fetchone()
-    imgs = conn.execute("SELECT id, filename FROM product_images WHERE product_id=? ORDER BY id", (pid,)).fetchall()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products WHERE id=%s", (pid,))
+    item = cursor.fetchone()
+    cursor.execute("SELECT id, filename FROM product_images WHERE product_id=%s ORDER BY id", (pid,))
+    imgs = cursor.fetchall()
     conn.close()
     if not item:
         flash("المنتج غير موجود.", "danger")
@@ -99,7 +106,9 @@ def admin_logout():
 @admin_required
 def admin_dashboard():
     conn = get_db()
-    items = conn.execute("SELECT * FROM products ORDER BY id DESC").fetchall()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products ORDER BY id DESC")
+    items = cursor.fetchall()
     conn.close()
     return render_template("admin_dashboard.html", products=items)
 
@@ -107,8 +116,9 @@ def admin_dashboard():
 @admin_required
 def admin_add():
     conn = get_db()
-    # جلب جميع الفئات الموجودة من قاعدة البيانات
-    cats = conn.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c").fetchall()
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c")
+    cats = cursor.fetchall()
     categories = [r["c"] for r in cats]
     conn.close()
 
@@ -116,7 +126,7 @@ def admin_add():
         name = request.form.get("name", "").strip()
         description = request.form.get("description", "").strip()
         price = request.form.get("price", "").strip()
-        category = request.form.get("category", "").strip()  # الفئة المختارة من الواجهة
+        category = request.form.get("category", "").strip()
         image_filename = None
 
         files = request.files.getlist("images")
@@ -137,14 +147,15 @@ def admin_add():
             return redirect(url_for("admin_add"))
 
         conn = get_db()
-        conn.execute(
-            "INSERT INTO products (name, description, price, image, category) VALUES (?, ?, ?, ?, ?)",
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO products (name, description, price, image, category) VALUES (%s, %s, %s, %s, %s) RETURNING id",
             (name, description, price_val, image_filename, category)
         )
-        pid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+        pid = cursor.fetchone()[0]
         if files:
             for f in files[:5]:
-                conn.execute("INSERT INTO product_images (product_id, filename) VALUES (?, ?)", (pid, f.filename))
+                cursor.execute("INSERT INTO product_images (product_id, filename) VALUES (%s, %s)", (pid, f.filename))
         conn.commit()
         conn.close()
         flash("تمت إضافة المنتج بنجاح.", "success")
@@ -156,17 +167,20 @@ def admin_add():
 @admin_required
 def admin_edit(pid):
     conn = get_db()
-    product = conn.execute("SELECT * FROM products WHERE id=?", (pid,)).fetchone()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products WHERE id=%s", (pid,))
+    product = cursor.fetchone()
     if not product:
         conn.close()
         flash("المنتج غير موجود.", "danger")
         return redirect(url_for("admin_dashboard"))
 
-    # جلب الصور الإضافية للمنتج
-    images = conn.execute("SELECT id, filename FROM product_images WHERE product_id=? ORDER BY id", (pid,)).fetchall()
-    # جلب جميع الفئات الموجودة
-    cats = conn.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c").fetchall()
+    cursor.execute("SELECT id, filename FROM product_images WHERE product_id=%s ORDER BY id", (pid,))
+    images = cursor.fetchall()
+    cursor.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c")
+    cats = cursor.fetchall()
     categories = [r["c"] for r in cats]
+    conn.close()
 
     if request.method == "POST":
         name = request.form.get("name", "").strip()
@@ -176,14 +190,11 @@ def admin_edit(pid):
         remove_image = request.form.get("remove_image", "0") == "1"
 
         if not name or not price or not category:
-            conn.close()
             flash("الاسم والسعر والفئة مطلوبة.", "danger")
             return redirect(url_for("admin_edit", pid=pid))
 
-        # معالجة الصورة الرئيسية
         image_filename = product["image"]
         if remove_image and image_filename:
-            # حذف الصورة الرئيسية من الملفات
             old_path = os.path.join(app.config["UPLOAD_FOLDER"], image_filename)
             if os.path.exists(old_path):
                 try:
@@ -195,7 +206,6 @@ def admin_edit(pid):
         files = request.files.getlist("images")
         files = [f for f in files if getattr(f, "filename", "")]
         if files:
-            # إذا تم رفع صور جديدة، استخدم أول صورة كصورة رئيسية
             image_filename = files[0].filename
             for f in files:
                 f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
@@ -203,39 +213,37 @@ def admin_edit(pid):
         try:
             price_val = float(price)
         except ValueError:
-            conn.close()
             flash("السعر غير صالح.", "danger")
             return redirect(url_for("admin_edit", pid=pid))
 
-        # تحديث المنتج
-        conn.execute(
-            "UPDATE products SET name=?, description=?, price=?, image=?, category=? WHERE id=?",
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE products SET name=%s, description=%s, price=%s, image=%s, category=%s WHERE id=%s",
             (name, description, price_val, image_filename, category, pid)
         )
-
-        # إضافة الصور الجديدة (حتى 5 إجمالاً)
-        cnt = conn.execute("SELECT COUNT(*) FROM product_images WHERE product_id=?", (pid,)).fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM product_images WHERE product_id=%s", (pid,))
+        cnt = cursor.fetchone()[0]
         slots = max(0, 5 - (cnt or 0))
         if files and slots:
-            # نضيف الصور الجديدة (باستثناء أول صورة تم استخدامها كصورة رئيسية)
             new_images = files[:slots] if len(files) > 1 else files
             for f in new_images:
-                conn.execute("INSERT INTO product_images (product_id, filename) VALUES (?, ?)", (pid, f.filename))
-
+                cursor.execute("INSERT INTO product_images (product_id, filename) VALUES (%s, %s)", (pid, f.filename))
         conn.commit()
         conn.close()
         flash("تم تعديل المنتج بنجاح.", "success")
         return redirect(url_for("admin_dashboard"))
 
-    conn.close()
     return render_template("edit_product.html", p=product, images=images, categories=categories)
 
 @app.route("/admin/delete/<int:pid>", methods=["POST"])
 @admin_required
 def admin_delete(pid):
     conn = get_db()
-    row = conn.execute("SELECT image FROM products WHERE id=?", (pid,)).fetchone()
-    conn.execute("DELETE FROM products WHERE id=?", (pid,))
+    cursor = conn.cursor()
+    cursor.execute("SELECT image FROM products WHERE id=%s", (pid,))
+    row = cursor.fetchone()
+    cursor.execute("DELETE FROM products WHERE id=%s", (pid,))
     conn.commit()
     conn.close()
 
@@ -253,9 +261,11 @@ def admin_delete(pid):
 @admin_required
 def admin_delete_image(image_id):
     conn = get_db()
-    row = conn.execute("SELECT filename, product_id FROM product_images WHERE id=?", (image_id,)).fetchone()
+    cursor = conn.cursor()
+    cursor.execute("SELECT filename, product_id FROM product_images WHERE id=%s", (image_id,))
+    row = cursor.fetchone()
     if row:
-        conn.execute("DELETE FROM product_images WHERE id=?", (image_id,))
+        cursor.execute("DELETE FROM product_images WHERE id=%s", (image_id,))
         conn.commit()
     conn.close()
     if row:
@@ -292,11 +302,14 @@ def contact():
 def products():
     cat = request.args.get("cat")
     conn = get_db()
-    cats = conn.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c").fetchall()
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c")
+    cats = cursor.fetchall()
     if cat:
-        items = conn.execute("SELECT * FROM products WHERE COALESCE(category,'عام')=? ORDER BY id DESC", (cat,)).fetchall()
+        cursor.execute("SELECT * FROM products WHERE COALESCE(category,'عام')=%s ORDER BY id DESC", (cat,))
     else:
-        items = conn.execute("SELECT * FROM products ORDER BY id DESC").fetchall()
+        cursor.execute("SELECT * FROM products ORDER BY id DESC")
+    items = cursor.fetchall()
     conn.close()
     return render_template("products.html", products=items, categories=[r["c"] for r in cats], active_cat=cat)
 
