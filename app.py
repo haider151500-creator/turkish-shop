@@ -22,22 +22,24 @@ def get_db():
         conn.cursor_factory = RealDictCursor
         return conn
     else:
-        # استخدام SQLite في التطوير المحلي
+        # استخدام SQLite في التطوير المحلي - تعديل لجعل النتائج قواميس
         conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
+        # إرجاع قاموس بدلاً من Row لسهولة التحويل إلى JSON
+        conn.row_factory = lambda cursor, row: {col[0]: row[i] for i, col in enumerate(cursor.description)}
         return conn
 
 def init_db():
     conn = get_db()
     cursor = conn.cursor()
     
-    # إنشاء جدول المنتجات (صيغة PostgreSQL)
+    # إنشاء جدول المنتجات
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             description TEXT,
             price REAL NOT NULL,
+            old_price REAL DEFAULT 0,
             image TEXT,
             category TEXT DEFAULT 'عام'
         )
@@ -64,7 +66,6 @@ def admin_required(f):
         return f(*args, **kwargs)
     return wrapper
 
-# ========== تم حذف الصفحة الرئيسية (index) ==========
 @app.route("/")
 def index():
     return redirect(url_for("products"))
@@ -126,6 +127,7 @@ def admin_add():
         name = request.form.get("name", "").strip()
         description = request.form.get("description", "").strip()
         price = request.form.get("price", "").strip()
+        old_price = request.form.get("old_price", "").strip()
         category = request.form.get("category", "").strip()
         image_filename = None
 
@@ -142,6 +144,7 @@ def admin_add():
 
         try:
             price_val = float(price)
+            old_price_val = float(old_price) if old_price else 0
         except ValueError:
             flash("السعر غير صالح.", "danger")
             return redirect(url_for("admin_add"))
@@ -149,10 +152,9 @@ def admin_add():
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO products (name, description, price, image, category) VALUES (%s, %s, %s, %s, %s) RETURNING id",
-            (name, description, price_val, image_filename, category)
+            "INSERT INTO products (name, description, price, old_price, image, category) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
+            (name, description, price_val, old_price_val, image_filename, category)
         )
-        # إصلاح الخطأ: استخدام ['id'] بدلاً من [0]
         result = cursor.fetchone()
         pid = result['id']
         if files:
@@ -188,6 +190,7 @@ def admin_edit(pid):
         name = request.form.get("name", "").strip()
         description = request.form.get("description", "").strip()
         price = request.form.get("price", "").strip()
+        old_price = request.form.get("old_price", "").strip()
         category = request.form.get("category", "").strip()
         remove_image = request.form.get("remove_image", "0") == "1"
 
@@ -214,6 +217,7 @@ def admin_edit(pid):
 
         try:
             price_val = float(price)
+            old_price_val = float(old_price) if old_price else 0
         except ValueError:
             flash("السعر غير صالح.", "danger")
             return redirect(url_for("admin_edit", pid=pid))
@@ -221,8 +225,8 @@ def admin_edit(pid):
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE products SET name=%s, description=%s, price=%s, image=%s, category=%s WHERE id=%s",
-            (name, description, price_val, image_filename, category, pid)
+            "UPDATE products SET name=%s, description=%s, price=%s, old_price=%s, image=%s, category=%s WHERE id=%s",
+            (name, description, price_val, old_price_val, image_filename, category, pid)
         )
         cursor.execute("SELECT COUNT(*) FROM product_images WHERE product_id=%s", (pid,))
         cnt_result = cursor.fetchone()
@@ -308,13 +312,25 @@ def products():
     cursor = conn.cursor()
     cursor.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c")
     cats = cursor.fetchall()
+    
     if cat:
         cursor.execute("SELECT * FROM products WHERE COALESCE(category,'عام')=%s ORDER BY id DESC", (cat,))
     else:
         cursor.execute("SELECT * FROM products ORDER BY id DESC")
     items = cursor.fetchall()
     conn.close()
-    return render_template("products.html", products=items, categories=[r["c"] for r in cats], active_cat=cat)
+    
+    # تحويل المنتجات إلى قائمة قواميس (النتائج أصبحت قواميس بالفعل بسبب تعديل row_factory)
+    products_list = list(items) if items else []
+    
+    # التأكد من وجود old_price لكل منتج
+    for product in products_list:
+        if 'old_price' not in product:
+            product['old_price'] = None
+    
+    categories_list = [r["c"] for r in cats]
+    
+    return render_template("products.html", products=products_list, categories=categories_list, active_cat=cat)
 
 if __name__ == "__main__":
     init_db()
