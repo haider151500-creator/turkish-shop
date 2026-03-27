@@ -915,7 +915,7 @@ def check_users():
             <p><a href="/create-test-user">إنشاء مستخدم تجريبي</a></p>
             """
         
-        html = "<h1>📋 قائمة المستخدمين</h1><table border='1' cellpadding='10'>寿<th>ID</th><th>الاسم</th><th>البريد</th><th>الهاتف</th>\,"
+        html = "<h1>📋 قائمة المستخدمين</h1><table border='1' cellpadding='10'>寿<th>ID</th><th>الاسم</th><th>البريد</th><th>الهاتف</th>"
         for u in users:
             html += f"<tr><td>{u['id']}</td><td>{u['name']}</td><td>{u['email']}</td><td>{u.get('phone', '-')}</td></tr>"
         html += "</table><p><a href='/'>العودة</a></p>"
@@ -1321,7 +1321,7 @@ def add_bulk_products():
             ("ساعة رجالية تركية", "ساعة يد رجالية بتصميم تركي عصري، ستانلس ستيل، مقاومة للماء", 120000, 180000, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_UL1500_.jpg", "ساعات"),
         ]
         
-        # إضافة المنتجات واحدة تلو الأخرى مع طباعة النتائج
+        # إضافة المنتجات واحدة تلو الأخرى
         count = 0
         errors = []
         
@@ -1376,7 +1376,8 @@ def add_bulk_products():
     except Exception as e:
         import traceback
         return f"❌ خطأ عام: {e}<br><pre>{traceback.format_exc()}</pre>"
-        @app.route("/update-product-images")
+
+@app.route("/update-product-images")
 def update_product_images():
     """تحديث صور المنتجات بروابط حقيقية"""
     try:
@@ -1386,26 +1387,26 @@ def update_product_images():
         
         # تحديث صور المنتجات بروابط حقيقية
         updates = [
-            (1, "https://m.media-amazon.com/images/I/61Y32E0lGqL._AC_SL1500_.jpg"),  # سماعات Sony
-            (2, "https://dlcdnwebimgs.asus.com/gain/C9A99B7E-0C5A-45F8-9DF4-11B5B2D6E8E2"),  # لابتوب ASUS
-            (3, "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-max-natural-titanium-select"),  # آيفون
-            (4, "https://images.samsung.com/is/image/samsung/p6pim/ae/2306/gallery/ae-galaxy-tab-s9-sm-x710nzafeu-536936600"),  # تابلت
-            (5, "https://m.media-amazon.com/images/I/71Z7Y8xYxL._AC_UL1500_.jpg"),  # قميص
-            (6, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg"),  # بدلة
-            (7, "https://ae-pic-a1.aliexpress-media.com/kf/S89b38b9c79454e60b2ab794b8c26d73bV.jpg"),  # تيشيرت
-            (8, "https://m.media-amazon.com/images/I/71w-8Y8xYxL._AC_UL1500_.jpg"),  # فستان
-            (9, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg"),  # بلوزة
-            (10, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg"),  # جاكيت
-            (11, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1500_.jpg"),  # طقم أواني
-            (12, "https://m.media-amazon.com/images/I/91iZ7Y8xYxL._AC_SL1500_.jpg"),  # سجاد
-            (13, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1500_.jpg"),  # ستائر
-            (14, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1500_.jpg"),  # كريم
-            (15, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg"),  # عطر
-            (16, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1000_.jpg"),  # رواية
-            (17, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_SL1000_.jpg"),  # كتاب طبخ
-            (18, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_UL1500_.jpg"),  # حذاء رياضي
-            (19, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_SL1500_.jpg"),  # لعبة خشبية
-            (20, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_UL1500_.jpg"),  # ساعة
+            (1, "https://m.media-amazon.com/images/I/61Y32E0lGqL._AC_SL1500_.jpg"),
+            (2, "https://dlcdnwebimgs.asus.com/gain/C9A99B7E-0C5A-45F8-9DF4-11B5B2D6E8E2"),
+            (3, "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-max-natural-titanium-select"),
+            (4, "https://images.samsung.com/is/image/samsung/p6pim/ae/2306/gallery/ae-galaxy-tab-s9-sm-x710nzafeu-536936600"),
+            (5, "https://m.media-amazon.com/images/I/71Z7Y8xYxL._AC_UL1500_.jpg"),
+            (6, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg"),
+            (7, "https://ae-pic-a1.aliexpress-media.com/kf/S89b38b9c79454e60b2ab794b8c26d73bV.jpg"),
+            (8, "https://m.media-amazon.com/images/I/71w-8Y8xYxL._AC_UL1500_.jpg"),
+            (9, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg"),
+            (10, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg"),
+            (11, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1500_.jpg"),
+            (12, "https://m.media-amazon.com/images/I/91iZ7Y8xYxL._AC_SL1500_.jpg"),
+            (13, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1500_.jpg"),
+            (14, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1500_.jpg"),
+            (15, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg"),
+            (16, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1000_.jpg"),
+            (17, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_SL1000_.jpg"),
+            (18, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_UL1500_.jpg"),
+            (19, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_SL1500_.jpg"),
+            (20, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_UL1500_.jpg"),
         ]
         
         count = 0
@@ -1435,6 +1436,7 @@ def update_product_images():
     except Exception as e:
         import traceback
         return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
+
 if __name__ == "__main__":
     init_db()
     migrate_db()
