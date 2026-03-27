@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>متجر المنتجات التركية | تسوق أجود المنتجات</title>
+    <title>مركز المنتجات التركية | تسوق أجود المنتجات</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -251,11 +251,11 @@
           <div class="w-9 h-9 rounded-xl bg-[#42a5f5] flex items-center justify-center shadow-md">
             <i data-lucide="flag" class="w-5 h-5 text-white"></i>
           </div>
-          <span class="text-xl font-extrabold tracking-tight text-white">متجر المنتجات التركية</span>
+          <span class="text-xl font-extrabold tracking-tight text-white">مركز المنتجات التركية</span>
         </div>
         <div class="hidden md:flex items-center bg-[#1976d2] rounded-full px-4 py-2 flex-1 max-w-md border border-[#42a5f5]/50 focus-within:border-[#42a5f5] transition">
           <i data-lucide="search" class="w-4 h-4 text-[#42a5f5] ml-2"></i>
-          <input id="searchInput" type="text" placeholder="ابحث عن منتج تركي..." class="bg-transparent text-white placeholder:text-gray-300 outline-none w-full text-sm">
+          <input id="searchInput" type="text" placeholder="ابحث عن منتج ..." class="bg-transparent text-white placeholder:text-gray-300 outline-none w-full text-sm">
         </div>
         <div class="flex items-center gap-4">
           <button id="chatBtn" onclick="toggleChat()" class="relative flex items-center gap-2 bg-[#42a5f5]/20 hover:bg-[#42a5f5]/40 text-white px-3 py-2 rounded-lg transition-all">
@@ -304,7 +304,7 @@
       <div id="mobileSearch" class="hidden md:hidden px-4 pb-3 bg-[#1565c0]">
         <div class="flex items-center bg-[#1976d2] rounded-full px-4 py-2 border border-[#42a5f5]/50">
           <i data-lucide="search" class="w-4 h-4 text-[#42a5f5] ml-2"></i>
-          <input type="text" placeholder="ابحث عن منتج تركي..." class="bg-transparent text-white placeholder:text-gray-300 outline-none w-full text-sm" oninput="document.getElementById('searchInput').value=this.value; filterProducts()">
+          <input type="text" placeholder="ابحث عن منتج ..." class="bg-transparent text-white placeholder:text-gray-300 outline-none w-full text-sm" oninput="document.getElementById('searchInput').value=this.value; filterProducts()">
         </div>
       </div>
     </nav>
@@ -312,9 +312,9 @@
     <section class="hero-gradient text-white py-12 md:py-16 px-4 relative overflow-hidden">
       <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 40%, #42a5f5 1.5px, transparent 1px); background-size: 40px 40px;"></div>
       <div class="max-w-6xl mx-auto text-center relative z-10">
-        <div class="inline-block bg-[#42a5f5]/20 text-[#42a5f5] px-5 py-1 rounded-full text-sm font-medium mb-4 backdrop-blur-sm border border-[#42a5f5]/30 shadow-lg">🇹🇷 جودة تركية أصيلة 🇹🇷</div>
+        <div class="inline-block bg-[#42a5f5]/20 text-[#42a5f5] px-5 py-1 rounded-full text-sm font-medium mb-4 backdrop-blur-sm border border-[#42a5f5]/30 shadow-lg">🇹🇷 جودة أصيلة 🇹🇷</div>
         <h1 class="text-3xl md:text-5xl font-extrabold mb-3 leading-tight drop-shadow-lg">أجود المنتجات التركية</h1>
-        <p class="text-base md:text-xl text-gray-200 max-w-xl mx-auto drop-shadow-md">تسوق مباشرة من تركيا بأفضل الأسعار وجودة لا تضاهى</p>
+        <p class="text-base md:text-xl text-gray-200 max-w-xl mx-auto drop-shadow-md">أفضل الأسعار وجودة لا تضاهى</p>
       </div>
     </section>
 
@@ -333,7 +333,7 @@
 
     <section class="max-w-6xl mx-auto px-4 pb-12">
       <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
-        <h2 class="text-xl font-bold text-gray-800">✨ أحدث المنتجات التركية</h2>
+        <h2 class="text-xl font-bold text-gray-800">✨ أحدث المنتجات لا تفوتها</h2>
         <span id="productCount" class="text-sm text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">{{ products|length }} منتج</span>
       </div>
       <div id="productsGrid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"></div>
@@ -410,11 +410,11 @@
     <footer class="bg-[#1565c0] text-white py-8 mt-8 border-t border-[#42a5f5]/20">
       <div class="max-w-6xl mx-auto text-center px-4">
         <div class="flex justify-center gap-8 mb-5 text-sm text-gray-200 flex-wrap">
-          <span class="flex items-center gap-1"><i data-lucide="truck" class="w-4 h-4 text-[#42a5f5]"></i> توصيل سريع من تركيا</span>
+          <span class="flex items-center gap-1"><i data-lucide="truck" class="w-4 h-4 text-[#42a5f5]"></i> توصيل سريع  </span>
           <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-4 h-4 text-[#42a5f5]"></i> دفع آمن 100%</span>
-          <span class="flex items-center gap-1"><i data-lucide="rotate-ccw" class="w-4 h-4 text-[#42a5f5]"></i> إرجاع خلال 14 يوم</span>
+          <span class="flex items-center gap-1"><i data-lucide="rotate-ccw" class="w-4 h-4 text-[#42a5f5]"></i> ضمان استبدال حقيقي</span>
         </div>
-        <p class="text-xs text-gray-300">© 2025 متجر المنتجات التركية – جميع الحقوق محفوظة</p>
+        <p class="text-xs text-gray-300">© 2026 مركز المنتجات التركية – جميع الحقوق محفوظة</p>
       </div>
     </footer>
   </div>
@@ -517,7 +517,7 @@
       document.getElementById("productPrice").innerText = currentProductData.price.toLocaleString() + " د.ع";
       document.getElementById("productOldPrice").innerHTML = currentProductData.old_price ? currentProductData.old_price.toLocaleString() + " د.ع" : '';
       document.getElementById("productPriceUsd").innerHTML = `≈ ${(currentProductData.price / 1300).toFixed(0)} دولار أمريكي`;
-      document.getElementById("productDescription").innerText = currentProductData.description || "منتج تركي عالي الجودة";
+      document.getElementById("productDescription").innerText = currentProductData.description || "منتج  عالي الجودة";
       document.getElementById("productEmoji").innerHTML = currentProductData.image ? `<img src="/uploads/${currentProductData.image}" class="w-full h-full object-cover rounded-xl">` : '📦';
       document.getElementById("productModal").classList.remove("hidden");
     }

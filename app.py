@@ -888,6 +888,7 @@ def debug_db():
                 <li><a href="/create-test-user">👤 إنشاء مستخدم تجريبي</a></li>
                 <li><a href="/check-users">📋 عرض المستخدمين</a></li>
                 <li><a href="/check-products">📦 عرض المنتجات</a></li>
+                <li><a href="/recreate-tables">🔄 إعادة إنشاء الجداول</a></li>
                 <li><a href="/clear-session">🗑️ مسح الجلسة</a></li>
             </ul>
         </body>
@@ -938,7 +939,7 @@ def check_products():
         html = "<h1>📦 قائمة المنتجات</h1><table border='1' cellpadding='10'>"
         html += "<tr><th>ID</th><th>الاسم</th><th>السعر</th><th>الفئة</th><th>الصورة</th></tr>"
         for p in products:
-            html += f"<tr><td>{p['id']}</td><td>{p['name']}</td><td>{p['price']} د.ع</td><td>{p.get('category', 'عام')}</td><td>{p.get('image', 'لا توجد')}</tr>"
+            html += f"<tr><td>{p['id']}</td><td>{p['name']}</td><td>{p['price']} د.ع</td><td>{p.get('category', 'عام')}</td><td>{p.get('image', 'لا توجد')}</td></tr>"
         html += "</table><p><a href='/admin/add'>➕ إضافة منتج جديد</a></p><p><a href='/admin/dashboard'>⬅️ العودة للوحة التحكم</a></p>"
         return html
     except Exception as e:
@@ -1071,6 +1072,7 @@ def setup_db():
                 <li><a href="/debug-db">🔍 فحص قاعدة البيانات</a></li>
                 <li><a href="/test-add">🧪 اختبار إضافة منتج</a></li>
                 <li><a href="/check-products">📦 عرض المنتجات</a></li>
+                <li><a href="/recreate-tables">🔄 إعادة إنشاء الجداول</a></li>
             </ul>
         </body>
         </html>
@@ -1111,6 +1113,158 @@ def test_add():
         conn.commit()
         conn.close()
         return "✅ تم إضافة منتج تجريبي بنجاح"
+    except Exception as e:
+        import traceback
+        return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
+
+@app.route("/recreate-tables")
+def recreate_tables():
+    """إعادة إنشاء الجداول بالكامل مع عمود old_price"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        if USE_POSTGRES:
+            # حذف الجداول القديمة
+            cursor.execute("DROP TABLE IF EXISTS product_images")
+            cursor.execute("DROP TABLE IF EXISTS orders")
+            cursor.execute("DROP TABLE IF EXISTS products")
+            cursor.execute("DROP TABLE IF EXISTS users")
+            
+            # إعادة إنشاء جدول المنتجات
+            cursor.execute("""
+                CREATE TABLE products (
+                    id SERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    price REAL NOT NULL,
+                    old_price REAL DEFAULT 0,
+                    image TEXT,
+                    category TEXT DEFAULT 'عام'
+                )
+            """)
+            
+            # إنشاء جدول الصور
+            cursor.execute("""
+                CREATE TABLE product_images (
+                    id SERIAL PRIMARY KEY,
+                    product_id INTEGER NOT NULL,
+                    filename TEXT NOT NULL
+                )
+            """)
+            
+            # إنشاء جدول المستخدمين
+            cursor.execute("""
+                CREATE TABLE users (
+                    id SERIAL PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    phone TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            # إنشاء جدول الطلبات
+            cursor.execute("""
+                CREATE TABLE orders (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    items TEXT NOT NULL,
+                    total REAL NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            conn.commit()
+            
+            # إنشاء حساب الأدمن
+            hashed = generate_password_hash(ADMIN_PASSWORD)
+            cursor.execute("INSERT INTO users (name, email, password, phone) VALUES (%s, %s, %s, %s)",
+                           ("مدير الموقع", ADMIN_EMAIL, hashed, "0500000000"))
+            conn.commit()
+            
+        else:
+            # SQLite
+            cursor.execute("DROP TABLE IF EXISTS product_images")
+            cursor.execute("DROP TABLE IF EXISTS orders")
+            cursor.execute("DROP TABLE IF EXISTS products")
+            cursor.execute("DROP TABLE IF EXISTS users")
+            
+            cursor.execute("""
+                CREATE TABLE products (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    description TEXT,
+                    price REAL NOT NULL,
+                    old_price REAL DEFAULT 0,
+                    image TEXT,
+                    category TEXT DEFAULT 'عام'
+                )
+            """)
+            
+            cursor.execute("""
+                CREATE TABLE product_images (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    product_id INTEGER NOT NULL,
+                    filename TEXT NOT NULL
+                )
+            """)
+            
+            cursor.execute("""
+                CREATE TABLE users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    email TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    phone TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            cursor.execute("""
+                CREATE TABLE orders (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    items TEXT NOT NULL,
+                    total REAL NOT NULL,
+                    status TEXT DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
+            conn.commit()
+            
+            hashed = generate_password_hash(ADMIN_PASSWORD)
+            cursor.execute("INSERT INTO users (name, email, password, phone) VALUES (?, ?, ?, ?)",
+                           ("مدير الموقع", ADMIN_EMAIL, hashed, "0500000000"))
+            conn.commit()
+        
+        conn.close()
+        
+        return """
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>إعادة إنشاء الجداول</title></head>
+        <body style="font-family: Arial; padding: 20px;">
+            <h1>✅ تم إعادة إنشاء جميع الجداول بنجاح!</h1>
+            <hr>
+            <p><strong>✓ جدول products:</strong> تم إنشاؤه مع عمود old_price</p>
+            <p><strong>✓ جدول product_images:</strong> تم إنشاؤه</p>
+            <p><strong>✓ جدول users:</strong> تم إنشاؤه مع حساب الأدمن</p>
+            <p><strong>✓ جدول orders:</strong> تم إنشاؤه</p>
+            <hr>
+            <h3>🔗 روابط مفيدة:</h3>
+            <ul>
+                <li><a href="/force-admin">⚡ تسجيل دخول الأدمن</a></li>
+                <li><a href="/admin/add">➕ إضافة منتج</a></li>
+                <li><a href="/check-products">📦 عرض المنتجات</a></li>
+                <li><a href="/test-add">🧪 اختبار إضافة منتج</a></li>
+            </ul>
+        </body>
+        </html>
+        """
     except Exception as e:
         import traceback
         return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
