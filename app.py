@@ -6,7 +6,7 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from datetime import timedelta, datetime
-import time
+import traceback
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
@@ -25,12 +25,16 @@ ADMIN_EMAIL = "admin@turkishstore.com"
 ADMIN_PASSWORD = "Turk!sh@dm!n2025#Secure"
 ADMIN_PASSWORD_HASH = generate_password_hash(ADMIN_PASSWORD)
 
-USE_POSTGRES = bool(os.environ.get('DATABASE_URL'))
+# التحقق من وجود قاعدة بيانات PostgreSQL على Render
+DATABASE_URL = os.environ.get('DATABASE_URL')
+USE_POSTGRES = bool(DATABASE_URL)
+
 print(f"🔍 استخدام PostgreSQL: {USE_POSTGRES}")
+if DATABASE_URL:
+    print(f"🔍 DATABASE_URL موجود: {DATABASE_URL[:30]}...")
 
 # ========== دوال التعامل مع الرسائل ==========
 def load_messages():
-    """تحميل الرسائل من ملف JSON"""
     if os.path.exists(MESSAGES_FILE):
         try:
             with open(MESSAGES_FILE, 'r', encoding='utf-8') as f:
@@ -40,13 +44,10 @@ def load_messages():
     return []
 
 def save_messages(messages):
-    """حفظ الرسائل في ملف JSON"""
     with open(MESSAGES_FILE, 'w', encoding='utf-8') as f:
         json.dump(messages, f, ensure_ascii=False, indent=2)
 
-# ========== دوال الدردشة ==========
 def load_chat():
-    """تحميل رسائل الدردشة من ملف JSON"""
     if os.path.exists(CHAT_FILE):
         try:
             with open(CHAT_FILE, 'r', encoding='utf-8') as f:
@@ -56,48 +57,28 @@ def load_chat():
     return []
 
 def save_chat(chat_messages):
-    """حفظ رسائل الدردشة في ملف JSON"""
     with open(CHAT_FILE, 'w', encoding='utf-8') as f:
         json.dump(chat_messages, f, ensure_ascii=False, indent=2)
 
 def get_db():
-    """الحصول على اتصال بقاعدة البيانات مع إعدادات مناسبة"""
+    """الحصول على اتصال بقاعدة البيانات"""
     try:
         if USE_POSTGRES:
-            database_url = os.environ.get('DATABASE_URL')
-            conn = psycopg2.connect(database_url, sslmode='require')
+            conn = psycopg2.connect(DATABASE_URL, sslmode='require')
             conn.cursor_factory = RealDictCursor
             return conn
         else:
-            # SQLite مع إعدادات أفضل للتزامن
-            conn = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
+            conn = sqlite3.connect(DB_PATH, timeout=30)
             conn.row_factory = lambda cursor, row: {col[0]: row[i] for i, col in enumerate(cursor.description)}
-            # تفعيل وضع WAL لتحسين التزامن
             conn.execute("PRAGMA journal_mode=WAL")
-            conn.execute("PRAGMA synchronous=NORMAL")
             return conn
     except Exception as e:
         print(f"❌ خطأ في الاتصال بقاعدة البيانات: {e}")
+        traceback.print_exc()
         raise
 
 def get_placeholder():
     return '%s' if USE_POSTGRES else '?'
-
-def retry_on_lock(func):
-    """ديكور لإعادة المحاولة عند قفل قاعدة البيانات"""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                return func(*args, **kwargs)
-            except sqlite3.OperationalError as e:
-                if "database is locked" in str(e) and attempt < max_retries - 1:
-                    time.sleep(0.5 * (attempt + 1))
-                    continue
-                raise
-        return func(*args, **kwargs)
-    return wrapper
 
 def init_db():
     conn = get_db()
@@ -210,7 +191,7 @@ def migrate_db():
         conn.close()
 
 def create_admin_user():
-    """إنشاء حساب الأدمن في جدول المستخدمين إذا لم يكن موجوداً"""
+    """إنشاء حساب الأدمن في جدول المستخدمين"""
     conn = get_db()
     cursor = conn.cursor()
     placeholder = get_placeholder()
@@ -225,11 +206,11 @@ def create_admin_user():
                 ("مدير الموقع", ADMIN_EMAIL, ADMIN_PASSWORD_HASH, "0500000000")
             )
             conn.commit()
-            print("✅ تم إضافة حساب الأدمن في جدول المستخدمين")
+            print("✅ تم إضافة حساب الأدمن")
         else:
             print("✅ حساب الأدمن موجود بالفعل")
     except Exception as e:
-        print(f"⚠️ تحذير أثناء إنشاء حساب الأدمن: {e}")
+        print(f"⚠️ تحذير: {e}")
     finally:
         conn.close()
 
@@ -366,7 +347,6 @@ def checkout():
     conn.commit()
     conn.close()
     
-    # إرسال إشعار في الدردشة
     chat_messages = load_chat()
     notification = {
         "id": int(datetime.now().timestamp()),
@@ -390,12 +370,10 @@ def checkout():
 # ========== API للدردشة ==========
 @app.route("/api/chat/messages")
 def api_chat_messages():
-    """جلب رسائل الدردشة"""
     chat_messages = load_chat()
     user_id = session.get('user_id')
     is_admin = session.get('is_admin', False)
     
-    # تحديث حالة القراءة
     for msg in chat_messages:
         if is_admin and not msg.get('read_by_admin', False):
             msg['read_by_admin'] = True
@@ -404,7 +382,6 @@ def api_chat_messages():
     
     save_chat(chat_messages)
     
-    # حساب عدد الرسائل غير المقروءة
     unread_count = 0
     for msg in chat_messages:
         if is_admin and not msg.get('read_by_admin', False):
@@ -420,7 +397,6 @@ def api_chat_messages():
 
 @app.route("/api/chat/send", methods=["POST"])
 def api_chat_send():
-    """إرسال رسالة دردشة"""
     data = request.json
     user_id = session.get('user_id')
     user_name = session.get('user_name', 'زائر')
@@ -450,7 +426,6 @@ def api_chat_send():
 # ========== API للرسائل العادية ==========
 @app.route("/api/contact", methods=["POST"])
 def contact_api():
-    """استقبال رسائل الاتصال من المستخدمين"""
     data = request.json
     message = {
         "id": int(datetime.now().timestamp()),
@@ -467,7 +442,6 @@ def contact_api():
     messages.append(message)
     save_messages(messages)
     
-    # إضافة إشعار إلى الدردشة
     chat_messages = load_chat()
     notification = {
         "id": int(datetime.now().timestamp()) + 1000000,
@@ -484,12 +458,10 @@ def contact_api():
     chat_messages.append(notification)
     save_chat(chat_messages)
     
-    print(f"📨 تم استلام رسالة جديدة من {data.get('name')}")
     return jsonify({"success": True})
 
 @app.route("/api/messages")
 def api_messages():
-    """جلب جميع الرسائل العادية (للأدمن فقط)"""
     if not session.get('is_admin'):
         return jsonify({"error": "Unauthorized"}), 401
     messages = load_messages()
@@ -498,7 +470,6 @@ def api_messages():
 
 @app.route("/api/messages/<int:mid>/read", methods=["POST"])
 def api_mark_read(mid):
-    """تحديد رسالة كمقروءة"""
     if not session.get('is_admin'):
         return jsonify({"error": "Unauthorized"}), 401
     messages = load_messages()
@@ -511,38 +482,42 @@ def api_mark_read(mid):
 
 @app.route("/api/send-reply", methods=["POST"])
 def api_send_reply():
-    """إرسال رد على الرسالة"""
     if not session.get('is_admin'):
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json
     print(f"📧 إرسال رد إلى {data.get('to')}")
     return jsonify({"success": True})
 
-# ========== نظام تسجيل الدخول للمستخدمين العاديين ==========
+# ========== نظام تسجيل الدخول ==========
 @app.route("/user/login", methods=["GET", "POST"])
 def user_login():
     if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        remember = request.form.get("remember") == "on"
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "").strip()
         
-        conn = get_db()
-        cursor = conn.cursor()
-        placeholder = get_placeholder()
-        cursor.execute(f"SELECT * FROM users WHERE email = {placeholder}", (email,))
-        user = cursor.fetchone()
-        conn.close()
+        print(f"📧 محاولة تسجيل دخول - البريد: {email}")
         
-        if user and check_password_hash(user['password'], password):
-            session['user_id'] = user['id']
-            session['user_name'] = user['name']
-            session['user_email'] = user['email']
-            if remember:
-                session.permanent = True
-            flash(f"مرحباً {user['name']}، تم تسجيل الدخول بنجاح!", "success")
-            return redirect(url_for("products"))
-        else:
-            flash("البريد الإلكتروني أو كلمة المرور غير صحيحة", "danger")
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            
+            cursor.execute(f"SELECT * FROM users WHERE email = {placeholder}", (email,))
+            user = cursor.fetchone()
+            conn.close()
+            
+            if user and check_password_hash(user['password'], password):
+                session['user_id'] = user['id']
+                session['user_name'] = user['name']
+                session['user_email'] = user['email']
+                flash(f"مرحباً {user['name']}، تم تسجيل الدخول بنجاح!", "success")
+                return redirect(url_for("products"))
+            else:
+                flash("البريد الإلكتروني أو كلمة المرور غير صحيحة", "danger")
+        except Exception as e:
+            print(f"❌ خطأ في تسجيل الدخول: {e}")
+            traceback.print_exc()
+            flash("حدث خطأ في الخادم، حاول مرة أخرى", "danger")
     
     return render_template("user_login.html")
 
@@ -597,7 +572,7 @@ def user_logout():
 def user_profile():
     return render_template("user_profile.html")
 
-# ========== نظام تسجيل الدخول للأدمن ==========
+# ========== نظام الأدمن ==========
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -623,69 +598,13 @@ def admin_logout():
     flash("تم تسجيل الخروج من لوحة التحكم.", "info")
     return redirect(url_for("products"))
 
-@app.route("/clear-session")
-def clear_session():
-    session.clear()
-    flash("تم مسح الجلسة بالكامل", "info")
-    return redirect(url_for("products"))
-
 @app.route("/force-admin")
 def force_admin():
-    """تسجيل الدخول القسري كأدمن"""
     session["is_admin"] = True
     session["admin_email"] = ADMIN_EMAIL
     session["user_id"] = 999
     session["user_name"] = "مدير الموقع"
     flash("✅ تم تسجيل الدخول كأدمن بنجاح", "success")
-    return redirect(url_for("admin_dashboard"))
-
-@app.route("/check-session")
-def check_session():
-    """التحقق من حالة الجلسة"""
-    return f"""
-    <!DOCTYPE html>
-    <html dir="rtl">
-    <head><meta charset="UTF-8"><title>حالة الجلسة</title></head>
-    <body style="font-family: Arial; padding: 20px;">
-        <h1>🔍 حالة الجلسة</h1>
-        <hr>
-        <ul>
-            <li><strong>is_admin:</strong> {session.get('is_admin')}</li>
-            <li><strong>user_id:</strong> {session.get('user_id')}</li>
-            <li><strong>user_name:</strong> {session.get('user_name')}</li>
-        </ul>
-        <hr>
-        <p><a href="/admin/dashboard">📊 لوحة التحكم</a></p>
-        <p><a href="/products">🛍️ المتجر</a></p>
-        <p><a href="/force-admin">⚡ تسجيل الدخول القسري</a></p>
-    </body>
-    </html>
-    """
-
-@app.route("/create-test-message")
-def create_test_message():
-    """إنشاء رسالة تجريبية"""
-    if not session.get('is_admin'):
-        return "يجب تسجيل الدخول كأدمن أولاً", 401
-    
-    chat_messages = load_chat()
-    test_message = {
-        "id": int(datetime.now().timestamp()),
-        "type": "chat",
-        "user_id": 1,
-        "user_name": "مستخدم تجريبي",
-        "user_email": "test@example.com",
-        "message": "هذه رسالة تجريبية للتأكد من عمل نظام الدردشة",
-        "created_at": datetime.now().isoformat(),
-        "read_by_user": False,
-        "read_by_admin": False,
-        "is_admin": False,
-        "sender": "user"
-    }
-    chat_messages.append(test_message)
-    save_chat(chat_messages)
-    
-    flash("✅ تم إنشاء رسالة تجريبية", "success")
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin")
@@ -730,75 +649,66 @@ def admin_users():
 @app.route("/admin/add", methods=["GET", "POST"])
 @admin_required
 def admin_add():
-    conn = None
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c")
-        cats = cursor.fetchall()
-        categories = [r["c"] for r in cats]
-        conn.close()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT COALESCE(category,'عام') AS c FROM products ORDER BY c")
+    cats = cursor.fetchall()
+    categories = [r["c"] for r in cats]
+    conn.close()
 
-        if request.method == "POST":
-            name = request.form.get("name", "").strip()
-            description = request.form.get("description", "").strip()
-            price = request.form.get("price", "").strip()
-            old_price = request.form.get("old_price", "").strip()
-            category = request.form.get("category", "").strip()
-            image_filename = None
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        description = request.form.get("description", "").strip()
+        price = request.form.get("price", "").strip()
+        old_price = request.form.get("old_price", "").strip()
+        category = request.form.get("category", "").strip()
+        image_filename = None
 
-            files = request.files.getlist("images")
-            files = [f for f in files if getattr(f, "filename", "")][:5]
-            if files:
-                image_filename = files[0].filename
-                for f in files:
-                    f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
+        files = request.files.getlist("images")
+        files = [f for f in files if getattr(f, "filename", "")][:5]
+        if files:
+            image_filename = files[0].filename
+            for f in files:
+                f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
 
-            if not name or not price or not category:
-                flash("الاسم والسعر والفئة مطلوبة.", "danger")
-                return redirect(url_for("admin_add"))
+        if not name or not price or not category:
+            flash("الاسم والسعر والفئة مطلوبة.", "danger")
+            return redirect(url_for("admin_add"))
 
-            try:
-                price_val = float(price)
-                old_price_val = float(old_price) if old_price else 0
-            except ValueError:
-                flash("السعر غير صالح.", "danger")
-                return redirect(url_for("admin_add"))
+        try:
+            price_val = float(price)
+            old_price_val = float(old_price) if old_price else 0
+        except ValueError:
+            flash("السعر غير صالح.", "danger")
+            return redirect(url_for("admin_add"))
 
-            conn2 = get_db()
-            cursor2 = conn2.cursor()
-            placeholder = get_placeholder()
-            
-            if USE_POSTGRES:
-                cursor2.execute(
-                    f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}) RETURNING id",
-                    (name, description, price_val, old_price_val, image_filename, category)
-                )
-                result = cursor2.fetchone()
-                pid = result['id']
-            else:
-                cursor2.execute(
-                    f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
-                    (name, description, price_val, old_price_val, image_filename, category)
-                )
-                pid = cursor2.lastrowid
-            
-            if files:
-                for f in files[:5]:
-                    cursor2.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
-            
-            conn2.commit()
-            conn2.close()
-            flash("تمت إضافة المنتج بنجاح.", "success")
-            return redirect(url_for("admin_dashboard"))
+        conn2 = get_db()
+        cursor2 = conn2.cursor()
+        placeholder = get_placeholder()
+        
+        if USE_POSTGRES:
+            cursor2.execute(
+                f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}) RETURNING id",
+                (name, description, price_val, old_price_val, image_filename, category)
+            )
+            result = cursor2.fetchone()
+            pid = result['id']
+        else:
+            cursor2.execute(
+                f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
+                (name, description, price_val, old_price_val, image_filename, category)
+            )
+            pid = cursor2.lastrowid
+        
+        if files:
+            for f in files[:5]:
+                cursor2.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
+        
+        conn2.commit()
+        conn2.close()
+        flash("تمت إضافة المنتج بنجاح.", "success")
+        return redirect(url_for("admin_dashboard"))
 
-    except Exception as e:
-        if conn:
-            conn.close()
-        print(f"❌ خطأ في إضافة المنتج: {e}")
-        flash(f"حدث خطأ: {e}", "danger")
-        return redirect(url_for("admin_add"))
-    
     return render_template("add_product.html", categories=categories)
 
 @app.route("/admin/edit/<int:pid>", methods=["GET", "POST"])
@@ -927,6 +837,12 @@ def admin_delete_image(image_id):
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+@app.route("/clear-session")
+def clear_session():
+    session.clear()
+    flash("تم مسح الجلسة بالكامل", "info")
+    return redirect(url_for("products"))
 
 if __name__ == "__main__":
     init_db()
