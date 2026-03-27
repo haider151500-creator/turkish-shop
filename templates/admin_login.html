@@ -1,7 +1,184 @@
-<!DOCTYPE html><html lang="ar"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>تسجيل دخول الأدمن</title><link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}"></head>
-<body class="p-4"><div class="container" style="max-width:480px;"><h2 class="mb-4">تسجيل دخول الأدمن</h2>
-<form method="POST"><div class="mb-3"><label class="form-label">كلمة المرور</label>
-<input type="password" class="form-control" name="password" placeholder="1234"></div>
-<button class="btn btn-primary w-100">دخول</button></form>
-<div class="mt-3"><a href="{{ url_for('index') }}">الصفحة الرئيسية</a></div></div></body></html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل دخول الأدمن - متجر المنتجات التركية</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Noto Kufi Arabic', sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .login-header {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+        .login-header h2 {
+            margin: 0;
+            font-weight: 700;
+        }
+        .login-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+        .login-body {
+            padding: 30px;
+        }
+        .form-control {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            border-color: #6f42c1;
+            box-shadow: 0 0 0 0.2rem rgba(111,66,193,0.25);
+        }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(111,66,193,0.4);
+        }
+        .alert {
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .info-text {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            border-right: 4px solid #6f42c1;
+        }
+        .info-text small {
+            color: #6c757d;
+            display: block;
+            margin-top: 8px;
+        }
+        .forgot-link {
+            color: #6f42c1;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+        .admin-credentials {
+            background: #fff3e0;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 15px;
+            border-right: 4px solid #ff6b6b;
+            font-size: 0.85rem;
+        }
+        .admin-credentials strong {
+            color: #6f42c1;
+        }
+        .admin-credentials code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 6px;
+            direction: ltr;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="max-width: 480px;">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="bi bi-shield-lock" style="font-size: 48px;"></i>
+                <h2>لوحة تحكم الأدمن</h2>
+                <p>تسجيل الدخول للوصول إلى لوحة التحكم</p>
+            </div>
+            <div class="login-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'danger' else 'info' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        <input type="email" class="form-control" name="email" placeholder="admin@turkishstore.com" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">كلمة المرور</label>
+                        <input type="password" class="form-control" name="password" placeholder="••••••••" required>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                        <label class="form-check-label" for="remember">تذكرني</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary-custom text-white">
+                        <i class="bi bi-box-arrow-in-right"></i> تسجيل الدخول
+                    </button>
+                </form>
+                
+                <div class="admin-credentials">
+                    <i class="bi bi-key"></i> <strong>بيانات الدخول:</strong><br>
+                    البريد: <code>admin@turkishstore.com</code><br>
+                    كلمة المرور: <code>Turk!sh@dm!n2025#Secure</code>
+                </div>
+                
+                <div class="info-text">
+                    <small>
+                        <i class="bi bi-info-circle"></i> ملاحظة: هذه الصفحة مخصصة للأدمن فقط.<br>
+                        الرجاء إدخال البريد الإلكتروني وكلمة المرور الصحيحتين.
+                    </small>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('products') }}" class="text-decoration-none text-muted">
+                        <i class="bi bi-arrow-right"></i> العودة إلى المتجر
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حسابي - متجر المنتجات التركية</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Noto Kufi Arabic', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- NAVBAR -->
+    <nav class="bg-[#1565c0] shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-xl bg-[#42a5f5] flex items-center justify-center">
+                    <i data-lucide="flag" class="w-5 h-5 text-white"></i>
+                </div>
+                <span class="text-xl font-bold text-white">متجر المنتجات التركية</span>
+            </div>
+            <a href="{{ url_for('products') }}" class="text-white hover:text-[#42a5f5] transition">
+                <i data-lucide="home" class="w-6 h-6"></i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto p-6 mt-8">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+                <div class="flex items-center gap-4">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center">
+                        <i data-lucide="user" class="w-10 h-10 text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold">{{ session.get('user_name', 'مستخدم') }}</h1>
+                        <p class="text-blue-100">{{ session.get('user_email', '') }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">معلومات الحساب</h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between py-2 border-b">
+                        <span class="text-gray-600">الاسم:</span>
+                        <span class="font-semibold">{{ session.get('user_name', '') }}</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b">
+                        <span class="text-gray-600">البريد الإلكتروني:</span>
+                        <span class="font-semibold">{{ session.get('user_email', '') }}</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex gap-3">
+                    <a href="{{ url_for('products') }}" class="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center py-2 rounded-lg hover:shadow-lg transition">
+                        <i data-lucide="shopping-bag" class="w-4 h-4 inline ml-2"></i> متابعة التسوق
+                    </a>
+                    <a href="{{ url_for('user_logout') }}" class="flex-1 bg-red-500 text-white text-center py-2 rounded-lg hover:bg-red-600 transition">
+                        <i data-lucide="log-out" class="w-4 h-4 inline ml-2"></i> تسجيل خروج
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -135,16 +135,19 @@
             margin-bottom: 8px;
         }
         
-        /* صندوق الرسائل */
-        .messages-panel {
+        /* صندوق الدردشة (مثل الواتساب) */
+        .chat-panel {
             background: white;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            height: calc(100vh - 150px);
+            display: flex;
+            flex-direction: column;
         }
         
-        .messages-header {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+        .chat-header {
+            background: linear-gradient(135deg, #1976d2, #1565c0);
             color: white;
             padding: 15px 20px;
             display: flex;
@@ -152,105 +155,116 @@
             align-items: center;
         }
         
-        .message-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .message-item:hover {
-            background: #f8f9fa;
-            transform: translateX(-5px);
-        }
-        
-        .message-item.unread {
-            background: #fff3e0;
-            border-right: 4px solid #ff6b6b;
-        }
-        
-        .message-subject {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .message-info {
-            font-size: 0.85rem;
-            color: #666;
+        .chat-header h4 {
+            margin: 0;
+            font-size: 1.2rem;
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
         }
         
-        .message-preview {
-            font-size: 0.9rem;
-            color: #888;
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-message {
+            margin-bottom: 15px;
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+        
+        .chat-message.user {
+            background: #1976d2;
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .chat-message.admin {
+            background: #e5e7eb;
+            color: #1f2937;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .chat-message.system {
+            background: #fef3c7;
+            color: #92400e;
+            align-self: center;
+            font-size: 12px;
+            text-align: center;
+            max-width: 90%;
+        }
+        
+        .chat-message .sender {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            opacity: 0.8;
+        }
+        
+        .chat-message .time {
+            font-size: 10px;
             margin-top: 5px;
+            opacity: 0.6;
+            text-align: left;
         }
         
-        .message-badge {
+        .chat-input-area {
+            padding: 15px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            background: white;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .chat-input:focus {
+            border-color: #1976d2;
+        }
+        
+        .chat-send {
+            background: #1976d2;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .chat-send:hover {
+            transform: scale(1.05);
+            background: #1565c0;
+        }
+        
+        .unread-badge {
             background: #ff6b6b;
             color: white;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-        }
-        
-        /* نافذة عرض الرسالة */
-        .modal-message {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        .modal-message.active {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow: auto;
-            animation: slideUp 0.3s ease;
-        }
-        
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        
-        .modal-header {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 20px 20px 0 0;
-        }
-        
-        .modal-body {
-            padding: 20px;
-        }
-        
-        .reply-form {
-            margin-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            padding-top: 20px;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 10px;
+            margin-right: 5px;
         }
         
         @media (max-width: 768px) {
@@ -277,6 +291,9 @@
                 padding: 10px;
                 border-radius: 10px;
             }
+            .chat-message {
+                max-width: 85%;
+            }
         }
         
         @media (min-width: 769px) {
@@ -297,6 +314,27 @@
         .btn-primary-custom:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(111,66,193,0.3);
+        }
+        
+        .product-card .card-footer {
+            background: transparent;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .admin-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: #ffaa00;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 999;
+        }
+        
+        .admin-badge i {
+            margin-left: 5px;
         }
     </style>
 </head>
@@ -320,14 +358,14 @@
         <a class="nav-link" href="#" onclick="showSection('products')">
             <i class='bx bx-package'></i> المنتجات
         </a>
-        <a class="nav-link" href="#" onclick="showSection('messages')">
-            <i class='bx bx-envelope'></i> الرسائل
-            <span class="badge bg-danger ms-auto" id="unreadCount">0</span>
+        <a class="nav-link" href="#" onclick="showSection('chat')">
+            <i class='bx bx-message-dots'></i> الدردشة
+            <span class="badge bg-danger ms-auto" id="chatUnreadBadge" style="display: none;">0</span>
         </a>
         <a class="nav-link" href="{{ url_for('products') }}">
             <i class='bx bx-store'></i> المتجر
         </a>
-        <a class="nav-link" href="{{ url_for('admin_logout') }}">
+        <a class="nav-link" href="{{ url_for('admin_logout') }}" onclick="return confirm('هل أنت متأكد من تسجيل الخروج؟')">
             <i class='bx bx-log-out'></i> خروج
         </a>
     </div>
@@ -346,9 +384,9 @@
         </div>
         <div class="col-md-3">
             <div class="stat-card text-center">
-                <i class='bx bx-envelope bx-lg text-primary'></i>
+                <i class='bx bx-message-dots bx-lg text-primary'></i>
                 <h3 id="totalMessages">0</h3>
-                <p class="text-muted mb-0">الرسائل الواردة</p>
+                <p class="text-muted mb-0">رسائل الدردشة</p>
             </div>
         </div>
         <div class="col-md-3">
@@ -394,7 +432,7 @@
                             <h5 class="card-title">{{ p.name }}</h5>
                             <p class="card-text text-muted small">{{ p.description[:80] }}{% if p.description|length > 80 %}...{% endif %}</p>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-primary">{{ '%.0f'|format(p.price) }} $</span>
+                                <span class="fw-bold text-primary">{{ '%.0f'|format(p.price) }} د.ع</span>
                                 <span class="badge bg-secondary">{{ p.category or 'عام' }}</span>
                             </div>
                         </div>
@@ -415,264 +453,227 @@
         {% endif %}
     </div>
 
-    <!-- قسم الرسائل -->
-    <div id="messagesSection" style="display: none;">
-        <div class="messages-panel">
-            <div class="messages-header">
-                <h5 class="mb-0"><i class='bx bx-envelope'></i> صندوق الوارد</h5>
-                <button class="btn btn-sm btn-light" onclick="refreshMessages()">
+    <!-- قسم الدردشة (مثل الواتساب) -->
+    <div id="chatSection" style="display: none;">
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h4>
+                    <i class='bx bx-message-dots'></i>
+                    محادثات العملاء
+                    <span id="chatUnreadCount" class="unread-badge" style="display: none;">0</span>
+                </h4>
+                <button class="btn btn-sm btn-light" onclick="refreshChat()">
                     <i class='bx bx-refresh'></i> تحديث
                 </button>
             </div>
-            <div id="messagesList">
-                <!-- سيتم عرض الرسائل هنا عبر JavaScript -->
-                <div class="text-center p-5 text-muted">
-                    <i class='bx bx-loader-alt bx-spin bx-lg'></i>
-                    <p>جاري تحميل الرسائل...</p>
+            <div id="chatMessages" class="chat-messages">
+                <div class="chat-message system">
+                    <i class='bx bx-loader-alt bx-spin'></i> جاري تحميل المحادثات...
                 </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" class="chat-input" placeholder="اكتب ردك هنا..." onkeypress="if(event.key === 'Enter') sendAdminMessage()">
+                <button class="chat-send" onclick="sendAdminMessage()">
+                    <i class='bx bx-send'></i>
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- نافذة عرض الرسالة -->
-<div id="messageModal" class="modal-message">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="mb-0" id="modalSubject"></h5>
-            <button class="btn-close btn-close-white" onclick="closeModal()"></button>
-        </div>
-        <div class="modal-body">
-            <div class="mb-3">
-                <strong>من:</strong> <span id="modalName"></span><br>
-                <strong>البريد:</strong> <span id="modalEmail"></span><br>
-                <strong>الهاتف:</strong> <span id="modalPhone"></span><br>
-                <strong>التاريخ:</strong> <span id="modalDate"></span>
-            </div>
-            <hr>
-            <div class="mb-3">
-                <strong>الرسالة:</strong>
-                <p class="mt-2" id="modalMessage" style="white-space: pre-wrap;"></p>
-            </div>
-            <div class="reply-form">
-                <h6>الرد على الرسالة:</h6>
-                <textarea id="replyText" class="form-control mb-2" rows="3" placeholder="اكتب ردك هنا..."></textarea>
-                <button class="btn btn-primary-custom" onclick="sendReply()">
-                    <i class='bx bx-send'></i> إرسال الرد
-                </button>
-            </div>
-        </div>
-    </div>
+<!-- شارة الأدمن -->
+<div class="admin-badge">
+    <i class='bx bx-shield'></i> وضع الأدمن
 </div>
 
 <script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 
 <script>
-// بيانات الرسائل (ستُخزن في localStorage مؤقتاً)
-let messages = [];
+// بيانات الدردشة
+let chatMessages = [];
+let chatInterval = null;
 
-// تحميل الرسائل المحفوظة
-function loadMessages() {
-    const saved = localStorage.getItem('contactMessages');
-    if (saved) {
-        messages = JSON.parse(saved);
-    } else {
-        // رسائل تجريبية
-        messages = [
-            {
-                id: 1,
-                name: 'أحمد محمد',
-                email: 'ahmed@example.com',
-                phone: '0551234567',
-                subject: 'استفسار عن منتج',
-                message: 'السلام عليكم، أود الاستفسار عن إمكانية شراء منتجات بالجملة وبأي أسعار؟',
-                date: new Date().toISOString(),
-                read: false
-            },
-            {
-                id: 2,
-                name: 'سارة علي',
-                email: 'sara@example.com',
-                phone: '0557654321',
-                subject: 'طلب شراء',
-                message: 'مرحباً، أريد شراء المنتج رقم 3، هل هو متوفر؟',
-                date: new Date(Date.now() - 86400000).toISOString(),
-                read: true
-            },
-            {
-                id: 3,
-                name: 'محمد خالد',
-                email: 'mohamed@example.com',
-                phone: '0501234567',
-                subject: 'شكوى',
-                message: 'لم تصلني الطلبية بعد، الرجاء التواصل معي',
-                date: new Date(Date.now() - 172800000).toISOString(),
-                read: false
+// جلب رسائل الدردشة
+async function loadChatMessages() {
+    try {
+        const response = await fetch('/api/chat/messages');
+        const data = await response.json();
+        
+        if (data.success && data.messages) {
+            chatMessages = data.messages;
+            updateChatDisplay();
+            
+            // تحديث عدد الرسائل غير المقروءة
+            const unreadCount = data.unread_count || 0;
+            const chatBadge = document.getElementById('chatUnreadBadge');
+            const chatUnreadCount = document.getElementById('chatUnreadCount');
+            const totalMessages = document.getElementById('totalMessages');
+            const unreadMessages = document.getElementById('unreadMessages');
+            
+            if (unreadCount > 0) {
+                chatBadge.style.display = 'inline-block';
+                chatUnreadCount.style.display = 'inline-block';
+                chatBadge.innerText = unreadCount;
+                chatUnreadCount.innerText = unreadCount;
+            } else {
+                chatBadge.style.display = 'none';
+                chatUnreadCount.style.display = 'none';
             }
-        ];
-        saveMessages();
-    }
-    updateMessagesDisplay();
-}
-
-// حفظ الرسائل
-function saveMessages() {
-    localStorage.setItem('contactMessages', JSON.stringify(messages));
-    updateStats();
-}
-
-// تحديث الإحصائيات
-function updateStats() {
-    const total = messages.length;
-    const unread = messages.filter(m => !m.read).length;
-    document.getElementById('totalMessages').innerText = total;
-    document.getElementById('unreadMessages').innerText = unread;
-    document.getElementById('unreadCount').innerText = unread;
-}
-
-// عرض الرسائل في الصفحة
-function updateMessagesDisplay() {
-    const container = document.getElementById('messagesList');
-    if (!container) return;
-    
-    if (messages.length === 0) {
-        container.innerHTML = `
-            <div class="text-center p-5 text-muted">
-                <i class='bx bx-inbox bx-lg'></i>
-                <p class="mt-2">لا توجد رسائل بعد</p>
+            
+            if (totalMessages) totalMessages.innerText = chatMessages.length;
+            if (unreadMessages) unreadMessages.innerText = unreadCount;
+        }
+    } catch (error) {
+        console.error('خطأ في جلب الرسائل:', error);
+        document.getElementById('chatMessages').innerHTML = `
+            <div class="chat-message system">
+                <i class='bx bx-error-circle'></i> حدث خطأ في الاتصال بالخادم
+                <button class="btn btn-sm btn-primary mt-2" onclick="refreshChat()">إعادة المحاولة</button>
             </div>
         `;
-        updateStats();
+    }
+}
+
+// عرض الرسائل في واجهة الدردشة
+function updateChatDisplay() {
+    const container = document.getElementById('chatMessages');
+    if (!container) return;
+    
+    if (chatMessages.length === 0) {
+        container.innerHTML = `
+            <div class="chat-message system">
+                <i class='bx bx-message-dots'></i> لا توجد رسائل بعد
+                <div class="mt-2 small">الرسائل من العملاء ستظهر هنا تلقائياً</div>
+            </div>
+        `;
         return;
     }
     
     let html = '';
-    messages.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // ترتيب الرسائل من الأحدث إلى الأقدم للعرض
+    const sortedMessages = [...chatMessages].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     
-    messages.forEach(msg => {
-        const date = new Date(msg.date).toLocaleDateString('ar-SA');
-        const isUnread = !msg.read;
+    sortedMessages.forEach(msg => {
+        const isUser = msg.sender === 'user' || (msg.user_id && msg.user_id !== 999);
+        const isAdmin = msg.sender === 'admin' || (msg.user_id === 999);
+        const isSystem = msg.type === 'system';
+        
+        let messageClass = '';
+        let senderName = '';
+        
+        if (isSystem) {
+            messageClass = 'system';
+            senderName = '📢 نظام';
+        } else if (isUser) {
+            messageClass = 'user';
+            senderName = msg.user_name || 'عميل';
+        } else {
+            messageClass = 'admin';
+            senderName = 'أنت (الأدمن)';
+        }
+        
+        const time = new Date(msg.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+        const date = new Date(msg.created_at).toLocaleDateString('ar-SA');
+        
         html += `
-            <div class="message-item ${isUnread ? 'unread' : ''}" onclick="openMessage(${msg.id})">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <div class="message-subject">
-                            ${msg.subject}
-                            ${isUnread ? '<span class="message-badge ms-2">جديد</span>' : ''}
-                        </div>
-                        <div class="message-info">
-                            <span><i class='bx bx-user'></i> ${msg.name}</span>
-                            <span><i class='bx bx-envelope'></i> ${msg.email}</span>
-                            <span><i class='bx bx-calendar'></i> ${date}</span>
-                        </div>
-                        <div class="message-preview">
-                            ${msg.message.substring(0, 80)}${msg.message.length > 80 ? '...' : ''}
-                        </div>
-                    </div>
-                    <div class="ms-3">
-                        ${!msg.read ? '<i class="bx bx-envelope text-primary"></i>' : '<i class="bx bx-check-circle text-success"></i>'}
-                    </div>
-                </div>
+            <div class="chat-message ${messageClass}">
+                <div class="sender">${escapeHtml(senderName)}</div>
+                <div>${escapeHtml(msg.message)}</div>
+                <div class="time">${date} - ${time}</div>
             </div>
         `;
     });
     
     container.innerHTML = html;
-    updateStats();
+    container.scrollTop = container.scrollHeight;
 }
 
-// فتح عرض الرسالة
-let currentMessageId = null;
-
-function openMessage(id) {
-    const msg = messages.find(m => m.id === id);
-    if (!msg) return;
+// إرسال رد من الأدمن
+async function sendAdminMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    if (!message) return;
     
-    currentMessageId = id;
-    
-    // تحديث حالة القراءة
-    if (!msg.read) {
-        msg.read = true;
-        saveMessages();
-        updateMessagesDisplay();
-    }
-    
-    document.getElementById('modalSubject').innerText = msg.subject;
-    document.getElementById('modalName').innerText = msg.name;
-    document.getElementById('modalEmail').innerText = msg.email;
-    document.getElementById('modalPhone').innerText = msg.phone || 'غير متوفر';
-    document.getElementById('modalDate').innerText = new Date(msg.date).toLocaleString('ar-SA');
-    document.getElementById('modalMessage').innerText = msg.message;
-    
-    document.getElementById('messageModal').classList.add('active');
-}
-
-// إغلاق النافذة
-function closeModal() {
-    document.getElementById('messageModal').classList.remove('active');
-}
-
-// إرسال الرد
-function sendReply() {
-    const reply = document.getElementById('replyText').value;
-    if (!reply.trim()) {
-        alert('الرجاء كتابة الرد أولاً');
-        return;
-    }
-    
-    const msg = messages.find(m => m.id === currentMessageId);
-    if (msg) {
-        // هنا يمكن إضافة كود إرسال الرد عبر البريد الإلكتروني
-        alert(`تم إرسال الرد إلى ${msg.email}\n\nالرد: ${reply}`);
-        document.getElementById('replyText').value = '';
-        closeModal();
+    try {
+        const response = await fetch('/api/chat/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: message,
+                user_id: 999,
+                user_name: 'الدعم الفني',
+                user_email: 'admin@turkishstore.com'
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            input.value = '';
+            loadChatMessages();
+            showAlert("✅ تم إرسال ردك", "success");
+        } else {
+            showAlert("❌ فشل في إرسال الرد", "danger");
+        }
+    } catch (error) {
+        console.error('خطأ في إرسال الرد:', error);
+        showAlert("❌ حدث خطأ في الإرسال", "danger");
     }
 }
 
-// إضافة رسالة جديدة (يمكن استدعاؤها من نموذج الاتصال)
-function addMessage(name, email, phone, subject, message) {
-    const newMessage = {
-        id: Date.now(),
-        name: name,
-        email: email,
-        phone: phone || '',
-        subject: subject,
-        message: message,
-        date: new Date().toISOString(),
-        read: false
-    };
-    messages.unshift(newMessage);
-    saveMessages();
-    updateMessagesDisplay();
-    alert('تم استلام رسالتك بنجاح! سنتواصل معك قريباً.');
+// تحديث الدردشة
+function refreshChat() {
+    loadChatMessages();
 }
 
-// تحديث الرسائل
-function refreshMessages() {
-    updateMessagesDisplay();
+// دالة لتأمين النص من XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// عرض تنبيه
+function showAlert(message, type = "info") {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alertDiv.style.zIndex = 9999;
+    alertDiv.style.minWidth = '300px';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 3000);
 }
 
 // تبديل الأقسام
 function showSection(section) {
     const productsDiv = document.getElementById('productsSection');
-    const messagesDiv = document.getElementById('messagesSection');
+    const chatDiv = document.getElementById('chatSection');
     const statsDiv = document.getElementById('statsSection');
     
     if (section === 'products') {
         productsDiv.style.display = 'block';
-        messagesDiv.style.display = 'none';
+        chatDiv.style.display = 'none';
         statsDiv.style.display = 'flex';
-        // تحديث الروابط النشطة
         document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
-        document.querySelectorAll('.sidebar .nav-link')[0].classList.add('active');
-    } else if (section === 'messages') {
+        document.querySelectorAll('.sidebar .nav-link')[1].classList.add('active');
+        if (chatInterval) {
+            clearInterval(chatInterval);
+            chatInterval = null;
+        }
+    } else if (section === 'chat') {
         productsDiv.style.display = 'none';
-        messagesDiv.style.display = 'block';
+        chatDiv.style.display = 'block';
         statsDiv.style.display = 'none';
         document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
         document.querySelectorAll('.sidebar .nav-link')[2].classList.add('active');
-        refreshMessages();
+        loadChatMessages();
+        if (!chatInterval) {
+            chatInterval = setInterval(loadChatMessages, 5000);
+        }
     }
 }
 
@@ -683,13 +684,13 @@ function toggleSidebar() {
 
 // تحميل البيانات عند فتح الصفحة
 document.addEventListener('DOMContentLoaded', function() {
-    loadMessages();
+    loadChatMessages();
 });
 
-// عند النقر خارج النافذة لإغلاقها
-document.getElementById('messageModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeModal();
+// تنظيف المؤقت عند مغادرة الصفحة
+window.addEventListener('beforeunload', function() {
+    if (chatInterval) {
+        clearInterval(chatInterval);
     }
 });
 </script>
