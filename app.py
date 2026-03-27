@@ -31,7 +31,7 @@ USE_POSTGRES = bool(DATABASE_URL)
 
 print(f"🔍 استخدام PostgreSQL: {USE_POSTGRES}")
 if DATABASE_URL:
-    print(f"🔍 DATABASE_URL موجود: {DATABASE_URL[:30]}...")
+    print(f"🔍 DATABASE_URL موجود")
 
 # ========== دوال التعامل مع الرسائل ==========
 def load_messages():
@@ -843,6 +843,106 @@ def clear_session():
     session.clear()
     flash("تم مسح الجلسة بالكامل", "info")
     return redirect(url_for("products"))
+
+# ========== رووات مساعدة للتشخيص ==========
+@app.route("/debug-db")
+def debug_db():
+    """فحص حالة قاعدة البيانات"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) as count FROM users")
+        users_count = cursor.fetchone()
+        cursor.execute("SELECT COUNT(*) as count FROM products")
+        products_count = cursor.fetchone()
+        conn.close()
+        
+        return f"""
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>حالة قاعدة البيانات</title></head>
+        <body style="font-family: Arial; padding: 20px;">
+            <h1>🔍 حالة قاعدة البيانات</h1>
+            <hr>
+            <p><strong>نوع قاعدة البيانات:</strong> {'PostgreSQL ✅' if USE_POSTGRES else 'SQLite'}</p>
+            <p><strong>عدد المستخدمين:</strong> {users_count['count']}</p>
+            <p><strong>عدد المنتجات:</strong> {products_count['count']}</p>
+            <hr>
+            <h3>🔗 روابط مفيدة:</h3>
+            <ul>
+                <li><a href="/force-admin">⚡ تسجيل دخول الأدمن</a></li>
+                <li><a href="/user/register">📝 إنشاء حساب جديد</a></li>
+                <li><a href="/create-test-user">👤 إنشاء مستخدم تجريبي</a></li>
+                <li><a href="/check-users">📋 عرض المستخدمين</a></li>
+                <li><a href="/clear-session">🗑️ مسح الجلسة</a></li>
+            </ul>
+        </body>
+        </html>
+        """
+    except Exception as e:
+        return f"❌ خطأ: {e}"
+
+@app.route("/check-users")
+def check_users():
+    """عرض جميع المستخدمين"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name, email, phone FROM users")
+        users = cursor.fetchall()
+        conn.close()
+        
+        if not users:
+            return """
+            <h1>⚠️ لا يوجد مستخدمين</h1>
+            <p>لا يوجد أي مستخدمين في قاعدة البيانات.</p>
+            <p><a href="/user/register">إنشاء حساب جديد</a></p>
+            <p><a href="/create-test-user">إنشاء مستخدم تجريبي</a></p>
+            """
+        
+        html = "<h1>📋 قائمة المستخدمين</h1><table border='1' cellpadding='10'><tr><th>ID</th><th>الاسم</th><th>البريد</th><th>الهاتف</th></tr>"
+        for u in users:
+            html += f"<tr><td>{u['id']}</td><td>{u['name']}</td><td>{u['email']}</td><td>{u.get('phone', '-')}</td></tr>"
+        html += "</table><p><a href='/'>العودة</a></p>"
+        return html
+    except Exception as e:
+        return f"❌ خطأ: {e}"
+
+@app.route("/create-test-user")
+def create_test_user():
+    """إنشاء مستخدم تجريبي"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        placeholder = get_placeholder()
+        
+        email = "test@example.com"
+        password = "123456"
+        hashed = generate_password_hash(password)
+        
+        # التحقق من وجود المستخدم
+        cursor.execute(f"SELECT * FROM users WHERE email = {placeholder}", (email,))
+        existing = cursor.fetchone()
+        
+        if not existing:
+            cursor.execute(
+                f"INSERT INTO users (name, email, password, phone) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder})",
+                ("مستخدم تجريبي", email, hashed, "0500000000")
+            )
+            conn.commit()
+            return """
+            <h1>✅ تم إنشاء مستخدم تجريبي</h1>
+            <p><strong>البريد:</strong> test@example.com</p>
+            <p><strong>كلمة المرور:</strong> 123456</p>
+            <hr>
+            <a href="/user/login">تسجيل الدخول</a>
+            """
+        else:
+            return "⚠️ المستخدم التجريبي موجود بالفعل"
+    except Exception as e:
+        return f"❌ خطأ: {e}"
+    finally:
+        conn.close()
 
 if __name__ == "__main__":
     init_db()
