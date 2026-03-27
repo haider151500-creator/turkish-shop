@@ -459,7 +459,7 @@
         return `
           <div class="product-card bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl fade-up fade-up-d${(idx % 4) + 1} cursor-pointer" onclick="openProductModal(${p.id})">
             <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 h-36 md:h-44 flex items-center justify-center hover:scale-110 transition-transform duration-300">
-              ${p.image ? `<img src="/uploads/${p.image}" class="w-full h-full object-cover" alt="${p.name}">` : `<span class="text-5xl md:text-6xl drop-shadow-sm">📦</span>`}
+              ${p.image ? `<img src="https://elxnymtwludcydvnjkth.supabase.co/storage/v1/object/public/products/${p.image}" class="w-full h-full object-cover" alt="${p.name}">` : `<span class="text-5xl md:text-6xl drop-shadow-sm">📦</span>`}
               ${discountBadge}
               <span class="product-category-badge">${p.category || 'عام'}</span>
             </div>
@@ -518,7 +518,7 @@
       document.getElementById("productOldPrice").innerHTML = currentProductData.old_price ? currentProductData.old_price.toLocaleString() + " د.ع" : '';
       document.getElementById("productPriceUsd").innerHTML = `≈ ${(currentProductData.price / 1300).toFixed(0)} دولار أمريكي`;
       document.getElementById("productDescription").innerText = currentProductData.description || "منتج  عالي الجودة";
-      document.getElementById("productEmoji").innerHTML = currentProductData.image ? `<img src="/uploads/${currentProductData.image}" class="w-full h-full object-cover rounded-xl">` : '📦';
+      document.getElementById("productEmoji").innerHTML = currentProductData.image ? `<img src="https://elxnymtwludcydvnjkth.supabase.co/storage/v1/object/public/products/${currentProductData.image}" class="w-full h-full object-cover rounded-xl">` : '📦';
       document.getElementById("productModal").classList.remove("hidden");
     }
 
@@ -527,7 +527,7 @@
       document.getElementById("imageGallery").classList.remove("hidden");
       const emojiSpan = document.getElementById("galleryEmoji");
       if (currentProductData && currentProductData.image) {
-        emojiSpan.innerHTML = `<img src="/uploads/${currentProductData.image}" class="max-w-full max-h-full object-contain">`;
+        emojiSpan.innerHTML = `<img src="https://elxnymtwludcydvnjkth.supabase.co/storage/v1/object/public/products/${currentProductData.image}" class="max-w-full max-h-full object-contain">`;
       } else { emojiSpan.innerText = '📦'; }
     }
     function closeImageGallery() { document.getElementById("imageGallery").classList.add("hidden"); }
