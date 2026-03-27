@@ -900,7 +900,7 @@ def check_users():
             <p><a href="/create-test-user">إنشاء مستخدم تجريبي</a></p>
             """
         
-        html = "<h1>📋 قائمة المستخدمين</h1><table border='1' cellpadding='10'><tr><th>ID</th><th>الاسم</th><th>البريد</th><th>الهاتف</th></tr>"
+        html = "<h1>📋 قائمة المستخدمين</h1><table border='1' cellpadding='10'>寿<th>ID</th><th>الاسم</th><th>البريد</th><th>الهاتف</th></tr>"
         for u in users:
             html += f"<tr><td>{u['id']}</td><td>{u['name']}</td><td>{u['email']}</td><td>{u.get('phone', '-')}</td></tr>"
         html += "</table><p><a href='/'>العودة</a></p>"
@@ -943,6 +943,103 @@ def create_test_user():
         return f"❌ خطأ: {e}"
     finally:
         conn.close()
+
+@app.route("/setup-db")
+def setup_db():
+    """إنشاء جميع الجداول في قاعدة البيانات"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # إنشاء جدول المنتجات
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS products (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                price REAL NOT NULL,
+                old_price REAL DEFAULT 0,
+                image TEXT,
+                category TEXT DEFAULT 'عام'
+            )
+        """)
+        
+        # إنشاء جدول الصور
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS product_images (
+                id SERIAL PRIMARY KEY,
+                product_id INTEGER NOT NULL,
+                filename TEXT NOT NULL
+            )
+        """)
+        
+        # إنشاء جدول المستخدمين
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                name TEXT NOT NULL,
+                phone TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # إنشاء جدول الطلبات
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS orders (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                items TEXT NOT NULL,
+                total REAL NOT NULL,
+                status TEXT DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        conn.commit()
+        
+        # إنشاء حساب الأدمن
+        hashed = generate_password_hash(ADMIN_PASSWORD)
+        cursor.execute("SELECT * FROM users WHERE email = %s", (ADMIN_EMAIL,))
+        admin_exists = cursor.fetchone()
+        
+        if not admin_exists:
+            cursor.execute(
+                "INSERT INTO users (name, email, password, phone) VALUES (%s, %s, %s, %s)",
+                ("مدير الموقع", ADMIN_EMAIL, hashed, "0500000000")
+            )
+            conn.commit()
+            admin_created = "✅ تم إنشاء حساب الأدمن"
+        else:
+            admin_created = "✅ حساب الأدمن موجود بالفعل"
+        
+        conn.close()
+        
+        return f"""
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>إعداد قاعدة البيانات</title></head>
+        <body style="font-family: Arial; padding: 20px;">
+            <h1>✅ تم إنشاء جميع الجداول بنجاح!</h1>
+            <hr>
+            <p><strong>الجدول products:</strong> تم إنشاؤه</p>
+            <p><strong>الجدول product_images:</strong> تم إنشاؤه</p>
+            <p><strong>الجدول users:</strong> تم إنشاؤه</p>
+            <p><strong>الجدول orders:</strong> تم إنشاؤه</p>
+            <p><strong>{admin_created}</strong></p>
+            <hr>
+            <h3>🔗 روابط مفيدة:</h3>
+            <ul>
+                <li><a href="/force-admin">⚡ تسجيل دخول الأدمن</a></li>
+                <li><a href="/user/register">📝 إنشاء حساب جديد</a></li>
+                <li><a href="/debug-db">🔍 فحص قاعدة البيانات</a></li>
+            </ul>
+        </body>
+        </html>
+        """
+    except Exception as e:
+        return f"❌ خطأ: {e}"
 
 if __name__ == "__main__":
     init_db()
