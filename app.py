@@ -7,6 +7,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from datetime import timedelta, datetime
 import traceback
+import uuid
+
+# محاولة استيراد Supabase (إذا كان مثبتاً)
+try:
+    from supabase import create_client
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    SUPABASE_AVAILABLE = False
+    print("⚠️ مكتبة supabase غير مثبتة. سيتم استخدام التخزين المحلي للصور.")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
@@ -19,6 +28,17 @@ app.secret_key = os.environ.get('SECRET_KEY', 'change-this-in-production')
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+# ========== إعداد Supabase Storage ==========
+SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://elxnymtwlducydvnjkth.supabase.co')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
+supabase = None
+if SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("✅ Supabase Storage متصل بنجاح")
+    except Exception as e:
+        print(f"⚠️ فشل الاتصال بـ Supabase Storage: {e}")
 
 # ========== بيانات حساب الأدمن ==========
 ADMIN_EMAIL = "admin@turkishstore.com"
@@ -646,7 +666,7 @@ def admin_users():
     conn.close()
     return render_template("admin_users.html", users=users)
 
-# ========== دالة إضافة المنتج المعدلة ==========
+# ========== دالة إضافة المنتج المعدلة (مع دعم Supabase Storage) ==========
 @app.route("/admin/add", methods=["GET", "POST"])
 @admin_required
 def admin_add():
@@ -668,7 +688,35 @@ def admin_add():
         files = request.files.getlist("images")
         files = [f for f in files if getattr(f, "filename", "")]
         
-        if files:
+        # رفع الصور إلى Supabase Storage أو حفظها محلياً
+        if files and supabase:
+            try:
+                uploaded_names = []
+                for f in files:
+                    # إنشاء اسم فريد للصورة
+                    ext = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
+                    unique_name = f"{uuid.uuid4()}.{ext}"
+                    
+                    # رفع الصورة إلى Supabase Storage
+                    file_content = f.read()
+                    supabase.storage.from_("products").upload(unique_name, file_content)
+                    uploaded_names.append(unique_name)
+                    print(f"✅ تم رفع الصورة {unique_name} إلى Supabase Storage")
+                
+                if uploaded_names:
+                    image_filename = uploaded_names[0]  # الصورة الرئيسية
+                    # يمكنك حفظ باقي الصور في جدول product_images إذا أردت
+            except Exception as e:
+                print(f"❌ خطأ في رفع الصورة إلى Supabase: {e}")
+                # في حالة الفشل، نعود للتخزين المحلي
+                image_filename = files[0].filename
+                for f in files:
+                    try:
+                        f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
+                    except Exception as e2:
+                        print(f"❌ خطأ في حفظ الصورة محلياً: {e2}")
+        elif files:
+            # حفظ محلياً إذا لم يكن Supabase متاحاً
             image_filename = files[0].filename
             for f in files:
                 try:
@@ -706,9 +754,17 @@ def admin_add():
                 )
                 pid = cursor.lastrowid
             
-            if files:
-                for f in files[:5]:
-                    cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
+            # حفظ الصور الإضافية في جدول product_images
+            if files and len(files) > 1:
+                for f in files[1:5]:  # أول صورة هي الرئيسية، نضيف الباقي كصور إضافية
+                    if supabase:
+                        ext = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
+                        unique_name = f"{uuid.uuid4()}.{ext}"
+                        file_content = f.read()
+                        supabase.storage.from_("products").upload(unique_name, file_content)
+                        cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, unique_name))
+                    else:
+                        cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
             
             conn.commit()
             conn.close()
@@ -758,6 +814,14 @@ def admin_edit(pid):
 
         image_filename = product["image"]
         if remove_image and image_filename:
+            # محاولة حذف الصورة من Supabase Storage
+            if supabase and image_filename:
+                try:
+                    supabase.storage.from_("products").remove([image_filename])
+                    print(f"✅ تم حذف الصورة {image_filename} من Supabase Storage")
+                except Exception as e:
+                    print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
+            # حذف من المجلد المحلي
             old_path = os.path.join(app.config["UPLOAD_FOLDER"], image_filename)
             if os.path.exists(old_path):
                 try:
@@ -768,10 +832,25 @@ def admin_edit(pid):
 
         files = request.files.getlist("images")
         files = [f for f in files if getattr(f, "filename", "")]
+        
+        # رفع الصور الجديدة
         if files:
-            image_filename = files[0].filename
-            for f in files:
-                f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
+            if supabase:
+                try:
+                    ext = files[0].filename.split('.')[-1] if '.' in files[0].filename else 'jpg'
+                    unique_name = f"{uuid.uuid4()}.{ext}"
+                    file_content = files[0].read()
+                    supabase.storage.from_("products").upload(unique_name, file_content)
+                    image_filename = unique_name
+                    print(f"✅ تم رفع الصورة الجديدة {unique_name} إلى Supabase Storage")
+                except Exception as e:
+                    print(f"❌ خطأ في رفع الصورة إلى Supabase: {e}")
+                    image_filename = files[0].filename
+                    files[0].save(os.path.join(app.config["UPLOAD_FOLDER"], files[0].filename))
+            else:
+                image_filename = files[0].filename
+                for f in files:
+                    f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
 
         try:
             price_val = float(price)
@@ -792,10 +871,17 @@ def admin_edit(pid):
         cnt_result = cursor2.fetchone()
         cnt = cnt_result['count'] if isinstance(cnt_result, dict) else list(cnt_result.values())[0] if cnt_result else 0
         slots = max(0, 5 - (cnt or 0))
-        if files and slots:
-            new_images = files[:slots] if len(files) > 1 else files
+        if len(files) > 1 and slots:
+            new_images = files[1:slots+1] if len(files) > 1 else []
             for f in new_images:
-                cursor2.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
+                if supabase:
+                    ext = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
+                    unique_name = f"{uuid.uuid4()}.{ext}"
+                    file_content = f.read()
+                    supabase.storage.from_("products").upload(unique_name, file_content)
+                    cursor2.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, unique_name))
+                else:
+                    cursor2.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
         conn2.commit()
         conn2.close()
         flash("تم تعديل المنتج بنجاح.", "success")
@@ -811,6 +897,15 @@ def admin_delete(pid):
     placeholder = get_placeholder()
     cursor.execute(f"SELECT image FROM products WHERE id = {placeholder}", (pid,))
     row = cursor.fetchone()
+    
+    # حذف الصورة من Supabase Storage إذا كانت موجودة
+    if row and row["image"] and supabase:
+        try:
+            supabase.storage.from_("products").remove([row["image"]])
+            print(f"✅ تم حذف الصورة {row['image']} من Supabase Storage")
+        except Exception as e:
+            print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
+    
     cursor.execute(f"DELETE FROM products WHERE id = {placeholder}", (pid,))
     conn.commit()
     conn.close()
@@ -834,6 +929,13 @@ def admin_delete_image(image_id):
     cursor.execute(f"SELECT filename, product_id FROM product_images WHERE id = {placeholder}", (image_id,))
     row = cursor.fetchone()
     if row:
+        # حذف الصورة من Supabase Storage
+        if supabase and row["filename"]:
+            try:
+                supabase.storage.from_("products").remove([row["filename"]])
+                print(f"✅ تم حذف الصورة {row['filename']} من Supabase Storage")
+            except Exception as e:
+                print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
         cursor.execute(f"DELETE FROM product_images WHERE id = {placeholder}", (image_id,))
         conn.commit()
     conn.close()
@@ -849,6 +951,14 @@ def admin_delete_image(image_id):
 
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
+    # إذا كان الملف في Supabase Storage، نعيد توجيه المستخدم
+    if supabase and filename:
+        try:
+            # جلب رابط الصورة من Supabase
+            url = f"{SUPABASE_URL}/storage/v1/object/public/products/{filename}"
+            return redirect(url)
+        except Exception as e:
+            print(f"⚠️ خطأ في جلب الصورة من Supabase: {e}")
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 @app.route("/clear-session")
@@ -878,6 +988,7 @@ def debug_db():
             <h1>🔍 حالة قاعدة البيانات</h1>
             <hr>
             <p><strong>نوع قاعدة البيانات:</strong> {'PostgreSQL ✅' if USE_POSTGRES else 'SQLite'}</p>
+            <p><strong>Supabase Storage:</strong> {'متصل ✅' if supabase else 'غير متصل ⚠️'}</p>
             <p><strong>عدد المستخدمين:</strong> {users_count['count']}</p>
             <p><strong>عدد المنتجات:</strong> {products_count['count']}</p>
             <hr>
