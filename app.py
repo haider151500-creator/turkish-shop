@@ -920,7 +920,6 @@ def create_test_user():
         password = "123456"
         hashed = generate_password_hash(password)
         
-        # التحقق من وجود المستخدم
         cursor.execute(f"SELECT * FROM users WHERE email = {placeholder}", (email,))
         existing = cursor.fetchone()
         
@@ -1039,7 +1038,24 @@ def setup_db():
         </html>
         """
     except Exception as e:
-        return f"❌ خطأ: {e}"
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"❌ خطأ: {e}")
+        print(error_details)
+        return f"""
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>خطأ</title></head>
+        <body style="font-family: Arial; padding: 20px;">
+            <h1>❌ حدث خطأ أثناء إنشاء الجداول</h1>
+            <hr>
+            <p><strong>الخطأ:</strong> {e}</p>
+            <pre style="background:#f0f0f0; padding:10px; overflow:auto;">{error_details}</pre>
+            <hr>
+            <p><a href="/">العودة للصفحة الرئيسية</a></p>
+        </body>
+        </html>
+        """
 
 if __name__ == "__main__":
     init_db()
