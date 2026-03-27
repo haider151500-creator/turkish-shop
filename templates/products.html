@@ -1,476 +1,380 @@
-{% extends "base.html" %}
-
-{% block title %}المنتجات - متجر المنتجات التركية{% endblock %}
-
-{% block head %}
-<style>
-    /* ========== قسم البطل ========== */
-    .hero-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 80px 0;
-        margin-bottom: 40px;
-        border-radius: 0 0 30px 30px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .hero-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        animation: move 20s linear infinite;
-    }
-    
-    @keyframes move {
-        0% { transform: translate(0, 0); }
-        100% { transform: translate(60px, 60px); }
-    }
-    
-    .hero-section h1 {
-        font-size: 3.5rem;
-        font-weight: 800;
-        animation: fadeInUp 0.8s ease;
-    }
-    
-    /* ========== أزرار الفلترة ========== */
-    .filter-btns {
-        background: white;
-        padding: 8px;
-        border-radius: 60px;
-        box-shadow: var(--shadow-lg);
-        display: inline-flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-    }
-    
-    .filter-btn {
-        border-radius: 50px;
-        padding: 10px 28px;
-        margin: 0;
-        transition: var(--transition);
-        font-weight: 600;
-        border: 2px solid transparent;
-        background: transparent;
-        color: var(--dark-color);
-        cursor: pointer;
-    }
-    
-    .filter-btn:hover {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-    }
-    
-    .filter-btn.active {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        box-shadow: var(--shadow-md);
-    }
-    
-    /* ========== بطاقات المنتجات ========== */
-    .product-card {
-        background: white;
-        border-radius: 24px;
-        overflow: hidden;
-        transition: var(--transition);
-        box-shadow: var(--shadow-md);
-        margin-bottom: 30px;
-        position: relative;
-    }
-    
-    .product-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        transform: scaleX(0);
-        transition: var(--transition);
-    }
-    
-    .product-card:hover::before {
-        transform: scaleX(1);
-    }
-    
-    .product-card:hover {
-        transform: translateY(-12px);
-        box-shadow: var(--shadow-hover);
-    }
-    
-    .product-card img {
-        height: 220px;
-        object-fit: cover;
-        transition: var(--transition);
-    }
-    
-    .product-card:hover img {
-        transform: scale(1.05);
-    }
-    
-    .product-card .card-body {
-        padding: 20px;
-    }
-    
-    .product-card .card-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-        color: var(--dark-color);
-    }
-    
-    .product-price {
-        font-size: 1.3rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    .product-category {
-        display: inline-block;
-        padding: 4px 12px;
-        background: #f1f5f9;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        color: var(--primary-color);
-        font-weight: 500;
-    }
-    
-    /* ========== قسم المنتجات المميزة ========== */
-    .featured-section {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 60px 0;
-        margin-top: 40px;
-    }
-    
-    .featured-card {
-        background: white;
-        border-radius: 24px;
-        padding: 30px;
-        text-align: center;
-        transition: var(--transition);
-        box-shadow: var(--shadow-md);
-    }
-    
-    .featured-card:hover {
-        transform: translateY(-8px);
-        box-shadow: var(--shadow-hover);
-    }
-    
-    .featured-icon {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-    }
-    
-    .featured-icon i {
-        font-size: 40px;
-        color: white;
-    }
-    
-    /* ========== رسالة عدم وجود منتجات ========== */
-    .no-products-message {
-        display: none;
-        text-align: center;
-        padding: 60px 20px;
-        background: white;
-        border-radius: 24px;
-        margin-top: 20px;
-    }
-    
-    .no-products-message.show {
-        display: block;
-        animation: fadeInUp 0.5s ease;
-    }
-    
-    /* ========== تأثيرات إضافية ========== */
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .product-item {
-        animation: fadeInUp 0.6s ease-out forwards;
-    }
-    
-    /* إخفاء العناصر عند الفلترة */
-    .product-item.hide-item {
-        display: none !important;
-    }
-    
-    @media (max-width: 768px) {
-        .hero-section h1 {
-            font-size: 2rem;
-        }
-        .filter-btn {
-            padding: 6px 16px;
-            font-size: 0.85rem;
-        }
-        .product-card img {
-            height: 180px;
-        }
-        .filter-btns {
-            border-radius: 30px;
-            padding: 8px;
-        }
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<!-- Hero Section -->
-<section class="hero-section text-white text-center">
-    <div class="container position-relative" style="z-index: 2;">
-        <h1 class="display-4 fw-bold mb-3 animate__animated animate__fadeInUp">منتجاتنا التركية</h1>
-        <p class="lead mb-4 animate__animated animate__fadeInUp animate__delay-1s">أفضل المنتجات الأصلية من تركيا بأعلى جودة وأفضل الأسعار</p>
-        <div class="mt-4 animate__animated animate__fadeInUp animate__delay-2s">
-            <a href="#products-grid" class="btn btn-light btn-lg px-4 mx-2">
-                <i class='bx bx-shopping-bag'></i> استعرض المنتجات
-            </a>
-            <a href="{{ url_for('contact') }}" class="btn btn-outline-light btn-lg px-4 mx-2">
-                <i class='bx bx-envelope'></i> تواصل معنا
-            </a>
-        </div>
+<!doctype html>
+<html lang="ar" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>متجر المنتجات التركية | تسوق أجود المنتجات</title><!-- Tailwind + Lucide + Fonts -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Noto Kufi Arabic', sans-serif; }
+    .product-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+    .product-card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -12px rgba(0,0,0,0.15); }
+    .cat-pill { transition: all 0.2s ease; }
+    .cat-pill:hover { transform: scale(1.03); }
+    .hero-gradient { background: linear-gradient(125deg, #8B0000 0%, #B22222 50%, #CD5C5C 100%); }
+    .badge-pulse { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.7 } }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    .fade-up { animation: fadeUp 0.5s ease forwards; }
+    .fade-up-d1 { animation-delay: 0.05s; opacity:0; }
+    .fade-up-d2 { animation-delay: 0.1s; opacity:0; }
+    .fade-up-d3 { animation-delay: 0.15s; opacity:0; }
+    .fade-up-d4 { animation-delay: 0.2s; opacity:0; }
+    .cart-bounce { animation: bounceCart 0.35s cubic-bezier(0.34,1.2,0.64,1); }
+    @keyframes bounceCart { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
+    .toast-slide { animation: slideIn 0.3s ease, slideOut 0.3s ease 2.8s forwards; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOut { to { transform: translateX(100%); opacity: 0; } }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #B22222; border-radius: 10px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-[#fefaf5] text-gray-800 antialiased">
+  <div id="app" class="w-full h-full overflow-auto relative"><!-- ========== STICKY NAVBAR مع زر السلة مخصص في الأعلى ========== -->
+   <nav class="sticky top-0 z-50 bg-[#8B0000] shadow-md border-b border-white/20">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4"><!-- Logo + اسم المتجر (تم التعديل: شعار تركي واسم المتجر) -->
+     <div class="flex items-center gap-2 shrink-0">
+      <div class="w-9 h-9 rounded-xl bg-[#FFD700] flex items-center justify-center shadow-md"><i data-lucide="flag" class="w-5 h-5 text-[#8B0000]"></i>
+      </div><span id="nav-store-name" class="text-xl font-extrabold tracking-tight text-white">متجر المنتجات التركية</span>
+     </div><!-- شريط بحث منسدل للديسكتوب -->
+     <div class="hidden md:flex items-center bg-[#a52a2a] rounded-full px-4 py-2 flex-1 max-w-md border border-[#FFD700]/50 focus-within:border-[#FFD700] transition"><i data-lucide="search" class="w-4 h-4 text-[#FFD700] ml-2"></i> <input id="searchInput" type="text" placeholder="ابحث عن منتج تركي..." class="bg-transparent text-white placeholder:text-gray-300 outline-none w-full text-sm">
+     </div><!-- الأزرار: زر السلة في الأعلى بشكل مميز + ايقونة بحث للجوال -->
+     <div class="flex items-center gap-4"><!-- زر السلة (مميز أعلى اليمين) مع عدّاد متحرك --> <button id="cartTopBtn" onclick="toggleCart()" class="relative flex items-center justify-center w-11 h-11 rounded-full bg-[#FFD700]/20 hover:bg-[#FFD700]/30 transition-all duration-200 border border-[#FFD700]/60 group"> <i data-lucide="shopping-cart" class="w-6 h-6 text-[#FFD700] group-hover:scale-105 transition"></i> <span id="cartCount" class="absolute -top-1.5 -right-1.5 bg-[#FFD700] text-[#8B0000] text-xs font-bold min-w-[22px] h-[22px] rounded-full flex items-center justify-center shadow-md px-1 border border-white/30 hidden">0</span> </button> <!-- أيقونة بحث للجوال --> <button class="md:hidden text-white p-1" onclick="document.getElementById('mobileSearch').classList.toggle('hidden')"> <i data-lucide="search" class="w-5 h-5"></i> </button>
+     </div>
+    </div><!-- حقل بحث موبايل -->
+    <div id="mobileSearch" class="hidden md:hidden px-4 pb-3 bg-[#8B0000]">
+     <div class="flex items-center bg-[#a52a2a] rounded-full px-4 py-2 border border-[#FFD700]/50"><i data-lucide="search" class="w-4 h-4 text-[#FFD700] ml-2"></i> <input type="text" placeholder="ابحث عن منتج تركي..." class="bg-transparent text-white placeholder:text-gray-300 outline-none w-full text-sm" oninput="document.getElementById('searchInput').value=this.value; filterProducts()">
+     </div>
     </div>
-</section>
-
-<!-- Filter Section -->
-<section class="container py-5">
-    <div class="row justify-content-center mb-5">
-        <div class="filter-btns text-center">
-            <button class="filter-btn active" data-filter="all">
-                <i class='bx bx-category'></i> الكل <span class="badge bg-light text-dark ms-2">{{ products|length }}</span>
-            </button>
-            {% for c in categories %}
-            {% set count = products|selectattr('category', 'equalto', c)|list|length %}
-            {% if count > 0 %}
-            <button class="filter-btn" data-filter="{{ c }}">
-                <i class='bx bx-tag'></i> {{ c }} <span class="badge bg-light text-dark ms-2">{{ count }}</span>
-            </button>
-            {% endif %}
-            {% endfor %}
-        </div>
+   </nav><!-- Hero section بألوان تركية -->
+   <section class="hero-gradient text-white py-12 md:py-16 px-4 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 40%, #FFD700 1.5px, transparent 1px); background-size: 40px 40px;"></div>
+    <div class="max-w-6xl mx-auto text-center relative z-10">
+     <div class="inline-block bg-[#FFD700]/20 text-[#FFD700] px-5 py-1 rounded-full text-sm font-medium mb-4 backdrop-blur-sm">
+      🇹🇷 جودة تركية أصيلة 🇹🇷
+     </div>
+     <h1 id="heroTitle" class="text-3xl md:text-5xl font-extrabold mb-3 leading-tight">أجود المنتجات التركية</h1>
+     <p id="heroSubtitle" class="text-base md:text-xl text-gray-200 max-w-xl mx-auto">تسوق مباشرة من تركيا بأفضل الأسعار وجودة لا تضاهى</p>
     </div>
+   </section><!-- Categories سريعة -->
+   <section class="max-w-6xl mx-auto px-4 -mt-6 relative z-10 mb-6">
+    <div id="categories" class="flex gap-3 overflow-x-auto pb-3 no-scrollbar"></div>
+   </section><!-- Products grid -->
+   <section class="max-w-6xl mx-auto px-4 pb-12">
+    <div class="flex items-center justify-between mb-5 flex-wrap gap-2">
+     <h2 class="text-xl font-bold text-gray-800">✨ أحدث المنتجات التركية</h2><span id="productCount" class="text-sm text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm"></span>
+    </div>
+    <div id="productsGrid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"></div>
+    <div id="emptyState" class="hidden text-center py-20 text-gray-400 bg-white/50 rounded-2xl mt-6"><i data-lucide="search-x" class="w-14 h-14 mx-auto mb-3 opacity-60"></i>
+     <p class="text-lg">لا توجد نتائج مطابقة 🔍</p>
+    </div>
+   </section><!-- سلة التسوق (Drawer) أنيقة وحديثة - مخفية بشكل افتراضي -->
+   <div id="cartOverlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] hidden transition-opacity duration-300 opacity-0" onclick="toggleCart()"></div>
+   <div id="cartDrawer" class="fixed top-0 right-0 h-full w-[90%] max-w-sm bg-white z-[110] shadow-2xl transform transition-transform duration-300 ease-out flex flex-col rounded-l-3xl border-l-4 border-[#B22222]" style="transform: translateX(100%); right: 0;">
+    <div class="p-5 bg-gradient-to-r from-[#8B0000] to-[#B22222] text-white rounded-tl-3xl flex items-center justify-between">
+     <h3 class="font-bold text-xl flex items-center gap-2"><i data-lucide="shopping-bag" class="w-5 h-5 text-[#FFD700]"></i> سلة المشتريات</h3><button onclick="toggleCart()" class="bg-white/10 hover:bg-white/20 p-2 rounded-full transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div id="cartItems" class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50"></div>
+    <div id="cartFooter" class="hidden border-t p-5 bg-white shadow-inner rounded-bl-3xl">
+     <div class="flex justify-between items-center font-bold text-lg mb-4"><span>المجموع الكلي</span> <span id="cartTotal" class="text-[#B22222] text-2xl font-black">0 د.ع</span>
+     </div><button onclick="checkout()" class="w-full bg-[#B22222] hover:bg-[#8B0000] text-white font-bold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 text-base"><i data-lucide="credit-card" class="w-5 h-5"></i> إتمام الطلب</button>
+    </div>
+   </div><!-- Toast notifications -->
+   <div id="toastContainer" class="fixed top-24 left-4 z-[120] space-y-2 w-72 pointer-events-none"></div><!-- Footer -->
+   <footer class="bg-[#8B0000] text-white py-8 mt-8 border-t border-[#FFD700]/20">
+    <div class="max-w-6xl mx-auto text-center px-4">
+     <div class="flex justify-center gap-8 mb-5 text-sm text-gray-200 flex-wrap"><span class="flex items-center gap-1"><i data-lucide="truck" class="w-4 h-4 text-[#FFD700]"></i> توصيل سريع من تركيا</span> <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-4 h-4 text-[#FFD700]"></i> دفع آمن 100%</span> <span class="flex items-center gap-1"><i data-lucide="rotate-ccw" class="w-4 h-4 text-[#FFD700]"></i> إرجاع خلال 14 يوم</span>
+     </div>
+     <p class="text-xs text-gray-300">© 2025 متجر المنتجات التركية – جميع الحقوق محفوظة</p>
+    </div>
+   </footer>
+  </div>
+  <script>
+    // ---------------------- بيانات المتجر (تم التعديل: اسم المتجر والعملة) ----------------------
+    const defaultConfig = {
+      store_name: "متجر المنتجات التركية",
+      hero_title: "أجود المنتجات التركية",
+      hero_subtitle: "تسوق مباشرة من تركيا بأفضل الأسعار وجودة لا تضاهى",
+      background_color: "#fefaf5",
+      surface_color: "#8B0000",
+      text_color: "#1e293b",
+      primary_action_color: "#B22222",
+      secondary_action_color: "#FFD700",
+      font_family: "Noto Kufi Arabic",
+      font_size: 16
+    };
 
-    <!-- Products Grid -->
-    <div class="row projects g-4" id="productsGrid">
-        {% if products and products|length > 0 %}
-            {% for p in products %}
-            <div class="col-sm-6 col-lg-4 product-item" data-category="{{ p.category or 'عام' }}">
-                <div class="product-card card h-100">
-                    {% if p.image %}
-                    <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" class="card-img-top" alt="{{ p.name }}">
-                    {% else %}
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 220px;">
-                        <i class='bx bx-image' style="font-size: 48px; color: #ccc;"></i>
-                    </div>
-                    {% endif %}
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title mb-0">{{ p.name }}</h5>
-                            <span class="product-category">{{ p.category or 'عام' }}</span>
-                        </div>
-                        <p class="card-text text-muted small mt-2">
-                            {{ p.description[:80] }}{% if p.description and p.description|length > 80 %}...{% endif %}
-                        </p>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="product-price">{{ '%.0f'|format(p.price) }} $</span>
-                            <a href="{{ url_for('product_detail', pid=p.id) }}" class="btn btn-primary btn-sm">
-                                <i class='bx bx-show'></i> تفاصيل
-                            </a>
-                        </div>
-                    </div>
-                    {% if session.get('is_admin') %}
-                    <div class="card-footer bg-transparent d-flex gap-2">
-                        <a href="{{ url_for('admin_edit', pid=p.id) }}" class="btn btn-outline-primary btn-sm w-50">
-                            <i class='bx bx-edit-alt'></i> تعديل
-                        </a>
-                        <form method="POST" action="{{ url_for('admin_delete', pid=p.id) }}" class="w-50" onsubmit="return confirm('تأكيد حذف المنتج؟');">
-                            <button class="btn btn-outline-danger btn-sm w-100">
-                                <i class='bx bx-trash'></i> حذف
-                            </button>
-                        </form>
-                    </div>
-                    {% endif %}
+    // التصنيفات + أيقونات
+    const categories = [
+      { id: "all", name: "الكل", icon: "grid-3x3" },
+      { id: "electronics", name: "إلكترونيات تركية", icon: "smartphone" },
+      { id: "fashion", name: "أزياء تركية", icon: "shirt" },
+      { id: "home", name: "منزلية تركية", icon: "home" },
+      { id: "sports", name: "رياضة", icon: "dumbbell" },
+      { id: "books", name: "كتب", icon: "book-open" }
+    ];
+
+    // منتجات تركية مميزة (الأسعار بالدينار العراقي - سعر تقريبي 1 دولار = 1300 دينار عراقي)
+    // تم تحويل الأسعار من الريال السعودي إلى الدينار العراقي (1 ريال سعودي ≈ 130 دينار عراقي)
+    const products = [
+      { id:1, name:"سماعات لاسلكية Pro", price:32370, oldPrice:51870, cat:"electronics", emoji:"🎧", rating:4.8, badge:"شحن سريع" },
+      { id:2, name:"ساعة ذكية Ultra", price:77870, oldPrice:116870, cat:"electronics", emoji:"⌚", rating:4.7, badge:"الأكثر مبيعاً" },
+      { id:3, name:"حقيبة جلدية فاخرة", price:24570, oldPrice:38870, cat:"fashion", emoji:"👜", rating:4.6, badge:"تخفيض" },
+      { id:4, name:"نظارة شمسية عصرية", price:16770, oldPrice:25870, cat:"fashion", emoji:"🕶️", rating:4.4, badge:"" },
+      { id:5, name:"مصباح ذكي RGB", price:10270, oldPrice:19370, cat:"home", emoji:"💡", rating:4.7, badge:"وفر 50%" },
+      { id:6, name:"وسادة طبية مريحة", price:12870, oldPrice:20670, cat:"home", emoji:"🛋️", rating:4.5, badge:"" },
+      { id:7, name:"كرة يوغا متعددة", price:7670, oldPrice:12870, cat:"sports", emoji:"🧘", rating:4.3, badge:"" },
+      { id:8, name:"حبل قفز احترافي", price:5070, oldPrice:8970, cat:"sports", emoji:"🏋️", rating:4.2, badge:"" },
+      { id:9, name:"رواية الأثر", price:6370, oldPrice:10270, cat:"books", emoji:"📖", rating:4.9, badge:"جائزة" },
+      { id:10, name:"شاحن سريع 65W", price:11570, oldPrice:19370, cat:"electronics", emoji:"⚡", rating:4.6, badge:"قوة عالية" },
+      { id:11, name:"قميص قطني كلاسيك", price:15470, oldPrice:23270, cat:"fashion", emoji:"👕", rating:4.4, badge:"" },
+      { id:12, name:"كتاب تطوير الذات", price:8970, oldPrice:14170, cat:"books", emoji:"📚", rating:4.8, badge:"أكثر مبيعاً" }
+    ];
+
+    let cart = [];
+    let activeCategory = "all";
+
+    function renderCategories() {
+      const container = document.getElementById("categories");
+      container.innerHTML = categories.map(cat => `
+        <button onclick="setCategory('${cat.id}')" data-cat="${cat.id}"
+          class="cat-pill flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap shrink-0 transition-all duration-200 shadow-sm ${
+            activeCategory === cat.id
+              ? 'bg-[#B22222] text-white shadow-lg shadow-red-500/30 font-bold'
+              : 'bg-white text-gray-700 border border-gray-200 hover:border-[#B22222] hover:bg-red-50'
+          }">
+          <i data-lucide="${cat.icon}" class="w-4 h-4"></i> ${cat.name}
+        </button>
+      `).join("");
+      lucide.createIcons();
+    }
+
+    function setCategory(id) {
+      activeCategory = id;
+      renderCategories();
+      filterProducts();
+    }
+
+    function filterProducts() {
+      const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
+      let filtered = products.filter(p => {
+        const matchCat = activeCategory === "all" || p.cat === activeCategory;
+        const matchSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm);
+        return matchCat && matchSearch;
+      });
+      renderProducts(filtered);
+    }
+
+    function renderProducts(productList) {
+      const grid = document.getElementById("productsGrid");
+      const emptyDiv = document.getElementById("emptyState");
+      const countSpan = document.getElementById("productCount");
+      countSpan.innerText = `${productList.length} منتج`;
+      if (productList.length === 0) {
+        grid.classList.add("hidden");
+        emptyDiv.classList.remove("hidden");
+        lucide.createIcons();
+        return;
+      }
+      grid.classList.remove("hidden");
+      emptyDiv.classList.add("hidden");
+      grid.innerHTML = productList.map((p, idx) => {
+        const discount = Math.round(((p.oldPrice - p.price) / p.oldPrice) * 100);
+        const discountBadge = discount > 0 ? `<span class="absolute top-2 right-2 bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md">-${discount}%</span>` : '';
+        const specialBadge = p.badge && !discountBadge ? `<span class="absolute top-2 left-2 bg-[#FFD700] text-[#8B0000] text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">${p.badge}</span>` : '';
+        // تنسيق الأرقام بالفاصلة للدينار العراقي
+        const formattedPrice = p.price.toLocaleString();
+        const formattedOldPrice = p.oldPrice.toLocaleString();
+        return `
+          <div class="product-card bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl fade-up fade-up-d${(idx % 4) + 1}">
+            <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 h-36 md:h-44 flex items-center justify-center">
+              <span class="text-5xl md:text-6xl drop-shadow-sm">${p.emoji}</span>
+              ${discountBadge}
+              ${specialBadge}
+            </div>
+            <div class="p-3">
+              <h3 class="font-semibold text-sm mb-1 truncate">${p.name}</h3>
+              <div class="flex items-center gap-1 mb-2">
+                <span class="text-amber-500 text-xs">★</span>
+                <span class="text-xs text-gray-500">${p.rating}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-baseline gap-1 flex-wrap">
+                  <span class="font-bold text-[#B22222] text-base">${formattedPrice} د.ع</span>
+                  ${p.oldPrice > p.price ? `<span class="text-xs text-gray-400 line-through mr-1">${formattedOldPrice}</span>` : ''}
                 </div>
+                <button onclick="addToCart(${p.id})" class="w-9 h-9 rounded-xl bg-[#8B0000] hover:bg-[#B22222] text-white flex items-center justify-center transition-all duration-200 shadow-sm">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                </button>
+              </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="col-12 text-center py-5">
-                <i class='bx bx-package bx-lg text-muted'></i>
-                <h3 class="text-muted mt-3">لا توجد منتجات بعد</h3>
-                {% if session.get('is_admin') %}
-                    <a href="{{ url_for('admin_add') }}" class="btn btn-primary mt-3">
-                        <i class='bx bx-plus'></i> أضف منتج جديد
-                    </a>
-                {% endif %}
-            </div>
-        {% endif %}
-    </div>
-    
-    <!-- رسالة عدم وجود منتجات في الفئة -->
-    <div id="noProductsMessage" class="no-products-message">
-        <i class='bx bx-folder-open bx-lg text-muted'></i>
-        <h4 class="mt-3">لا توجد منتجات في هذه الفئة</h4>
-        <p class="text-muted">جرّب اختيار فئة أخرى</p>
-    </div>
-    
-    <!-- Pagination -->
-    {% if products and products|length > 12 %}
-    <div class="row mt-5">
-        <div class="col-12">
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#" tabindex="-1">
-                            <i class='bx bx-chevron-right'></i> السابق
-                        </a>
-                    </li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item">
-                        <a class="page-link" href="#">
-                            التالي <i class='bx bx-chevron-left'></i>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </div>
-    {% endif %}
-</section>
+          </div>
+        `;
+      }).join("");
+      lucide.createIcons();
+    }
 
-<!-- Featured Products Section -->
-<section class="featured-section">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">لماذا تختار منتجاتنا؟</h2>
-            <p class="text-muted">نقدم أفضل المنتجات التركية الأصلية بجودة عالية</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="featured-card">
-                    <div class="featured-icon">
-                        <i class='bx bx-check-shield'></i>
-                    </div>
-                    <h4 class="mb-3">جودة مضمونة</h4>
-                    <p class="text-muted">جميع منتجاتنا أصلية 100% ومستوردة مباشرة من المصانع التركية</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="featured-card">
-                    <div class="featured-icon">
-                        <i class='bx bx-package'></i>
-                    </div>
-                    <h4 class="mb-3">شحن سريع</h4>
-                    <p class="text-muted">توصيل سريع وآمن لجميع أنحاء العالم مع متابعة مستمرة</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="featured-card">
-                    <div class="featured-icon">
-                        <i class='bx bx-dollar'></i>
-                    </div>
-                    <h4 class="mb-3">أسعار تنافسية</h4>
-                    <p class="text-muted">أفضل الأسعار في السوق مع عروض وخصومات مستمرة</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-{% endblock %}
+    function addToCart(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ ...product, qty: 1 });
+      }
+      updateCartUI();
+      showToast(`✨ تم إضافة "${product.name}" إلى السلة`, "success");
+      const cartBtn = document.getElementById("cartTopBtn");
+      cartBtn.classList.add("cart-bounce");
+      setTimeout(() => cartBtn.classList.remove("cart-bounce"), 350);
+      const countSpan = document.getElementById("cartCount");
+      if (cart.reduce((s,i)=>s+i.qty,0) > 0) {
+        countSpan.classList.remove("hidden");
+      }
+    }
 
-{% block scripts %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js"></script>
-<script>
-    $(document).ready(function() {
-        console.log('جاري تهيئة الفلترة...');
-        
-        var $grid = $('#productsGrid');
-        var $noProductsMsg = $('#noProductsMessage');
-        
-        // تأكد من وجود منتجات
-        if ($grid.find('.product-item').length === 0) {
-            console.log('لا توجد منتجات');
-            return;
-        }
-        
-        // تهيئة Isotope
-        $grid.isotope({
-            itemSelector: '.product-item',
-            layoutMode: 'fitRows',
-            transitionDuration: '0.4s'
-        });
-        
-        console.log('تم تهيئة Isotope بنجاح');
-        
-        // دالة تحديث العرض
-        function filterProducts(category) {
-            if (category === 'all') {
-                $grid.isotope({ filter: '*' });
-                $noProductsMsg.removeClass('show');
-                $grid.show();
-                console.log('عرض جميع المنتجات');
-            } else {
-                $grid.isotope({ filter: '.product-item[data-category="' + category + '"]' });
-                
-                // التحقق من وجود منتجات في الفئة
-                setTimeout(function() {
-                    var visibleCount = $grid.isotope('getFilteredItemElements').length;
-                    if (visibleCount === 0) {
-                        $noProductsMsg.addClass('show');
-                        $grid.hide();
-                        console.log('لا توجد منتجات في الفئة: ' + category);
-                    } else {
-                        $noProductsMsg.removeClass('show');
-                        $grid.show();
-                        console.log('عرض ' + visibleCount + ' منتج في الفئة: ' + category);
-                    }
-                }, 100);
-            }
-        }
-        
-        // معالج النقر على أزرار الفلترة
-        $('.filter-btn').on('click', function() {
-            var filterValue = $(this).data('filter');
-            console.log('تم النقر على: ' + filterValue);
-            
-            filterProducts(filterValue);
-            
-            // تحديث الزر النشط
-            $('.filter-btn').removeClass('active');
-            $(this).addClass('active');
-        });
-        
-        // عرض جميع المنتجات في البداية
-        filterProducts('all');
-        
-        // عرض معلومات التصحيح
-        console.log('الفئات المتاحة:', $('.product-item').map(function() {
-            return $(this).data('category');
-        }).get());
-        console.log('عدد المنتجات الكلي:', $('.product-item').length);
+    function updateCartUI() {
+      const totalItems = cart.reduce((sum, i) => sum + i.qty, 0);
+      const cartCountSpan = document.getElementById("cartCount");
+      if (totalItems > 0) {
+        cartCountSpan.innerText = totalItems;
+        cartCountSpan.classList.remove("hidden");
+      } else {
+        cartCountSpan.classList.add("hidden");
+      }
+      renderCartDrawerItems();
+    }
+
+    function renderCartDrawerItems() {
+      const container = document.getElementById("cartItems");
+      const footer = document.getElementById("cartFooter");
+      if (!cart.length) {
+        container.innerHTML = `<div class="flex flex-col items-center justify-center py-12 text-gray-400"><i data-lucide="shopping-cart" class="w-14 h-14 mb-3 opacity-40"></i><p class="font-medium">سلتك فارغة</p><p class="text-xs">أضف منتجاتك المفضلة</p></div>`;
+        footer.classList.add("hidden");
+        lucide.createIcons();
+        return;
+      }
+      footer.classList.remove("hidden");
+      let totalPrice = 0;
+      container.innerHTML = cart.map(item => {
+        totalPrice += item.price * item.qty;
+        const formattedItemPrice = (item.price * item.qty).toLocaleString();
+        return `
+          <div class="flex items-center gap-3 bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+            <span class="text-3xl">${item.emoji}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold truncate">${item.name}</p>
+              <p class="text-xs text-[#B22222] font-bold mt-1">${formattedItemPrice} د.ع</p>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
+              <button onclick="changeQty(${item.id}, -1)" class="w-7 h-7 rounded-full bg-white hover:bg-gray-200 flex items-center justify-center text-lg font-bold shadow-sm">−</button>
+              <span class="text-sm font-bold w-6 text-center">${item.qty}</span>
+              <button onclick="changeQty(${item.id}, 1)" class="w-7 h-7 rounded-full bg-white hover:bg-gray-200 flex items-center justify-center text-lg font-bold shadow-sm">+</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+      document.getElementById("cartTotal").innerHTML = totalPrice.toLocaleString() + " د.ع";
+      lucide.createIcons();
+    }
+
+    function changeQty(id, delta) {
+      const idx = cart.findIndex(i => i.id === id);
+      if (idx === -1) return;
+      const newQty = cart[idx].qty + delta;
+      if (newQty <= 0) {
+        cart.splice(idx, 1);
+      } else {
+        cart[idx].qty = newQty;
+      }
+      updateCartUI();
+      if(cart.length === 0) {
+        const countSpan = document.getElementById("cartCount");
+        countSpan.classList.add("hidden");
+      }
+    }
+
+    function toggleCart() {
+      const overlay = document.getElementById("cartOverlay");
+      const drawer = document.getElementById("cartDrawer");
+      const isHidden = overlay.classList.contains("hidden");
+      if (isHidden) {
+        overlay.classList.remove("hidden");
+        setTimeout(() => overlay.classList.remove("opacity-0"), 10);
+        drawer.style.transform = "translateX(0)";
+        renderCartDrawerItems();
+      } else {
+        overlay.classList.add("opacity-0");
+        drawer.style.transform = "translateX(100%)";
+        setTimeout(() => overlay.classList.add("hidden"), 250);
+      }
+    }
+
+    function checkout() {
+      if (!cart.length) {
+        showToast("❌ السلة فارغة، أضف منتجات أولاً", "error");
+        return;
+      }
+      const totalAmount = cart.reduce((sum,i)=> sum + (i.price * i.qty), 0);
+      showToast(`✅ تم إرسال طلبك بنجاح! بقيمة ${totalAmount.toLocaleString()} د.ع 🎉`, "success");
+      cart = [];
+      updateCartUI();
+      if (!document.getElementById("cartOverlay").classList.contains("hidden")) {
+        toggleCart();
+      }
+      const countSpan = document.getElementById("cartCount");
+      countSpan.classList.add("hidden");
+    }
+
+    function showToast(msg, type = "info") {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = "toast-slide bg-[#8B0000] text-white px-4 py-3 rounded-2xl shadow-xl text-sm font-medium flex items-center gap-3 pointer-events-auto border-r-4 border-[#FFD700]";
+      const icon = type === "success" ? "check-circle-2" : "shopping-cart";
+      toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 text-[#FFD700]"></i> <span class="flex-1">${msg}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => {
+        toast.remove();
+      }, 3200);
+    }
+
+    document.getElementById("searchInput").addEventListener("input", filterProducts);
+
+    function refreshIcons() {
+      lucide.createIcons();
+    }
+
+    function init() {
+      renderCategories();
+      filterProducts();
+      updateCartUI();
+      refreshIcons();
+    }
+
+    window.elementSdk?.init({
+      defaultConfig,
+      onConfigChange: async (cfg) => {
+        const merged = { ...defaultConfig, ...cfg };
+        document.getElementById("nav-store-name").innerText = merged.store_name;
+        document.getElementById("heroTitle").innerText = merged.hero_title;
+        document.getElementById("heroSubtitle").innerText = merged.hero_subtitle;
+        document.body.style.backgroundColor = merged.background_color;
+        document.body.style.color = merged.text_color;
+      },
+      mapToCapabilities: (config) => ({}),
+      mapToEditPanelValues: (cfg) => new Map([["store_name", cfg.store_name || defaultConfig.store_name]])
     });
-</script>
-{% endblock %}
+
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e2c277676f03d44',t:'MTc3NDU5MTAxMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
