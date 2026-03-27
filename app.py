@@ -1268,6 +1268,7 @@ def recreate_tables():
     except Exception as e:
         import traceback
         return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
+
 @app.route("/add-bulk-products")
 def add_bulk_products():
     """إضافة 20 منتجاً متنوعاً دفعة واحدة"""
@@ -1377,6 +1378,7 @@ def add_bulk_products():
     except Exception as e:
         import traceback
         return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
+
 if __name__ == "__main__":
     init_db()
     migrate_db()
