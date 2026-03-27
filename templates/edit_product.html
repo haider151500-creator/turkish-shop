@@ -260,7 +260,7 @@
                         <label class="form-label">الصورة الحالية</label>
                         <div class="image-preview">
                             <div class="image-badge">
-                                <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" 
+                                <img src="https://elxnymtwludcydvnjkth.supabase.co/storage/v1/object/public/products/{{ p.image }}" 
                                      alt="{{ p.name }}" class="current-image">
                                 <button type="button" class="remove-image-btn" onclick="removeCurrentImage()" title="حذف الصورة">
                                     <i class='bx bx-trash'></i>
