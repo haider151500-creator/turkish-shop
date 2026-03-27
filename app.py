@@ -1378,7 +1378,63 @@ def add_bulk_products():
     except Exception as e:
         import traceback
         return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
-
+@app.route("/debug-add")
+def debug_add():
+    """فحص سبب عدم إضافة المنتجات"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        placeholder = get_placeholder()
+        
+        # فحص عدد المنتجات الحالية
+        cursor.execute("SELECT COUNT(*) as count FROM products")
+        count_before = cursor.fetchone()
+        
+        # محاولة إضافة منتج واحد
+        test_name = "منتج اختبار"
+        test_desc = "وصف اختبار"
+        test_price = 100
+        test_old_price = 150
+        test_image = None
+        test_category = "عام"
+        
+        cursor.execute(
+            f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
+            (test_name, test_desc, test_price, test_old_price, test_image, test_category)
+        )
+        conn.commit()
+        
+        # فحص عدد المنتجات بعد الإضافة
+        cursor.execute("SELECT COUNT(*) as count FROM products")
+        count_after = cursor.fetchone()
+        
+        # عرض آخر 5 منتجات
+        cursor.execute("SELECT * FROM products ORDER BY id DESC LIMIT 5")
+        last_products = cursor.fetchall()
+        
+        conn.close()
+        
+        html = f"""
+        <h1>🔍 فحص إضافة المنتجات</h1>
+        <p><strong>عدد المنتجات قبل الإضافة:</strong> {count_before['count']}</p>
+        <p><strong>عدد المنتجات بعد الإضافة:</strong> {count_after['count']}</p>
+        <p><strong>✅ تم إضافة منتج اختبار بنجاح!</strong></p>
+        <hr>
+        <h3>📦 آخر 5 منتجات:</h3>
+        <ul>
+        """
+        for p in last_products:
+            html += f"<li>ID: {p['id']} - {p['name']} - {p['price']} د.ع - {p.get('category', 'عام')}</li>"
+        html += """
+        </ul>
+        <hr>
+        <p><a href="/add-bulk-products">➡️ محاولة إضافة 20 منتج</a></p>
+        <p><a href="/check-products">📦 عرض جميع المنتجات</a></p>
+        """
+        return html
+    except Exception as e:
+        import traceback
+        return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
 if __name__ == "__main__":
     init_db()
     migrate_db()
