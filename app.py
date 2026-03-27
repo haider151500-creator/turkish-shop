@@ -6,6 +6,7 @@ from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 import json
 from datetime import timedelta, datetime
+import time
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
@@ -14,7 +15,7 @@ MESSAGES_FILE = os.path.join(BASE_DIR, "messages.json")
 CHAT_FILE = os.path.join(BASE_DIR, "chat.json")
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
-app.secret_key = "change-this-in-production"
+app.secret_key = os.environ.get('SECRET_KEY', 'change-this-in-production')
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
@@ -25,6 +26,7 @@ ADMIN_PASSWORD = "Turk!sh@dm!n2025#Secure"
 ADMIN_PASSWORD_HASH = generate_password_hash(ADMIN_PASSWORD)
 
 USE_POSTGRES = bool(os.environ.get('DATABASE_URL'))
+print(f"🔍 استخدام PostgreSQL: {USE_POSTGRES}")
 
 # ========== دوال التعامل مع الرسائل ==========
 def load_messages():
@@ -60,19 +62,42 @@ def save_chat(chat_messages):
 
 def get_db():
     """الحصول على اتصال بقاعدة البيانات مع إعدادات مناسبة"""
-    if USE_POSTGRES:
-        database_url = os.environ.get('DATABASE_URL')
-        conn = psycopg2.connect(database_url)
-        conn.cursor_factory = RealDictCursor
-        return conn
-    else:
-        # إضافة timeout و check_same_thread لمنع قفل قاعدة البيانات
-        conn = sqlite3.connect(DB_PATH, timeout=20, check_same_thread=False)
-        conn.row_factory = lambda cursor, row: {col[0]: row[i] for i, col in enumerate(cursor.description)}
-        return conn
+    try:
+        if USE_POSTGRES:
+            database_url = os.environ.get('DATABASE_URL')
+            conn = psycopg2.connect(database_url, sslmode='require')
+            conn.cursor_factory = RealDictCursor
+            return conn
+        else:
+            # SQLite مع إعدادات أفضل للتزامن
+            conn = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
+            conn.row_factory = lambda cursor, row: {col[0]: row[i] for i, col in enumerate(cursor.description)}
+            # تفعيل وضع WAL لتحسين التزامن
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA synchronous=NORMAL")
+            return conn
+    except Exception as e:
+        print(f"❌ خطأ في الاتصال بقاعدة البيانات: {e}")
+        raise
 
 def get_placeholder():
     return '%s' if USE_POSTGRES else '?'
+
+def retry_on_lock(func):
+    """ديكور لإعادة المحاولة عند قفل قاعدة البيانات"""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                return func(*args, **kwargs)
+            except sqlite3.OperationalError as e:
+                if "database is locked" in str(e) and attempt < max_retries - 1:
+                    time.sleep(0.5 * (attempt + 1))
+                    continue
+                raise
+        return func(*args, **kwargs)
+    return wrapper
 
 def init_db():
     conn = get_db()
@@ -427,7 +452,6 @@ def api_chat_send():
 def contact_api():
     """استقبال رسائل الاتصال من المستخدمين"""
     data = request.json
-    # إضافة رسالة عادية إلى ملف messages.json
     message = {
         "id": int(datetime.now().timestamp()),
         "name": data.get('name'),
@@ -443,7 +467,7 @@ def contact_api():
     messages.append(message)
     save_messages(messages)
     
-    # إضافة إشعار إلى الدردشة أيضاً
+    # إضافة إشعار إلى الدردشة
     chat_messages = load_chat()
     notification = {
         "id": int(datetime.now().timestamp()) + 1000000,
@@ -460,19 +484,16 @@ def contact_api():
     chat_messages.append(notification)
     save_chat(chat_messages)
     
-    print(f"📨 تم استلام رسالة جديدة من {data.get('name')} - الموضوع: {data.get('subject')}")
+    print(f"📨 تم استلام رسالة جديدة من {data.get('name')}")
     return jsonify({"success": True})
 
 @app.route("/api/messages")
 def api_messages():
     """جلب جميع الرسائل العادية (للأدمن فقط)"""
-    print(f"🔍 محاولة جلب الرسائل - is_admin: {session.get('is_admin')}")
     if not session.get('is_admin'):
-        return jsonify({"error": "Unauthorized", "is_admin": session.get('is_admin')}), 401
+        return jsonify({"error": "Unauthorized"}), 401
     messages = load_messages()
-    # تصفية الرسائل العادية فقط
     contact_messages = [m for m in messages if m.get('type') != 'chat']
-    print(f"📨 تم جلب {len(contact_messages)} رسالة")
     return jsonify(contact_messages)
 
 @app.route("/api/messages/<int:mid>/read", methods=["POST"])
@@ -494,7 +515,7 @@ def api_send_reply():
     if not session.get('is_admin'):
         return jsonify({"error": "Unauthorized"}), 401
     data = request.json
-    print(f"📧 إرسال رد إلى {data.get('to')}: {data.get('message')}")
+    print(f"📧 إرسال رد إلى {data.get('to')}")
     return jsonify({"success": True})
 
 # ========== نظام تسجيل الدخول للمستخدمين العاديين ==========
@@ -583,21 +604,14 @@ def admin_login():
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "").strip()
         
-        print(f"📧 محاولة تسجيل دخول أدمن - البريد: '{email}'")
-        print(f"🔑 كلمة المرور المدخلة: '{password}'")
-        print(f"✅ البريد الصحيح: '{ADMIN_EMAIL}'")
-        print(f"✅ كلمة المرور الصحيحة: '{ADMIN_PASSWORD}'")
-        
         if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
             session["is_admin"] = True
             session["admin_email"] = email
             session["user_id"] = 999
             session["user_name"] = "مدير الموقع"
-            print("✅ تم تعيين is_admin = True في الجلسة")
             flash("تم تسجيل الدخول كأدمن بنجاح.", "success")
             return redirect(url_for("admin_dashboard"))
         else:
-            print("❌ فشل تسجيل الدخول - بيانات غير صحيحة")
             flash("البريد الإلكتروني أو كلمة المرور غير صحيحة.", "danger")
     
     return render_template("admin_login.html")
@@ -617,12 +631,12 @@ def clear_session():
 
 @app.route("/force-admin")
 def force_admin():
-    """تسجيل الدخول القسري كأدمن (للتجربة)"""
+    """تسجيل الدخول القسري كأدمن"""
     session["is_admin"] = True
     session["admin_email"] = ADMIN_EMAIL
     session["user_id"] = 999
     session["user_name"] = "مدير الموقع"
-    flash("✅ تم تسجيل الدخول كأدمن بنجاح (تلقائياً)", "success")
+    flash("✅ تم تسجيل الدخول كأدمن بنجاح", "success")
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/check-session")
@@ -637,33 +651,23 @@ def check_session():
         <hr>
         <ul>
             <li><strong>is_admin:</strong> {session.get('is_admin')}</li>
-            <li><strong>admin_email:</strong> {session.get('admin_email')}</li>
             <li><strong>user_id:</strong> {session.get('user_id')}</li>
             <li><strong>user_name:</strong> {session.get('user_name')}</li>
-            <li><strong>user_email:</strong> {session.get('user_email')}</li>
-            <li><strong>cart:</strong> {session.get('cart')}</li>
         </ul>
         <hr>
-        <h3>🔗 روابط مفيدة:</h3>
-        <ul>
-            <li><a href="/admin/dashboard">📊 لوحة التحكم</a></li>
-            <li><a href="/products">🛍️ المتجر</a></li>
-            <li><a href="/admin/login">🔐 صفحة تسجيل الدخول العادية</a></li>
-            <li><a href="/force-admin">⚡ تسجيل الدخول القسري</a></li>
-            <li><a href="/clear-session">🗑️ مسح الجلسة</a></li>
-            <li><a href="/create-test-message">📨 إنشاء رسالة تجريبية</a></li>
-        </ul>
+        <p><a href="/admin/dashboard">📊 لوحة التحكم</a></p>
+        <p><a href="/products">🛍️ المتجر</a></p>
+        <p><a href="/force-admin">⚡ تسجيل الدخول القسري</a></p>
     </body>
     </html>
     """
 
 @app.route("/create-test-message")
 def create_test_message():
-    """إنشاء رسالة تجريبية للتأكد من عمل المراسلة"""
+    """إنشاء رسالة تجريبية"""
     if not session.get('is_admin'):
         return "يجب تسجيل الدخول كأدمن أولاً", 401
     
-    # إضافة رسالة إلى الدردشة
     chat_messages = load_chat()
     test_message = {
         "id": int(datetime.now().timestamp()),
@@ -681,56 +685,8 @@ def create_test_message():
     chat_messages.append(test_message)
     save_chat(chat_messages)
     
-    flash("✅ تم إنشاء رسالة تجريبية في الدردشة", "success")
+    flash("✅ تم إنشاء رسالة تجريبية", "success")
     return redirect(url_for("admin_dashboard"))
-
-@app.route("/test-admin-login", methods=["GET", "POST"])
-def test_admin_login():
-    """صفحة اختبار لتسجيل الدخول المباشر"""
-    if request.method == "POST":
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "").strip()
-        
-        print(f"📧 البريد المدخل: '{email}'")
-        print(f"🔑 كلمة المرور المدخلة: '{password}'")
-        print(f"✅ البريد الصحيح: '{ADMIN_EMAIL}'")
-        print(f"✅ كلمة المرور الصحيحة: '{ADMIN_PASSWORD}'")
-        
-        if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
-            session["is_admin"] = True
-            session["admin_email"] = email
-            session["user_id"] = 999
-            session["user_name"] = "مدير الموقع"
-            flash("✅ تم تسجيل الدخول كأدمن بنجاح!", "success")
-            return redirect(url_for("admin_dashboard"))
-        else:
-            flash("❌ البريد الإلكتروني أو كلمة المرور غير صحيحة.", "danger")
-    
-    return """
-    <!DOCTYPE html>
-    <html dir="rtl">
-    <head><meta charset="UTF-8"><title>اختبار تسجيل الدخول</title></head>
-    <body style="font-family: Arial; padding: 20px; text-align: center;">
-        <h1>🔐 صفحة اختبار تسجيل الدخول للأدمن</h1>
-        <hr>
-        <form method="POST">
-            <div style="margin: 10px;">
-                <label>البريد الإلكتروني:</label><br>
-                <input type="email" name="email" value="admin@turkishstore.com" style="width: 300px; padding: 8px;">
-            </div>
-            <div style="margin: 10px;">
-                <label>كلمة المرور:</label><br>
-                <input type="password" name="password" value="Turk!sh@dm!n2025#Secure" style="width: 300px; padding: 8px;">
-            </div>
-            <button type="submit" style="padding: 10px 20px; background: blue; color: white; border: none; border-radius: 5px;">تسجيل الدخول</button>
-        </form>
-        <hr>
-        <p><a href="/force-admin">⚡ تسجيل الدخول القسري</a></p>
-        <p><a href="/admin/login">🔐 صفحة تسجيل الدخول العادية</a></p>
-        <p><a href="/check-session">🔍 التحقق من الجلسة</a></p>
-    </body>
-    </html>
-    """
 
 @app.route("/admin")
 @admin_required
@@ -840,7 +796,7 @@ def admin_add():
         if conn:
             conn.close()
         print(f"❌ خطأ في إضافة المنتج: {e}")
-        flash(f"حدث خطأ أثناء إضافة المنتج: {e}", "danger")
+        flash(f"حدث خطأ: {e}", "danger")
         return redirect(url_for("admin_add"))
     
     return render_template("add_product.html", categories=categories)
