@@ -646,6 +646,7 @@ def admin_users():
     conn.close()
     return render_template("admin_users.html", users=users)
 
+# ========== دالة إضافة المنتج المعدلة ==========
 @app.route("/admin/add", methods=["GET", "POST"])
 @admin_required
 def admin_add():
@@ -665,11 +666,15 @@ def admin_add():
         image_filename = None
 
         files = request.files.getlist("images")
-        files = [f for f in files if getattr(f, "filename", "")][:5]
+        files = [f for f in files if getattr(f, "filename", "")]
+        
         if files:
             image_filename = files[0].filename
             for f in files:
-                f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
+                try:
+                    f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
+                except Exception as e:
+                    print(f"❌ خطأ في حفظ الصورة: {e}")
 
         if not name or not price or not category:
             flash("الاسم والسعر والفئة مطلوبة.", "danger")
@@ -682,32 +687,40 @@ def admin_add():
             flash("السعر غير صالح.", "danger")
             return redirect(url_for("admin_add"))
 
-        conn2 = get_db()
-        cursor2 = conn2.cursor()
-        placeholder = get_placeholder()
-        
-        if USE_POSTGRES:
-            cursor2.execute(
-                f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}) RETURNING id",
-                (name, description, price_val, old_price_val, image_filename, category)
-            )
-            result = cursor2.fetchone()
-            pid = result['id']
-        else:
-            cursor2.execute(
-                f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
-                (name, description, price_val, old_price_val, image_filename, category)
-            )
-            pid = cursor2.lastrowid
-        
-        if files:
-            for f in files[:5]:
-                cursor2.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
-        
-        conn2.commit()
-        conn2.close()
-        flash("تمت إضافة المنتج بنجاح.", "success")
-        return redirect(url_for("admin_dashboard"))
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+            placeholder = get_placeholder()
+            
+            if USE_POSTGRES:
+                cursor.execute(
+                    f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}) RETURNING id",
+                    (name, description, price_val, old_price_val, image_filename, category)
+                )
+                result = cursor.fetchone()
+                pid = result['id']
+            else:
+                cursor.execute(
+                    f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
+                    (name, description, price_val, old_price_val, image_filename, category)
+                )
+                pid = cursor.lastrowid
+            
+            if files:
+                for f in files[:5]:
+                    cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
+            
+            conn.commit()
+            conn.close()
+            flash("تمت إضافة المنتج بنجاح.", "success")
+            return redirect(url_for("admin_dashboard"))
+            
+        except Exception as e:
+            print(f"❌ خطأ في إضافة المنتج: {e}")
+            import traceback
+            traceback.print_exc()
+            flash(f"حدث خطأ: {str(e)[:100]}", "danger")
+            return redirect(url_for("admin_add"))
 
     return render_template("add_product.html", categories=categories)
 
@@ -900,7 +913,7 @@ def check_users():
             <p><a href="/create-test-user">إنشاء مستخدم تجريبي</a></p>
             """
         
-        html = "<h1>📋 قائمة المستخدمين</h1><table border='1' cellpadding='10'>寿<th>ID</th><th>الاسم</th><th>البريد</th><th>الهاتف</th></tr>"
+        html = "<h1>📋 قائمة المستخدمين</h1><table border='1' cellpadding='10'>寿<th>ID</th><th>الاسم</th><th>البريد</th><th>الهاتف</th>\,"
         for u in users:
             html += f"<tr><td>{u['id']}</td><td>{u['name']}</td><td>{u['email']}</td><td>{u.get('phone', '-')}</td></tr>"
         html += "</table><p><a href='/'>العودة</a></p>"
@@ -1033,6 +1046,7 @@ def setup_db():
                 <li><a href="/force-admin">⚡ تسجيل دخول الأدمن</a></li>
                 <li><a href="/user/register">📝 إنشاء حساب جديد</a></li>
                 <li><a href="/debug-db">🔍 فحص قاعدة البيانات</a></li>
+                <li><a href="/test-add">🧪 اختبار إضافة منتج</a></li>
             </ul>
         </body>
         </html>
@@ -1056,6 +1070,26 @@ def setup_db():
         </body>
         </html>
         """
+
+@app.route("/test-add")
+def test_add():
+    """اختبار إضافة منتج"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        placeholder = get_placeholder()
+        
+        # محاولة إضافة منتج تجريبي
+        cursor.execute(
+            f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
+            ("منتج تجريبي", "وصف تجريبي", 100, 150, None, "عام")
+        )
+        conn.commit()
+        conn.close()
+        return "✅ تم إضافة منتج تجريبي بنجاح"
+    except Exception as e:
+        import traceback
+        return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
 
 if __name__ == "__main__":
     init_db()
