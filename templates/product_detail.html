@@ -23,7 +23,7 @@
       {% if main_image %}
       <div class="card border-0 shadow-sm rounded-4 mb-3">
         <div class="ratio ratio-1x1">
-          <img src="{{ url_for('uploaded_file', filename=main_image) }}" alt="{{ p.name }}" class="main-img object-fit-contain p-3 rounded-4" style="width:100%;height:100%;cursor:zoom-in;">
+          <img src="https://elxnymtwludcydvnjkth.supabase.co/storage/v1/object/public/products/{{ main_image }}" alt="{{ p.name }}" class="main-img object-fit-contain p-3 rounded-4" style="width:100%;height:100%;cursor:zoom-in;">
         </div>
       </div>
       {% else %}
@@ -33,8 +33,8 @@
       {% if images and images|length > 0 %}
       <div class="d-flex gallery-thumbs">
         {% for im in images %}
-        <button type="button" class="thumb" data-src="{{ url_for('uploaded_file', filename=im.filename) }}">
-          <img src="{{ url_for('uploaded_file', filename=im.filename) }}" alt="">
+        <button type="button" class="thumb" data-src="https://elxnymtwludcydvnjkth.supabase.co/storage/v1/object/public/products/{{ im.filename }}">
+          <img src="https://elxnymtwludcydvnjkth.supabase.co/storage/v1/object/public/products/{{ im.filename }}" alt="">
         </button>
         {% endfor %}
       </div>
