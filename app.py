@@ -1271,7 +1271,8 @@ def recreate_tables():
 
 @app.route("/add-bulk-products")
 def add_bulk_products():
-    """إضافة 20 منتجاً متنوعاً دفعة واحدة"""
+    """إضافة 20 منتجاً متنوعاً دفعة واحدة - طريقة مبسطة"""
+    results = []
     try:
         conn = get_db()
         cursor = conn.cursor()
@@ -1280,15 +1281,15 @@ def add_bulk_products():
         # قائمة المنتجات (20 منتج)
         products = [
             # ========== إلكترونيات (4) ==========
-            ("سماعات Sony WH-1000XM5", "سماعات لاسلكية عالية الجودة مع تقنية إلغاء الضوضاء، بطارية تدوم 30 ساعة، صوت عالي الدقة", 450000, 550000, "https://m.media-amazon.com/images/I/61Y32E0lGqL._AC_SL1500_.jpg", "إلكترونيات"),
-            ("لابتوب ASUS Zenbook 14", "لابتوب خفيف الوزن بشاشة OLED 14 إنش، معالج Intel Core i7، 16GB RAM، 512GB SSD", 1250000, 1450000, "https://dlcdnwebimgs.asus.com/gain/C9A99B7E-0C5A-45F8-9DF4-11B5B2D6E8E2", "إلكترونيات"),
-            ("آيفون 15 Pro Max", "هاتف ذكي من Apple مع كاميرا احترافية 48 ميجابكسل، شاشة Super Retina XDR، بطارية تدوم طويلاً", 1450000, 1650000, "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-max-natural-titanium-select", "إلكترونيات"),
+            ("سماعات Sony WH-1000XM5", "سماعات لاسلكية عالية الجودة مع تقنية إلغاء الضوضاء، بطارية تدوم 30 ساعة", 450000, 550000, "https://m.media-amazon.com/images/I/61Y32E0lGqL._AC_SL1500_.jpg", "إلكترونيات"),
+            ("لابتوب ASUS Zenbook 14", "لابتوب خفيف الوزن بشاشة OLED 14 إنش، معالج Intel Core i7، 16GB RAM", 1250000, 1450000, "https://dlcdnwebimgs.asus.com/gain/C9A99B7E-0C5A-45F8-9DF4-11B5B2D6E8E2", "إلكترونيات"),
+            ("آيفون 15 Pro Max", "هاتف ذكي من Apple مع كاميرا احترافية 48 ميجابكسل، شاشة Super Retina XDR", 1450000, 1650000, "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-max-natural-titanium-select", "إلكترونيات"),
             ("تابلت سامسونج Galaxy Tab S9", "جهاز لوحي بشاشة 11 إنش، قلم S Pen مضمن، معالج Snapdragon 8 Gen 2", 850000, 950000, "https://images.samsung.com/is/image/samsung/p6pim/ae/2306/gallery/ae-galaxy-tab-s9-sm-x710nzafeu-536936600", "إلكترونيات"),
             
             # ========== ملابس رجالية (3) ==========
-            ("قميص قطني تركي", "قميص رجالي قطني 100% من أجود الأقمشة التركية، ناعم ومريح، مقاسات متعددة", 55000, 75000, "https://m.media-amazon.com/images/I/71Z7Y8xYxL._AC_UL1500_.jpg", "ملابس رجالية"),
-            ("بدلة رسمية تركية", "بدلة رجالية أنيقة من الصوف التركي، مناسبة للمناسبات الرسمية، تصميم عصري", 250000, 350000, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg", "ملابس رجالية"),
-            ("تيشيرت قطني", "تيشيرت قطني مريح بتصميم بسيط، متوفر بألوان متعددة، مقاس M-XXL", 25000, 40000, "https://ae-pic-a1.aliexpress-media.com/kf/S89b38b9c79454e60b2ab794b8c26d73bV.jpg", "ملابس رجالية"),
+            ("قميص قطني تركي", "قميص رجالي قطني 100% من أجود الأقمشة التركية، ناعم ومريح", 55000, 75000, "https://m.media-amazon.com/images/I/71Z7Y8xYxL._AC_UL1500_.jpg", "ملابس رجالية"),
+            ("بدلة رسمية تركية", "بدلة رجالية أنيقة من الصوف التركي، مناسبة للمناسبات الرسمية", 250000, 350000, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg", "ملابس رجالية"),
+            ("تيشيرت قطني", "تيشيرت قطني مريح بتصميم بسيط، متوفر بألوان متعددة", 25000, 40000, "https://ae-pic-a1.aliexpress-media.com/kf/S89b38b9c79454e60b2ab794b8c26d73bV.jpg", "ملابس رجالية"),
             
             # ========== ملابس نسائية (3) ==========
             ("فستان سهرة تركي", "فستان سهرة أنيق من تصميم تركي، دانتيل فاخر، مناسب للمناسبات", 180000, 280000, "https://m.media-amazon.com/images/I/71w-8Y8xYxL._AC_UL1500_.jpg", "ملابس نسائية"),
@@ -1301,7 +1302,7 @@ def add_bulk_products():
             ("ستائر مخملية", "ستائر مخملية تركية فاخرة، عازلة للضوء، مقاسات حسب الطلب", 85000, 130000, "https://ae-pic-a1.aliexpress-media.com/kf/Sa3b2c0d8e9f4a1b2c3d4e5f6a7b8c9d0.jpg", "مستلزمات منزلية"),
             
             # ========== مستحضرات تجميل (1) ==========
-            ("كريم العناية بالبشرة", "كريم تركي طبيعي للعناية بالبشرة، مناسب لجميع أنواع البشرة، يحتوي على زيت الزيتون", 45000, 65000, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1500_.jpg", "مستحضرات تجميل"),
+            ("كريم العناية بالبشرة", "كريم تركي طبيعي للعناية بالبشرة، مناسب لجميع أنواع البشرة", 45000, 65000, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_SL1500_.jpg", "مستحضرات تجميل"),
             
             # ========== عطور (1) ==========
             ("عطر تركي فاخر", "عطر تركي برائحة خشبية مميزة، ثبات طويل، تركيز عالٍ", 95000, 140000, "https://m.media-amazon.com/images/I/81iZ7Y8xYxL._AC_UL1500_.jpg", "عطور"),
@@ -1320,50 +1321,45 @@ def add_bulk_products():
             ("ساعة رجالية تركية", "ساعة يد رجالية بتصميم تركي عصري، ستانلس ستيل، مقاومة للماء", 120000, 180000, "https://m.media-amazon.com/images/I/71YxY8xYxL._AC_UL1500_.jpg", "ساعات"),
         ]
         
-        # إضافة المنتجات
+        # إضافة المنتجات واحدة تلو الأخرى مع طباعة النتائج
         count = 0
-        for p in products:
+        errors = []
+        
+        for i, p in enumerate(products):
             try:
                 cursor.execute(
                     f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
                     (p[0], p[1], p[2], p[3], p[4], p[5])
                 )
                 count += 1
+                results.append(f"✅ {i+1}. {p[0]} - تمت الإضافة")
             except Exception as e:
-                print(f"❌ خطأ في إضافة {p[0]}: {e}")
+                error_msg = f"❌ {i+1}. {p[0]} - خطأ: {str(e)[:100]}"
+                results.append(error_msg)
+                errors.append(error_msg)
         
         conn.commit()
         conn.close()
         
-        return f"""
+        # بناء صفحة النتائج
+        html = f"""
         <!DOCTYPE html>
         <html dir="rtl">
-        <head><meta charset="UTF-8"><title>إضافة المنتجات</title></head>
+        <head><meta charset="UTF-8"><title>نتائج إضافة المنتجات</title></head>
         <body style="font-family: Arial; padding: 20px;">
-            <h1>✅ تم إضافة {count} منتج بنجاح!</h1>
+            <h1>📦 نتائج إضافة 20 منتجاً</h1>
             <hr>
-            <h3>📦 المنتجات المضافة:</h3>
+            <p><strong>✅ تمت الإضافة بنجاح:</strong> {count} من {len(products)} منتج</p>
+            <p><strong>❌ عدد الأخطاء:</strong> {len(errors)}</p>
+            <hr>
+            <h3>📋 التفاصيل:</h3>
             <ul>
-                <li>🔹 سماعات Sony WH-1000XM5 - 450,000 د.ع</li>
-                <li>🔹 لابتوب ASUS Zenbook 14 - 1,250,000 د.ع</li>
-                <li>🔹 آيفون 15 Pro Max - 1,450,000 د.ع</li>
-                <li>🔹 تابلت سامسونج Galaxy Tab S9 - 850,000 د.ع</li>
-                <li>🔹 قميص قطني تركي - 55,000 د.ع</li>
-                <li>🔹 بدلة رسمية تركية - 250,000 د.ع</li>
-                <li>🔹 تيشيرت قطني - 25,000 د.ع</li>
-                <li>🔹 فستان سهرة تركي - 180,000 د.ع</li>
-                <li>🔹 بلوزة حريرية - 75,000 د.ع</li>
-                <li>🔹 جاكيت جينز - 65,000 د.ع</li>
-                <li>🔹 طقم أواني طبخ تركي - 120,000 د.ع</li>
-                <li>🔹 سجاد تركي - 350,000 د.ع</li>
-                <li>🔹 ستائر مخملية - 85,000 د.ع</li>
-                <li>🔹 كريم العناية بالبشرة - 45,000 د.ع</li>
-                <li>🔹 عطر تركي فاخر - 95,000 د.ع</li>
-                <li>🔹 رواية تركية مترجمة - 15,000 د.ع</li>
-                <li>🔹 كتاب الطبخ التركي - 22,000 د.ع</li>
-                <li>🔹 حذاء رياضي تركي - 75,000 د.ع</li>
-                <li>🔹 لعبة تركية خشبية - 35,000 د.ع</li>
-                <li>🔹 ساعة رجالية تركية - 120,000 د.ع</li>
+        """
+        
+        for r in results:
+            html += f"<li>{r}</li>"
+        
+        html += """
             </ul>
             <hr>
             <h3>🔗 روابط مفيدة:</h3>
@@ -1375,66 +1371,11 @@ def add_bulk_products():
         </body>
         </html>
         """
-    except Exception as e:
-        import traceback
-        return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
-@app.route("/debug-add")
-def debug_add():
-    """فحص سبب عدم إضافة المنتجات"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        placeholder = get_placeholder()
-        
-        # فحص عدد المنتجات الحالية
-        cursor.execute("SELECT COUNT(*) as count FROM products")
-        count_before = cursor.fetchone()
-        
-        # محاولة إضافة منتج واحد
-        test_name = "منتج اختبار"
-        test_desc = "وصف اختبار"
-        test_price = 100
-        test_old_price = 150
-        test_image = None
-        test_category = "عام"
-        
-        cursor.execute(
-            f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
-            (test_name, test_desc, test_price, test_old_price, test_image, test_category)
-        )
-        conn.commit()
-        
-        # فحص عدد المنتجات بعد الإضافة
-        cursor.execute("SELECT COUNT(*) as count FROM products")
-        count_after = cursor.fetchone()
-        
-        # عرض آخر 5 منتجات
-        cursor.execute("SELECT * FROM products ORDER BY id DESC LIMIT 5")
-        last_products = cursor.fetchall()
-        
-        conn.close()
-        
-        html = f"""
-        <h1>🔍 فحص إضافة المنتجات</h1>
-        <p><strong>عدد المنتجات قبل الإضافة:</strong> {count_before['count']}</p>
-        <p><strong>عدد المنتجات بعد الإضافة:</strong> {count_after['count']}</p>
-        <p><strong>✅ تم إضافة منتج اختبار بنجاح!</strong></p>
-        <hr>
-        <h3>📦 آخر 5 منتجات:</h3>
-        <ul>
-        """
-        for p in last_products:
-            html += f"<li>ID: {p['id']} - {p['name']} - {p['price']} د.ع - {p.get('category', 'عام')}</li>"
-        html += """
-        </ul>
-        <hr>
-        <p><a href="/add-bulk-products">➡️ محاولة إضافة 20 منتج</a></p>
-        <p><a href="/check-products">📦 عرض جميع المنتجات</a></p>
-        """
         return html
+        
     except Exception as e:
         import traceback
-        return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
+        return f"❌ خطأ عام: {e}<br><pre>{traceback.format_exc()}</pre>"
 if __name__ == "__main__":
     init_db()
     migrate_db()
