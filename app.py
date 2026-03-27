@@ -712,14 +712,14 @@ def admin_add():
             
             conn.commit()
             conn.close()
-            flash("تمت إضافة المنتج بنجاح.", "success")
+            flash("✅ تمت إضافة المنتج بنجاح!", "success")
             return redirect(url_for("admin_dashboard"))
             
         except Exception as e:
             print(f"❌ خطأ في إضافة المنتج: {e}")
             import traceback
             traceback.print_exc()
-            flash(f"حدث خطأ: {str(e)[:100]}", "danger")
+            flash(f"❌ حدث خطأ: {str(e)[:100]}", "danger")
             return redirect(url_for("admin_add"))
 
     return render_template("add_product.html", categories=categories)
@@ -887,6 +887,7 @@ def debug_db():
                 <li><a href="/user/register">📝 إنشاء حساب جديد</a></li>
                 <li><a href="/create-test-user">👤 إنشاء مستخدم تجريبي</a></li>
                 <li><a href="/check-users">📋 عرض المستخدمين</a></li>
+                <li><a href="/check-products">📦 عرض المنتجات</a></li>
                 <li><a href="/clear-session">🗑️ مسح الجلسة</a></li>
             </ul>
         </body>
@@ -917,6 +918,28 @@ def check_users():
         for u in users:
             html += f"<tr><td>{u['id']}</td><td>{u['name']}</td><td>{u['email']}</td><td>{u.get('phone', '-')}</td></tr>"
         html += "</table><p><a href='/'>العودة</a></p>"
+        return html
+    except Exception as e:
+        return f"❌ خطأ: {e}"
+
+@app.route("/check-products")
+def check_products():
+    """عرض جميع المنتجات في قاعدة البيانات"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM products ORDER BY id DESC")
+        products = cursor.fetchall()
+        conn.close()
+        
+        if not products:
+            return "<h1>⚠️ لا توجد منتجات في قاعدة البيانات</h1><p><a href='/admin/add'>إضافة منتج</a></p>"
+        
+        html = "<h1>📦 قائمة المنتجات</h1><table border='1' cellpadding='10'>"
+        html += "<tr><th>ID</th><th>الاسم</th><th>السعر</th><th>الفئة</th><th>الصورة</th></tr>"
+        for p in products:
+            html += f"<tr><td>{p['id']}</td><td>{p['name']}</td><td>{p['price']} د.ع</td><td>{p.get('category', 'عام')}</td><td>{p.get('image', 'لا توجد')}</tr>"
+        html += "</table><p><a href='/admin/add'>➕ إضافة منتج جديد</a></p><p><a href='/admin/dashboard'>⬅️ العودة للوحة التحكم</a></p>"
         return html
     except Exception as e:
         return f"❌ خطأ: {e}"
@@ -1047,6 +1070,7 @@ def setup_db():
                 <li><a href="/user/register">📝 إنشاء حساب جديد</a></li>
                 <li><a href="/debug-db">🔍 فحص قاعدة البيانات</a></li>
                 <li><a href="/test-add">🧪 اختبار إضافة منتج</a></li>
+                <li><a href="/check-products">📦 عرض المنتجات</a></li>
             </ul>
         </body>
         </html>
