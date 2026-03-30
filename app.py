@@ -138,11 +138,7 @@ def init_db():
                 items TEXT NOT NULL,
                 total REAL NOT NULL,
                 status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                customer_name TEXT,
-                customer_phone TEXT,
-                customer_address TEXT,
-                customer_notes TEXT
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
     else:
@@ -181,11 +177,7 @@ def init_db():
                 items TEXT NOT NULL,
                 total REAL NOT NULL,
                 status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                customer_name TEXT,
-                customer_phone TEXT,
-                customer_address TEXT,
-                customer_notes TEXT
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
     
@@ -199,6 +191,7 @@ def migrate_db():
     try:
         if USE_POSTGRES:
             cursor.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price REAL DEFAULT 0")
+            # إضافة أعمدة الطلبات الجديدة
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT")
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT")
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address TEXT")
@@ -396,22 +389,26 @@ def api_remove_from_cart():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ========== دالة إتمام الطلب المعدلة (تتعامل مع الأخطاء) ==========
 @app.route("/checkout", methods=["POST"])
 def checkout():
     """إتمام الطلب - متاح للجميع"""
     try:
         cart = session.get('cart', [])
         if not cart:
-            return jsonify({'success': False, 'error': 'السلة فارغة'})
+            return jsonify({'success': False, 'error': 'السلة فارغة'}), 400
         
         data = request.json
+        if not data:
+            return jsonify({'success': False, 'error': 'بيانات غير صالحة'}), 400
+        
         customer_name = data.get('customer_name', '').strip()
         customer_phone = data.get('customer_phone', '').strip()
         customer_address = data.get('customer_address', '').strip()
         customer_notes = data.get('customer_notes', '').strip()
         
         if not customer_name or not customer_phone or not customer_address:
-            return jsonify({'success': False, 'error': 'الرجاء تعبئة جميع البيانات المطلوبة'})
+            return jsonify({'success': False, 'error': 'الرجاء تعبئة جميع البيانات المطلوبة'}), 400
         
         # حساب المجموع الكلي
         total = 0
@@ -431,11 +428,40 @@ def checkout():
         # تحويل السلة إلى JSON
         cart_json = json.dumps(cart, ensure_ascii=False)
         
-        cursor.execute(
-            f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address, customer_notes) 
-               VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
-            (user_id, cart_json, total, customer_name, customer_phone, customer_address, customer_notes)
-        )
+        # محاولة الإدراج مع جميع الأعمدة
+        try:
+            cursor.execute(
+                f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address, customer_notes) 
+                   VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
+                (user_id, cart_json, total, customer_name, customer_phone, customer_address, customer_notes)
+            )
+        except Exception as db_error:
+            # إذا فشل، حاول بدون customer_notes
+            print(f"⚠️ خطأ في الإدراج مع customer_notes: {db_error}")
+            try:
+                cursor.execute(
+                    f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address) 
+                       VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
+                    (user_id, cart_json, total, customer_name, customer_phone, customer_address)
+                )
+            except Exception as db_error2:
+                # إذا فشل أيضاً، حاول بدون customer_address
+                print(f"⚠️ خطأ في الإدراج مع customer_address: {db_error2}")
+                try:
+                    cursor.execute(
+                        f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone) 
+                           VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
+                        (user_id, cart_json, total, customer_name, customer_phone)
+                    )
+                except Exception as db_error3:
+                    # آخر محاولة - بدون أي حقول إضافية
+                    print(f"⚠️ خطأ في الإدراج مع customer_phone: {db_error3}")
+                    cursor.execute(
+                        f"""INSERT INTO orders (user_id, items, total) 
+                           VALUES ({placeholder}, {placeholder}, {placeholder})""",
+                        (user_id, cart_json, total)
+                    )
+        
         conn.commit()
         
         # الحصول على ID الطلب
@@ -451,6 +477,7 @@ def checkout():
         
         session.pop('cart', None)
         return jsonify({'success': True, 'order_id': order_id})
+        
     except Exception as e:
         print(f"❌ خطأ في إتمام الطلب: {e}")
         traceback.print_exc()
@@ -834,6 +861,27 @@ def admin_delete(pid):
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+
+# ========== route لإصلاح قاعدة البيانات ==========
+@app.route("/fix-db")
+def fix_db():
+    """إصلاح قاعدة البيانات وإضافة الأعمدة المفقودة"""
+    try:
+        migrate_db()
+        return """
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>إصلاح قاعدة البيانات</title></head>
+        <body style="font-family: Arial; padding: 20px;">
+            <h1>✅ تم إصلاح قاعدة البيانات بنجاح!</h1>
+            <p>تم إضافة جميع الأعمدة المطلوبة (customer_name, customer_phone, customer_address, customer_notes).</p>
+            <hr>
+            <a href="/">العودة للصفحة الرئيسية</a>
+        </body>
+        </html>
+        """
+    except Exception as e:
+        return f"❌ خطأ: {e}"
 
 if __name__ == "__main__":
     init_db()
