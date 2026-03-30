@@ -50,8 +50,6 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 USE_POSTGRES = bool(DATABASE_URL)
 
 print(f"🔍 استخدام PostgreSQL: {USE_POSTGRES}")
-if DATABASE_URL:
-    print(f"🔍 DATABASE_URL موجود")
 
 # ========== دوال التعامل مع الرسائل ==========
 def load_messages():
@@ -140,7 +138,11 @@ def init_db():
                 items TEXT NOT NULL,
                 total REAL NOT NULL,
                 status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                customer_name TEXT,
+                customer_phone TEXT,
+                customer_address TEXT,
+                customer_notes TEXT
             )
         """)
     else:
@@ -179,7 +181,11 @@ def init_db():
                 items TEXT NOT NULL,
                 total REAL NOT NULL,
                 status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                customer_name TEXT,
+                customer_phone TEXT,
+                customer_address TEXT,
+                customer_notes TEXT
             )
         """)
     
@@ -193,6 +199,10 @@ def migrate_db():
     try:
         if USE_POSTGRES:
             cursor.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price REAL DEFAULT 0")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address TEXT")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_notes TEXT")
         else:
             cursor.execute("PRAGMA table_info(products)")
             columns = cursor.fetchall()
@@ -203,6 +213,18 @@ def migrate_db():
                     break
             if not has_old_price:
                 cursor.execute("ALTER TABLE products ADD COLUMN old_price REAL DEFAULT 0")
+            
+            cursor.execute("PRAGMA table_info(orders)")
+            order_columns = cursor.fetchall()
+            order_col_names = [col['name'] for col in order_columns]
+            if 'customer_name' not in order_col_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN customer_name TEXT")
+            if 'customer_phone' not in order_col_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN customer_phone TEXT")
+            if 'customer_address' not in order_col_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN customer_address TEXT")
+            if 'customer_notes' not in order_col_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN customer_notes TEXT")
         
         conn.commit()
     except Exception as e:
@@ -211,7 +233,6 @@ def migrate_db():
         conn.close()
 
 def create_admin_user():
-    """إنشاء حساب الأدمن في جدول المستخدمين"""
     conn = get_db()
     cursor = conn.cursor()
     placeholder = get_placeholder()
@@ -227,8 +248,6 @@ def create_admin_user():
             )
             conn.commit()
             print("✅ تم إضافة حساب الأدمن")
-        else:
-            print("✅ حساب الأدمن موجود بالفعل")
     except Exception as e:
         print(f"⚠️ تحذير: {e}")
     finally:
@@ -255,6 +274,10 @@ def admin_required(f):
 @app.route("/")
 def index():
     return redirect(url_for("products"))
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
 
 @app.route("/products")
 def products():
@@ -298,35 +321,51 @@ def product_detail(pid):
     main_image = item["image"] if item["image"] else (imgs[0]["filename"] if imgs else None)
     return render_template("product_detail.html", p=item, images=imgs, main_image=main_image)
 
-# ========== API للسلة ==========
+# ========== API للسلة (مع دعم الكمية) ==========
 @app.route("/api/add-to-cart", methods=["POST"])
-@login_required
 def api_add_to_cart():
-    data = request.json
-    product_id = data.get('product_id')
-    product_name = data.get('product_name')
-    product_price = data.get('product_price')
-    
-    if not session.get('cart'):
-        session['cart'] = []
-    
-    cart = session['cart']
-    existing = next((item for item in cart if item['id'] == product_id), None)
-    
-    if existing:
-        existing['qty'] += 1
-    else:
-        cart.append({
-            'id': product_id,
-            'name': product_name,
-            'price': product_price,
-            'qty': 1
-        })
-    
-    session['cart'] = cart
-    session.permanent = True
-    
-    return jsonify({'success': True, 'cart_count': len(cart)})
+    """API لإضافة المنتجات للسلة - يدعم تحديد الكمية"""
+    try:
+        data = request.json
+        product_id = data.get('product_id')
+        product_name = data.get('product_name')
+        product_price = data.get('product_price')
+        quantity = data.get('quantity', 1)
+        
+        # التحقق من أن الكمية رقم صحيح
+        try:
+            quantity = int(quantity)
+            if quantity < 1:
+                quantity = 1
+        except:
+            quantity = 1
+        
+        if not session.get('cart'):
+            session['cart'] = []
+        
+        cart = session['cart']
+        existing = next((item for item in cart if item['id'] == product_id), None)
+        
+        if existing:
+            existing['qty'] += quantity
+        else:
+            cart.append({
+                'id': product_id,
+                'name': product_name,
+                'price': float(product_price),
+                'qty': quantity
+            })
+        
+        session['cart'] = cart
+        session.permanent = True
+        
+        # حساب العدد الإجمالي للعناصر
+        total_items = sum(item['qty'] for item in cart)
+        
+        return jsonify({'success': True, 'cart_count': total_items})
+    except Exception as e:
+        print(f"❌ خطأ في إضافة المنتج للسلة: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route("/api/get-cart")
 def api_get_cart():
@@ -336,177 +375,135 @@ def api_get_cart():
 
 @app.route("/api/remove-from-cart", methods=["POST"])
 def api_remove_from_cart():
-    data = request.json
-    product_id = data.get('product_id')
-    
-    cart = session.get('cart', [])
-    cart = [item for item in cart if item['id'] != product_id]
-    session['cart'] = cart
-    
-    total = sum(item['price'] * item['qty'] for item in cart)
-    return jsonify({'success': True, 'cart': cart, 'total': total})
+    try:
+        data = request.json
+        product_id = data.get('product_id')
+        
+        cart = session.get('cart', [])
+        cart = [item for item in cart if item['id'] != product_id]
+        session['cart'] = cart
+        
+        total = sum(item['price'] * item['qty'] for item in cart)
+        total_items = sum(item['qty'] for item in cart)
+        return jsonify({'success': True, 'cart': cart, 'total': total, 'cart_count': total_items})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route("/checkout", methods=["POST"])
-@login_required
 def checkout():
-    cart = session.get('cart', [])
-    if not cart:
-        flash("السلة فارغة", "warning")
-        return redirect(url_for("products"))
-    
-    total = sum(item['price'] * item['qty'] for item in cart)
-    
-    conn = get_db()
-    cursor = conn.cursor()
-    placeholder = get_placeholder()
-    
-    cursor.execute(
-        f"INSERT INTO orders (user_id, items, total) VALUES ({placeholder}, {placeholder}, {placeholder})",
-        (session['user_id'], json.dumps(cart), total)
-    )
-    conn.commit()
-    conn.close()
-    
-    chat_messages = load_chat()
-    notification = {
-        "id": int(datetime.now().timestamp()),
-        "type": "system",
-        "message": f"🛍️ تم إتمام طلب جديد بقيمة {total:,.0f} د.ع من قبل {session.get('user_name', 'مستخدم')}",
-        "user_id": session['user_id'],
-        "user_name": session.get('user_name', 'مستخدم'),
-        "created_at": datetime.now().isoformat(),
-        "read_by_user": False,
-        "read_by_admin": False,
-        "is_notification": True,
-        "sender": "system"
-    }
-    chat_messages.append(notification)
-    save_chat(chat_messages)
-    
-    session.pop('cart', None)
-    flash("تم إتمام الطلب بنجاح!", "success")
-    return jsonify({'success': True})
+    """إتمام الطلب - متاح للجميع"""
+    try:
+        cart = session.get('cart', [])
+        if not cart:
+            return jsonify({'success': False, 'error': 'السلة فارغة'})
+        
+        data = request.json
+        customer_name = data.get('customer_name', '').strip()
+        customer_phone = data.get('customer_phone', '').strip()
+        customer_address = data.get('customer_address', '').strip()
+        customer_notes = data.get('customer_notes', '').strip()
+        
+        if not customer_name or not customer_phone or not customer_address:
+            return jsonify({'success': False, 'error': 'الرجاء تعبئة جميع البيانات المطلوبة'})
+        
+        # حساب المجموع الكلي
+        total = 0
+        for item in cart:
+            item_total = item['price'] * item['qty']
+            total += item_total
+            print(f"📦 منتج: {item['name']} - السعر: {item['price']} - الكمية: {item['qty']} - المجموع: {item_total}")
+        
+        print(f"💰 المجموع الكلي للطلب: {total}")
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        placeholder = get_placeholder()
+        
+        user_id = session.get('user_id', 0)
+        
+        # تحويل السلة إلى JSON
+        cart_json = json.dumps(cart, ensure_ascii=False)
+        
+        cursor.execute(
+            f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address, customer_notes) 
+               VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
+            (user_id, cart_json, total, customer_name, customer_phone, customer_address, customer_notes)
+        )
+        conn.commit()
+        
+        # الحصول على ID الطلب
+        if USE_POSTGRES:
+            cursor.execute("SELECT LASTVAL()")
+            order_id = cursor.fetchone()['lastval']
+        else:
+            order_id = cursor.lastrowid
+        
+        print(f"✅ تم حفظ الطلب رقم {order_id} بنجاح! المجموع: {total}")
+        
+        conn.close()
+        
+        session.pop('cart', None)
+        return jsonify({'success': True, 'order_id': order_id})
+    except Exception as e:
+        print(f"❌ خطأ في إتمام الطلب: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-# ========== API للدردشة ==========
-@app.route("/api/chat/messages")
-def api_chat_messages():
-    chat_messages = load_chat()
-    user_id = session.get('user_id')
-    is_admin = session.get('is_admin', False)
-    
-    for msg in chat_messages:
-        if is_admin and not msg.get('read_by_admin', False):
-            msg['read_by_admin'] = True
-        elif not is_admin and not msg.get('read_by_user', False) and msg.get('user_id') != user_id:
-            msg['read_by_user'] = True
-    
-    save_chat(chat_messages)
-    
-    unread_count = 0
-    for msg in chat_messages:
-        if is_admin and not msg.get('read_by_admin', False):
-            unread_count += 1
-        elif not is_admin and not msg.get('read_by_user', False) and msg.get('user_id') != user_id:
-            unread_count += 1
-    
-    return jsonify({
-        "success": True, 
-        "messages": chat_messages,
-        "unread_count": unread_count
-    })
+# ========== API للطلبات (للوحة التحكم) ==========
+@app.route("/api/orders", methods=["GET"])
+@admin_required
+def api_get_orders():
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT o.*, u.name as user_name, u.email as user_email 
+            FROM orders o 
+            LEFT JOIN users u ON o.user_id = u.id 
+            ORDER BY o.created_at DESC
+        """)
+        orders = cursor.fetchall()
+        conn.close()
+        
+        for order in orders:
+            try:
+                order['items'] = json.loads(order['items']) if isinstance(order['items'], str) else order['items']
+            except:
+                order['items'] = []
+        
+        return jsonify({'success': True, 'orders': orders})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route("/api/chat/send", methods=["POST"])
-def api_chat_send():
-    data = request.json
-    user_id = session.get('user_id')
-    user_name = session.get('user_name', 'زائر')
-    user_email = session.get('user_email', '')
-    is_admin = session.get('is_admin', False)
-    
-    message = {
-        "id": int(datetime.now().timestamp()),
-        "type": "chat",
-        "user_id": user_id,
-        "user_name": user_name,
-        "user_email": user_email,
-        "message": data.get('message'),
-        "created_at": datetime.now().isoformat(),
-        "read_by_user": True if is_admin else False,
-        "read_by_admin": True if not is_admin else False,
-        "is_admin": is_admin,
-        "sender": "admin" if is_admin else "user"
-    }
-    
-    chat_messages = load_chat()
-    chat_messages.append(message)
-    save_chat(chat_messages)
-    
-    return jsonify({"success": True})
-
-# ========== API للرسائل العادية ==========
-@app.route("/api/contact", methods=["POST"])
-def contact_api():
-    data = request.json
-    message = {
-        "id": int(datetime.now().timestamp()),
-        "name": data.get('name'),
-        "email": data.get('email'),
-        "phone": data.get('phone', ''),
-        "subject": data.get('subject'),
-        "message": data.get('message'),
-        "date": datetime.now().isoformat(),
-        "read": False,
-        "type": "contact"
-    }
-    messages = load_messages()
-    messages.append(message)
-    save_messages(messages)
-    
-    chat_messages = load_chat()
-    notification = {
-        "id": int(datetime.now().timestamp()) + 1000000,
-        "type": "system",
-        "message": f"📧 رسالة جديدة من {data.get('name')}: {data.get('subject')}",
-        "user_id": None,
-        "user_name": data.get('name'),
-        "created_at": datetime.now().isoformat(),
-        "read_by_user": False,
-        "read_by_admin": False,
-        "is_notification": True,
-        "sender": "system"
-    }
-    chat_messages.append(notification)
-    save_chat(chat_messages)
-    
-    return jsonify({"success": True})
-
-@app.route("/api/messages")
-def api_messages():
-    if not session.get('is_admin'):
-        return jsonify({"error": "Unauthorized"}), 401
-    messages = load_messages()
-    contact_messages = [m for m in messages if m.get('type') != 'chat']
-    return jsonify(contact_messages)
-
-@app.route("/api/messages/<int:mid>/read", methods=["POST"])
-def api_mark_read(mid):
-    if not session.get('is_admin'):
-        return jsonify({"error": "Unauthorized"}), 401
-    messages = load_messages()
-    for msg in messages:
-        if msg['id'] == mid:
-            msg['read'] = True
-            break
-    save_messages(messages)
-    return jsonify({"success": True})
-
-@app.route("/api/send-reply", methods=["POST"])
-def api_send_reply():
-    if not session.get('is_admin'):
-        return jsonify({"error": "Unauthorized"}), 401
-    data = request.json
-    print(f"📧 إرسال رد إلى {data.get('to')}")
-    return jsonify({"success": True})
+@app.route("/api/orders/update", methods=["POST"])
+@admin_required
+def api_update_order():
+    try:
+        data = request.json
+        order_id = data.get('order_id')
+        status = data.get('status')
+        
+        if not order_id or not status:
+            return jsonify({'success': False, 'error': 'بيانات غير مكتملة'})
+        
+        if status not in ['pending', 'completed', 'cancelled']:
+            return jsonify({'success': False, 'error': 'حالة غير صالحة'})
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        placeholder = get_placeholder()
+        
+        cursor.execute(
+            f"UPDATE orders SET status = {placeholder} WHERE id = {placeholder}",
+            (status, order_id)
+        )
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # ========== نظام تسجيل الدخول ==========
 @app.route("/user/login", methods=["GET", "POST"])
@@ -514,8 +511,6 @@ def user_login():
     if request.method == "POST":
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "").strip()
-        
-        print(f"📧 محاولة تسجيل دخول - البريد: {email}")
         
         try:
             conn = get_db()
@@ -535,8 +530,6 @@ def user_login():
             else:
                 flash("البريد الإلكتروني أو كلمة المرور غير صحيحة", "danger")
         except Exception as e:
-            print(f"❌ خطأ في تسجيل الدخول: {e}")
-            traceback.print_exc()
             flash("حدث خطأ في الخادم، حاول مرة أخرى", "danger")
     
     return render_template("user_login.html")
@@ -653,6 +646,13 @@ def admin_orders():
         ORDER BY o.created_at DESC
     """)
     orders = cursor.fetchall()
+    
+    for order in orders:
+        try:
+            order['items'] = json.loads(order['items']) if isinstance(order['items'], str) else order['items']
+        except:
+            order['items'] = []
+    
     conn.close()
     return render_template("admin_orders.html", orders=orders)
 
@@ -666,7 +666,7 @@ def admin_users():
     conn.close()
     return render_template("admin_users.html", users=users)
 
-# ========== دالة إضافة المنتج المعدلة (مع دعم Supabase Storage) ==========
+# ========== دالة إضافة المنتج ==========
 @app.route("/admin/add", methods=["GET", "POST"])
 @admin_required
 def admin_add():
@@ -688,35 +688,7 @@ def admin_add():
         files = request.files.getlist("images")
         files = [f for f in files if getattr(f, "filename", "")]
         
-        # رفع الصور إلى Supabase Storage أو حفظها محلياً
-        if files and supabase:
-            try:
-                uploaded_names = []
-                for f in files:
-                    # إنشاء اسم فريد للصورة
-                    ext = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
-                    unique_name = f"{uuid.uuid4()}.{ext}"
-                    
-                    # رفع الصورة إلى Supabase Storage
-                    file_content = f.read()
-                    supabase.storage.from_("products").upload(unique_name, file_content)
-                    uploaded_names.append(unique_name)
-                    print(f"✅ تم رفع الصورة {unique_name} إلى Supabase Storage")
-                
-                if uploaded_names:
-                    image_filename = uploaded_names[0]  # الصورة الرئيسية
-                    # يمكنك حفظ باقي الصور في جدول product_images إذا أردت
-            except Exception as e:
-                print(f"❌ خطأ في رفع الصورة إلى Supabase: {e}")
-                # في حالة الفشل، نعود للتخزين المحلي
-                image_filename = files[0].filename
-                for f in files:
-                    try:
-                        f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
-                    except Exception as e2:
-                        print(f"❌ خطأ في حفظ الصورة محلياً: {e2}")
-        elif files:
-            # حفظ محلياً إذا لم يكن Supabase متاحاً
+        if files:
             image_filename = files[0].filename
             for f in files:
                 try:
@@ -754,17 +726,9 @@ def admin_add():
                 )
                 pid = cursor.lastrowid
             
-            # حفظ الصور الإضافية في جدول product_images
             if files and len(files) > 1:
-                for f in files[1:5]:  # أول صورة هي الرئيسية، نضيف الباقي كصور إضافية
-                    if supabase:
-                        ext = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
-                        unique_name = f"{uuid.uuid4()}.{ext}"
-                        file_content = f.read()
-                        supabase.storage.from_("products").upload(unique_name, file_content)
-                        cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, unique_name))
-                    else:
-                        cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
+                for f in files[1:5]:
+                    cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
             
             conn.commit()
             conn.close()
@@ -773,8 +737,6 @@ def admin_add():
             
         except Exception as e:
             print(f"❌ خطأ في إضافة المنتج: {e}")
-            import traceback
-            traceback.print_exc()
             flash(f"❌ حدث خطأ: {str(e)[:100]}", "danger")
             return redirect(url_for("admin_add"))
 
@@ -814,43 +776,15 @@ def admin_edit(pid):
 
         image_filename = product["image"]
         if remove_image and image_filename:
-            # محاولة حذف الصورة من Supabase Storage
-            if supabase and image_filename:
-                try:
-                    supabase.storage.from_("products").remove([image_filename])
-                    print(f"✅ تم حذف الصورة {image_filename} من Supabase Storage")
-                except Exception as e:
-                    print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
-            # حذف من المجلد المحلي
-            old_path = os.path.join(app.config["UPLOAD_FOLDER"], image_filename)
-            if os.path.exists(old_path):
-                try:
-                    os.remove(old_path)
-                except Exception:
-                    pass
             image_filename = None
 
         files = request.files.getlist("images")
         files = [f for f in files if getattr(f, "filename", "")]
         
-        # رفع الصور الجديدة
         if files:
-            if supabase:
-                try:
-                    ext = files[0].filename.split('.')[-1] if '.' in files[0].filename else 'jpg'
-                    unique_name = f"{uuid.uuid4()}.{ext}"
-                    file_content = files[0].read()
-                    supabase.storage.from_("products").upload(unique_name, file_content)
-                    image_filename = unique_name
-                    print(f"✅ تم رفع الصورة الجديدة {unique_name} إلى Supabase Storage")
-                except Exception as e:
-                    print(f"❌ خطأ في رفع الصورة إلى Supabase: {e}")
-                    image_filename = files[0].filename
-                    files[0].save(os.path.join(app.config["UPLOAD_FOLDER"], files[0].filename))
-            else:
-                image_filename = files[0].filename
-                for f in files:
-                    f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
+            image_filename = files[0].filename
+            for f in files:
+                f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
 
         try:
             price_val = float(price)
@@ -867,21 +801,6 @@ def admin_edit(pid):
             (name, description, price_val, old_price_val, image_filename, category, pid)
         )
         
-        cursor2.execute(f"SELECT COUNT(*) FROM product_images WHERE product_id={placeholder}", (pid,))
-        cnt_result = cursor2.fetchone()
-        cnt = cnt_result['count'] if isinstance(cnt_result, dict) else list(cnt_result.values())[0] if cnt_result else 0
-        slots = max(0, 5 - (cnt or 0))
-        if len(files) > 1 and slots:
-            new_images = files[1:slots+1] if len(files) > 1 else []
-            for f in new_images:
-                if supabase:
-                    ext = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
-                    unique_name = f"{uuid.uuid4()}.{ext}"
-                    file_content = f.read()
-                    supabase.storage.from_("products").upload(unique_name, file_content)
-                    cursor2.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, unique_name))
-                else:
-                    cursor2.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
         conn2.commit()
         conn2.close()
         flash("تم تعديل المنتج بنجاح.", "success")
@@ -898,490 +817,19 @@ def admin_delete(pid):
     cursor.execute(f"SELECT image FROM products WHERE id = {placeholder}", (pid,))
     row = cursor.fetchone()
     
-    # حذف الصورة من Supabase Storage إذا كانت موجودة
-    if row and row["image"] and supabase:
-        try:
-            supabase.storage.from_("products").remove([row["image"]])
-            print(f"✅ تم حذف الصورة {row['image']} من Supabase Storage")
-        except Exception as e:
-            print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
-    
     cursor.execute(f"DELETE FROM products WHERE id = {placeholder}", (pid,))
     conn.commit()
     conn.close()
 
-    if row and row["image"]:
-        img_path = os.path.join(app.config["UPLOAD_FOLDER"], row["image"])
-        if os.path.exists(img_path):
-            try:
-                os.remove(img_path)
-            except Exception:
-                pass
     flash("تم حذف المنتج.", "info")
     return redirect(url_for("admin_dashboard"))
 
-@app.route("/admin/image/delete/<int:image_id>", methods=["POST"])
-@admin_required
-def admin_delete_image(image_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    placeholder = get_placeholder()
-    cursor.execute(f"SELECT filename, product_id FROM product_images WHERE id = {placeholder}", (image_id,))
-    row = cursor.fetchone()
-    if row:
-        # حذف الصورة من Supabase Storage
-        if supabase and row["filename"]:
-            try:
-                supabase.storage.from_("products").remove([row["filename"]])
-                print(f"✅ تم حذف الصورة {row['filename']} من Supabase Storage")
-            except Exception as e:
-                print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
-        cursor.execute(f"DELETE FROM product_images WHERE id = {placeholder}", (image_id,))
-        conn.commit()
-    conn.close()
-    if row:
-        fpath = os.path.join(app.config["UPLOAD_FOLDER"], row["filename"])
-        if os.path.exists(fpath):
-            try:
-                os.remove(fpath)
-            except Exception:
-                pass
-    flash("تم حذف الصورة.", "info")
-    return redirect(url_for("admin_edit", pid=row["product_id"] if row else 0))
-
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
-    # إذا كان الملف في Supabase Storage، نعيد توجيه المستخدم
-    if supabase and filename:
-        try:
-            # جلب رابط الصورة من Supabase
-            url = f"{SUPABASE_URL}/storage/v1/object/public/products/{filename}"
-            return redirect(url)
-        except Exception as e:
-            print(f"⚠️ خطأ في جلب الصورة من Supabase: {e}")
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-
-@app.route("/clear-session")
-def clear_session():
-    session.clear()
-    flash("تم مسح الجلسة بالكامل", "info")
-    return redirect(url_for("products"))
-
-# ========== رووات مساعدة للتشخيص ==========
-@app.route("/debug-db")
-def debug_db():
-    """فحص حالة قاعدة البيانات"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) as count FROM users")
-        users_count = cursor.fetchone()
-        cursor.execute("SELECT COUNT(*) as count FROM products")
-        products_count = cursor.fetchone()
-        conn.close()
-        
-        return f"""
-        <!DOCTYPE html>
-        <html dir="rtl">
-        <head><meta charset="UTF-8"><title>حالة قاعدة البيانات</title></head>
-        <body style="font-family: Arial; padding: 20px;">
-            <h1>🔍 حالة قاعدة البيانات</h1>
-            <hr>
-            <p><strong>نوع قاعدة البيانات:</strong> {'PostgreSQL ✅' if USE_POSTGRES else 'SQLite'}</p>
-            <p><strong>Supabase Storage:</strong> {'متصل ✅' if supabase else 'غير متصل ⚠️'}</p>
-            <p><strong>عدد المستخدمين:</strong> {users_count['count']}</p>
-            <p><strong>عدد المنتجات:</strong> {products_count['count']}</p>
-            <hr>
-            <h3>🔗 روابط مفيدة:</h3>
-            <ul>
-                <li><a href="/force-admin">⚡ تسجيل دخول الأدمن</a></li>
-                <li><a href="/user/register">📝 إنشاء حساب جديد</a></li>
-                <li><a href="/create-test-user">👤 إنشاء مستخدم تجريبي</a></li>
-                <li><a href="/check-users">📋 عرض المستخدمين</a></li>
-                <li><a href="/check-products">📦 عرض المنتجات</a></li>
-                <li><a href="/recreate-tables">🔄 إعادة إنشاء الجداول</a></li>
-                <li><a href="/clear-session">🗑️ مسح الجلسة</a></li>
-            </ul>
-        </body>
-        </html>
-        """
-    except Exception as e:
-        return f"❌ خطأ: {e}"
-
-@app.route("/check-users")
-def check_users():
-    """عرض جميع المستخدمين"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name, email, phone FROM users")
-        users = cursor.fetchall()
-        conn.close()
-        
-        if not users:
-            return """
-            <h1>⚠️ لا يوجد مستخدمين</h1>
-            <p>لا يوجد أي مستخدمين في قاعدة البيانات.</p>
-            <p><a href="/user/register">إنشاء حساب جديد</a></p>
-            <p><a href="/create-test-user">إنشاء مستخدم تجريبي</a></p>
-            """
-        
-        html = "<h1>📋 قائمة المستخدمين</h1><table border='1' cellpadding='10'>寿<th>ID</th><th>الاسم</th><th>البريد</th><th>الهاتف</th>"
-        for u in users:
-            html += f"<tr><td>{u['id']}</td><td>{u['name']}</td><td>{u['email']}</td><td>{u.get('phone', '-')}</td></tr>"
-        html += "</table><p><a href='/'>العودة</a></p>"
-        return html
-    except Exception as e:
-        return f"❌ خطأ: {e}"
-
-@app.route("/check-products")
-def check_products():
-    """عرض جميع المنتجات في قاعدة البيانات"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM products ORDER BY id DESC")
-        products = cursor.fetchall()
-        conn.close()
-        
-        if not products:
-            return "<h1>⚠️ لا توجد منتجات في قاعدة البيانات</h1><p><a href='/admin/add'>إضافة منتج</a></p>"
-        
-        html = "<h1>📦 قائمة المنتجات</h1><table border='1' cellpadding='10'>"
-        html += "<tr><th>ID</th><th>الاسم</th><th>السعر</th><th>الفئة</th><th>الصورة</th></tr>"
-        for p in products:
-            html += f"<tr><td>{p['id']}</td><td>{p['name']}</td><td>{p['price']} د.ع</td><td>{p.get('category', 'عام')}</td><td>{p.get('image', 'لا توجد')}</td></tr>"
-        html += "</table><p><a href='/admin/add'>➕ إضافة منتج جديد</a></p><p><a href='/admin/dashboard'>⬅️ العودة للوحة التحكم</a></p>"
-        return html
-    except Exception as e:
-        return f"❌ خطأ: {e}"
-
-@app.route("/create-test-user")
-def create_test_user():
-    """إنشاء مستخدم تجريبي"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        placeholder = get_placeholder()
-        
-        email = "test@example.com"
-        password = "123456"
-        hashed = generate_password_hash(password)
-        
-        cursor.execute(f"SELECT * FROM users WHERE email = {placeholder}", (email,))
-        existing = cursor.fetchone()
-        
-        if not existing:
-            cursor.execute(
-                f"INSERT INTO users (name, email, password, phone) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder})",
-                ("مستخدم تجريبي", email, hashed, "0500000000")
-            )
-            conn.commit()
-            return """
-            <h1>✅ تم إنشاء مستخدم تجريبي</h1>
-            <p><strong>البريد:</strong> test@example.com</p>
-            <p><strong>كلمة المرور:</strong> 123456</p>
-            <hr>
-            <a href="/user/login">تسجيل الدخول</a>
-            """
-        else:
-            return "⚠️ المستخدم التجريبي موجود بالفعل"
-    except Exception as e:
-        return f"❌ خطأ: {e}"
-    finally:
-        conn.close()
-
-@app.route("/setup-db")
-def setup_db():
-    """إنشاء جميع الجداول في قاعدة البيانات"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        
-        # إنشاء جدول المنتجات
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS products (
-                id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                description TEXT,
-                price REAL NOT NULL,
-                old_price REAL DEFAULT 0,
-                image TEXT,
-                category TEXT DEFAULT 'عام'
-            )
-        """)
-        
-        # إنشاء جدول الصور
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS product_images (
-                id SERIAL PRIMARY KEY,
-                product_id INTEGER NOT NULL,
-                filename TEXT NOT NULL
-            )
-        """)
-        
-        # إنشاء جدول المستخدمين
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                name TEXT NOT NULL,
-                phone TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        # إنشاء جدول الطلبات
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS orders (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                items TEXT NOT NULL,
-                total REAL NOT NULL,
-                status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        
-        conn.commit()
-        
-        # إنشاء حساب الأدمن
-        hashed = generate_password_hash(ADMIN_PASSWORD)
-        cursor.execute("SELECT * FROM users WHERE email = %s", (ADMIN_EMAIL,))
-        admin_exists = cursor.fetchone()
-        
-        if not admin_exists:
-            cursor.execute(
-                "INSERT INTO users (name, email, password, phone) VALUES (%s, %s, %s, %s)",
-                ("مدير الموقع", ADMIN_EMAIL, hashed, "0500000000")
-            )
-            conn.commit()
-            admin_created = "✅ تم إنشاء حساب الأدمن"
-        else:
-            admin_created = "✅ حساب الأدمن موجود بالفعل"
-        
-        conn.close()
-        
-        return f"""
-        <!DOCTYPE html>
-        <html dir="rtl">
-        <head><meta charset="UTF-8"><title>إعداد قاعدة البيانات</title></head>
-        <body style="font-family: Arial; padding: 20px;">
-            <h1>✅ تم إنشاء جميع الجداول بنجاح!</h1>
-            <hr>
-            <p><strong>الجدول products:</strong> تم إنشاؤه</p>
-            <p><strong>الجدول product_images:</strong> تم إنشاؤه</p>
-            <p><strong>الجدول users:</strong> تم إنشاؤه</p>
-            <p><strong>الجدول orders:</strong> تم إنشاؤه</p>
-            <p><strong>{admin_created}</strong></p>
-            <hr>
-            <h3>🔗 روابط مفيدة:</h3>
-            <ul>
-                <li><a href="/force-admin">⚡ تسجيل دخول الأدمن</a></li>
-                <li><a href="/user/register">📝 إنشاء حساب جديد</a></li>
-                <li><a href="/debug-db">🔍 فحص قاعدة البيانات</a></li>
-                <li><a href="/test-add">🧪 اختبار إضافة منتج</a></li>
-                <li><a href="/check-products">📦 عرض المنتجات</a></li>
-                <li><a href="/recreate-tables">🔄 إعادة إنشاء الجداول</a></li>
-            </ul>
-        </body>
-        </html>
-        """
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        print(f"❌ خطأ: {e}")
-        print(error_details)
-        return f"""
-        <!DOCTYPE html>
-        <html dir="rtl">
-        <head><meta charset="UTF-8"><title>خطأ</title></head>
-        <body style="font-family: Arial; padding: 20px;">
-            <h1>❌ حدث خطأ أثناء إنشاء الجداول</h1>
-            <hr>
-            <p><strong>الخطأ:</strong> {e}</p>
-            <pre style="background:#f0f0f0; padding:10px; overflow:auto;">{error_details}</pre>
-            <hr>
-            <p><a href="/">العودة للصفحة الرئيسية</a></p>
-        </body>
-        </html>
-        """
-
-@app.route("/test-add")
-def test_add():
-    """اختبار إضافة منتج"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        placeholder = get_placeholder()
-        
-        # محاولة إضافة منتج تجريبي
-        cursor.execute(
-            f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
-            ("منتج تجريبي", "وصف تجريبي", 100, 150, None, "عام")
-        )
-        conn.commit()
-        conn.close()
-        return "✅ تم إضافة منتج تجريبي بنجاح"
-    except Exception as e:
-        import traceback
-        return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
-
-@app.route("/recreate-tables")
-def recreate_tables():
-    """إعادة إنشاء الجداول بالكامل مع عمود old_price"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-        
-        if USE_POSTGRES:
-            # حذف الجداول القديمة
-            cursor.execute("DROP TABLE IF EXISTS product_images")
-            cursor.execute("DROP TABLE IF EXISTS orders")
-            cursor.execute("DROP TABLE IF EXISTS products")
-            cursor.execute("DROP TABLE IF EXISTS users")
-            
-            # إعادة إنشاء جدول المنتجات
-            cursor.execute("""
-                CREATE TABLE products (
-                    id SERIAL PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    description TEXT,
-                    price REAL NOT NULL,
-                    old_price REAL DEFAULT 0,
-                    image TEXT,
-                    category TEXT DEFAULT 'عام'
-                )
-            """)
-            
-            # إنشاء جدول الصور
-            cursor.execute("""
-                CREATE TABLE product_images (
-                    id SERIAL PRIMARY KEY,
-                    product_id INTEGER NOT NULL,
-                    filename TEXT NOT NULL
-                )
-            """)
-            
-            # إنشاء جدول المستخدمين
-            cursor.execute("""
-                CREATE TABLE users (
-                    id SERIAL PRIMARY KEY,
-                    email TEXT UNIQUE NOT NULL,
-                    password TEXT NOT NULL,
-                    name TEXT NOT NULL,
-                    phone TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            # إنشاء جدول الطلبات
-            cursor.execute("""
-                CREATE TABLE orders (
-                    id SERIAL PRIMARY KEY,
-                    user_id INTEGER NOT NULL,
-                    items TEXT NOT NULL,
-                    total REAL NOT NULL,
-                    status TEXT DEFAULT 'pending',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            conn.commit()
-            
-            # إنشاء حساب الأدمن
-            hashed = generate_password_hash(ADMIN_PASSWORD)
-            cursor.execute("INSERT INTO users (name, email, password, phone) VALUES (%s, %s, %s, %s)",
-                           ("مدير الموقع", ADMIN_EMAIL, hashed, "0500000000"))
-            conn.commit()
-            
-        else:
-            # SQLite
-            cursor.execute("DROP TABLE IF EXISTS product_images")
-            cursor.execute("DROP TABLE IF EXISTS orders")
-            cursor.execute("DROP TABLE IF EXISTS products")
-            cursor.execute("DROP TABLE IF EXISTS users")
-            
-            cursor.execute("""
-                CREATE TABLE products (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    description TEXT,
-                    price REAL NOT NULL,
-                    old_price REAL DEFAULT 0,
-                    image TEXT,
-                    category TEXT DEFAULT 'عام'
-                )
-            """)
-            
-            cursor.execute("""
-                CREATE TABLE product_images (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    product_id INTEGER NOT NULL,
-                    filename TEXT NOT NULL
-                )
-            """)
-            
-            cursor.execute("""
-                CREATE TABLE users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    email TEXT UNIQUE NOT NULL,
-                    password TEXT NOT NULL,
-                    name TEXT NOT NULL,
-                    phone TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            cursor.execute("""
-                CREATE TABLE orders (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    items TEXT NOT NULL,
-                    total REAL NOT NULL,
-                    status TEXT DEFAULT 'pending',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-            
-            conn.commit()
-            
-            hashed = generate_password_hash(ADMIN_PASSWORD)
-            cursor.execute("INSERT INTO users (name, email, password, phone) VALUES (?, ?, ?, ?)",
-                           ("مدير الموقع", ADMIN_EMAIL, hashed, "0500000000"))
-            conn.commit()
-        
-        conn.close()
-        
-        return """
-        <!DOCTYPE html>
-        <html dir="rtl">
-        <head><meta charset="UTF-8"><title>إعادة إنشاء الجداول</title></head>
-        <body style="font-family: Arial; padding: 20px;">
-            <h1>✅ تم إعادة إنشاء جميع الجداول بنجاح!</h1>
-            <hr>
-            <p><strong>✓ جدول products:</strong> تم إنشاؤه مع عمود old_price</p>
-            <p><strong>✓ جدول product_images:</strong> تم إنشاؤه</p>
-            <p><strong>✓ جدول users:</strong> تم إنشاؤه مع حساب الأدمن</p>
-            <p><strong>✓ جدول orders:</strong> تم إنشاؤه</p>
-            <hr>
-            <h3>🔗 روابط مفيدة:</h3>
-            <ul>
-                <li><a href="/force-admin">⚡ تسجيل دخول الأدمن</a></li>
-                <li><a href="/admin/add">➕ إضافة منتج</a></li>
-                <li><a href="/check-products">📦 عرض المنتجات</a></li>
-                <li><a href="/test-add">🧪 اختبار إضافة منتج</a></li>
-            </ul>
-        </body>
-        </html>
-        """
-    except Exception as e:
-        import traceback
-        return f"❌ خطأ: {e}<br><pre>{traceback.format_exc()}</pre>"
 
 if __name__ == "__main__":
     init_db()
     migrate_db()
     create_admin_user()
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)

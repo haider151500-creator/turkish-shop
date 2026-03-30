@@ -135,171 +135,95 @@
             margin-bottom: 8px;
         }
         
-        /* صندوق الدردشة (مثل الواتساب) */
-        .chat-panel {
+        /* بطاقات الطلبات */
+        .order-card {
             background: white;
-            border-radius: 20px;
+            border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            height: calc(100vh - 150px);
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
         
-        .chat-header {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .order-header {
+            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
             color: white;
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
         }
         
-        .chat-header h4 {
-            margin: 0;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
+        .order-body {
             padding: 20px;
+        }
+        
+        .order-info {
             background: #f8f9fa;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .chat-message {
-            margin-bottom: 15px;
-            max-width: 70%;
-            padding: 10px 15px;
-            border-radius: 18px;
-            position: relative;
-            word-wrap: break-word;
-        }
-        
-        .chat-message.user {
-            background: #1976d2;
-            color: white;
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-        }
-        
-        .chat-message.admin {
-            background: #e5e7eb;
-            color: #1f2937;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
-        }
-        
-        .chat-message.system {
-            background: #fef3c7;
-            color: #92400e;
-            align-self: center;
-            font-size: 12px;
-            text-align: center;
-            max-width: 90%;
-        }
-        
-        .chat-message .sender {
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            opacity: 0.8;
-        }
-        
-        .chat-message .time {
-            font-size: 10px;
-            margin-top: 5px;
-            opacity: 0.6;
-            text-align: left;
-        }
-        
-        .chat-input-area {
             padding: 15px;
-            border-top: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .order-info p {
+            margin-bottom: 8px;
+        }
+        
+        .order-info i {
+            color: #6f42c1;
+            width: 25px;
+        }
+        
+        .order-products {
+            margin-top: 15px;
+        }
+        
+        .order-product-item {
             display: flex;
-            gap: 10px;
-            background: white;
-        }
-        
-        .chat-input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 1px solid #e5e7eb;
-            border-radius: 25px;
-            outline: none;
-            font-size: 14px;
-        }
-        
-        .chat-input:focus {
-            border-color: #1976d2;
-        }
-        
-        .chat-send {
-            background: #1976d2;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
         }
         
-        .chat-send:hover {
-            transform: scale(1.05);
-            background: #1565c0;
+        .order-product-item:last-child {
+            border-bottom: none;
         }
         
-        .unread-badge {
-            background: #ff6b6b;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 10px;
-            margin-right: 5px;
+        .order-status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
         }
         
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(100%);
-                right: -280px;
-            }
-            .sidebar.open {
-                transform: translateX(0);
-                right: 0;
-            }
-            .main-content {
-                margin-right: 0;
-            }
-            .menu-toggle {
-                display: block;
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 1001;
-                background: #6f42c1;
-                color: white;
-                border: none;
-                padding: 10px;
-                border-radius: 10px;
-            }
-            .chat-message {
-                max-width: 85%;
-            }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
         }
         
-        @media (min-width: 769px) {
-            .menu-toggle {
-                display: none;
-            }
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .btn-sm-custom {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 0 5px;
         }
         
         .btn-primary-custom {
@@ -336,6 +260,56 @@
         .admin-badge i {
             margin-left: 5px;
         }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(100%);
+                right: -280px;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+                right: 0;
+            }
+            .main-content {
+                margin-right: 0;
+            }
+            .menu-toggle {
+                display: block;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1001;
+                background: #6f42c1;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 10px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .menu-toggle {
+                display: none;
+            }
+        }
+        
+        .empty-orders {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 15px;
+        }
+        
+        .empty-orders i {
+            font-size: 64px;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
     </style>
 </head>
 <body>
@@ -352,15 +326,15 @@
         <small class="text-muted">لوحة التحكم</small>
     </div>
     <div class="nav flex-column">
-        <a class="nav-link active" href="{{ url_for('admin_dashboard') }}">
+        <a class="nav-link active" href="#" onclick="showSection('dashboard')">
             <i class='bx bx-dashboard'></i> الرئيسية
+        </a>
+        <a class="nav-link" href="#" onclick="showSection('orders')">
+            <i class='bx bx-shopping-bag'></i> الطلبات
+            <span class="badge bg-danger ms-auto" id="ordersBadge" style="display: none;">0</span>
         </a>
         <a class="nav-link" href="#" onclick="showSection('products')">
             <i class='bx bx-package'></i> المنتجات
-        </a>
-        <a class="nav-link" href="#" onclick="showSection('chat')">
-            <i class='bx bx-message-dots'></i> الدردشة
-            <span class="badge bg-danger ms-auto" id="chatUnreadBadge" style="display: none;">0</span>
         </a>
         <a class="nav-link" href="{{ url_for('products') }}">
             <i class='bx bx-store'></i> المتجر
@@ -373,40 +347,52 @@
 
 <!-- المحتوى الرئيسي -->
 <div class="main-content">
-    <!-- قسم الإحصائيات -->
-    <div class="row g-3 mb-4" id="statsSection">
-        <div class="col-md-3">
-            <div class="stat-card text-center">
-                <i class='bx bx-package bx-lg text-primary'></i>
-                <h3>{{ products|length }}</h3>
-                <p class="text-muted mb-0">إجمالي المنتجات</p>
+    <!-- قسم الإحصائيات الرئيسية -->
+    <div id="dashboardSection">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <i class='bx bx-package bx-lg text-primary'></i>
+                    <h3>{{ products|length }}</h3>
+                    <p class="text-muted mb-0">إجمالي المنتجات</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <i class='bx bx-shopping-bag bx-lg text-primary'></i>
+                    <h3 id="totalOrders">0</h3>
+                    <p class="text-muted mb-0">إجمالي الطلبات</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <i class='bx bx-trending-up bx-lg text-primary'></i>
+                    <h3 id="totalRevenue">0</h3>
+                    <p class="text-muted mb-0">إجمالي الإيرادات</p>
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="stat-card text-center">
-                <i class='bx bx-message-dots bx-lg text-primary'></i>
-                <h3 id="totalMessages">0</h3>
-                <p class="text-muted mb-0">رسائل الدردشة</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card text-center">
-                <i class='bx bx-star bx-lg text-primary'></i>
-                <h3 id="unreadMessages">0</h3>
-                <p class="text-muted mb-0">رسائل غير مقروءة</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stat-card text-center">
-                <i class='bx bx-trending-up bx-lg text-primary'></i>
-                <h3>+25%</h3>
-                <p class="text-muted mb-0">نمو المبيعات</p>
-            </div>
+        
+        <!-- آخر الطلبات -->
+        <div class="mt-4">
+            <h4><i class='bx bx-time'></i> آخر الطلبات</h4>
+            <div id="recentOrders"></div>
         </div>
     </div>
 
+    <!-- قسم الطلبات -->
+    <div id="ordersSection" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class='bx bx-shopping-bag'></i> جميع الطلبات</h3>
+            <button class="btn btn-primary-custom" onclick="loadOrders()">
+                <i class='bx bx-refresh'></i> تحديث
+            </button>
+        </div>
+        <div id="ordersList"></div>
+    </div>
+
     <!-- قسم المنتجات -->
-    <div id="productsSection">
+    <div id="productsSection" style="display: none;">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3><i class='bx bx-package'></i> إدارة المنتجات</h3>
             <a class="btn btn-primary-custom" href="{{ url_for('admin_add') }}">
@@ -452,33 +438,6 @@
             </div>
         {% endif %}
     </div>
-
-    <!-- قسم الدردشة (مثل الواتساب) -->
-    <div id="chatSection" style="display: none;">
-        <div class="chat-panel">
-            <div class="chat-header">
-                <h4>
-                    <i class='bx bx-message-dots'></i>
-                    محادثات العملاء
-                    <span id="chatUnreadCount" class="unread-badge" style="display: none;">0</span>
-                </h4>
-                <button class="btn btn-sm btn-light" onclick="refreshChat()">
-                    <i class='bx bx-refresh'></i> تحديث
-                </button>
-            </div>
-            <div id="chatMessages" class="chat-messages">
-                <div class="chat-message system">
-                    <i class='bx bx-loader-alt bx-spin'></i> جاري تحميل المحادثات...
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="chatInput" class="chat-input" placeholder="اكتب ردك هنا..." onkeypress="if(event.key === 'Enter') sendAdminMessage()">
-                <button class="chat-send" onclick="sendAdminMessage()">
-                    <i class='bx bx-send'></i>
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- شارة الأدمن -->
@@ -490,154 +449,271 @@
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 
 <script>
-// بيانات الدردشة
-let chatMessages = [];
-let chatInterval = null;
-
-// جلب رسائل الدردشة
-async function loadChatMessages() {
+// جلب جميع الطلبات
+async function loadOrders() {
+    const ordersList = document.getElementById('ordersList');
+    if (ordersList) {
+        ordersList.innerHTML = '<div class="loading"><i class="bx bx-loader-alt bx-spin"></i> جاري تحميل الطلبات...</div>';
+    }
+    
     try {
-        const response = await fetch('/api/chat/messages');
+        const response = await fetch('/api/orders');
         const data = await response.json();
         
-        if (data.success && data.messages) {
-            chatMessages = data.messages;
-            updateChatDisplay();
-            
-            // تحديث عدد الرسائل غير المقروءة
-            const unreadCount = data.unread_count || 0;
-            const chatBadge = document.getElementById('chatUnreadBadge');
-            const chatUnreadCount = document.getElementById('chatUnreadCount');
-            const totalMessages = document.getElementById('totalMessages');
-            const unreadMessages = document.getElementById('unreadMessages');
-            
-            if (unreadCount > 0) {
-                chatBadge.style.display = 'inline-block';
-                chatUnreadCount.style.display = 'inline-block';
-                chatBadge.innerText = unreadCount;
-                chatUnreadCount.innerText = unreadCount;
-            } else {
-                chatBadge.style.display = 'none';
-                chatUnreadCount.style.display = 'none';
+        if (data.success && data.orders && Array.isArray(data.orders)) {
+            displayOrders(data.orders);
+            updateStats(data.orders);
+        } else {
+            if (ordersList) {
+                ordersList.innerHTML = `
+                    <div class="empty-orders">
+                        <i class='bx bx-shopping-bag'></i>
+                        <h5>لا توجد طلبات بعد</h5>
+                        <p class="text-muted">الطلبات الجديدة ستظهر هنا تلقائياً</p>
+                    </div>
+                `;
             }
-            
-            if (totalMessages) totalMessages.innerText = chatMessages.length;
-            if (unreadMessages) unreadMessages.innerText = unreadCount;
         }
     } catch (error) {
-        console.error('خطأ في جلب الرسائل:', error);
-        document.getElementById('chatMessages').innerHTML = `
-            <div class="chat-message system">
-                <i class='bx bx-error-circle'></i> حدث خطأ في الاتصال بالخادم
-                <button class="btn btn-sm btn-primary mt-2" onclick="refreshChat()">إعادة المحاولة</button>
-            </div>
-        `;
+        console.error('خطأ في جلب الطلبات:', error);
+        if (ordersList) {
+            ordersList.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class='bx bx-error-circle'></i> حدث خطأ في تحميل الطلبات
+                    <button class="btn btn-sm btn-primary mt-2" onclick="loadOrders()">إعادة المحاولة</button>
+                </div>
+            `;
+        }
     }
 }
 
-// عرض الرسائل في واجهة الدردشة
-function updateChatDisplay() {
-    const container = document.getElementById('chatMessages');
+// عرض الطلبات في واجهة الأدمن
+function displayOrders(orders) {
+    const container = document.getElementById('ordersList');
     if (!container) return;
     
-    if (chatMessages.length === 0) {
+    if (!orders || orders.length === 0) {
         container.innerHTML = `
-            <div class="chat-message system">
-                <i class='bx bx-message-dots'></i> لا توجد رسائل بعد
-                <div class="mt-2 small">الرسائل من العملاء ستظهر هنا تلقائياً</div>
+            <div class="empty-orders">
+                <i class='bx bx-shopping-bag'></i>
+                <h5>لا توجد طلبات بعد</h5>
+                <p class="text-muted">الطلبات الجديدة ستظهر هنا تلقائياً</p>
             </div>
         `;
         return;
     }
     
     let html = '';
-    // ترتيب الرسائل من الأحدث إلى الأقدم للعرض
-    const sortedMessages = [...chatMessages].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
-    sortedMessages.forEach(msg => {
-        const isUser = msg.sender === 'user' || (msg.user_id && msg.user_id !== 999);
-        const isAdmin = msg.sender === 'admin' || (msg.user_id === 999);
-        const isSystem = msg.type === 'system';
+    orders.forEach(order => {
+        // التحقق من وجود البيانات ومنع الأخطاء
+        const statusClass = order.status === 'completed' ? 'status-completed' : 
+                           order.status === 'cancelled' ? 'status-cancelled' : 'status-pending';
+        const statusText = order.status === 'completed' ? 'مكتمل' : 
+                          order.status === 'cancelled' ? 'ملغي' : 'قيد المعالجة';
         
-        let messageClass = '';
-        let senderName = '';
-        
-        if (isSystem) {
-            messageClass = 'system';
-            senderName = '📢 نظام';
-        } else if (isUser) {
-            messageClass = 'user';
-            senderName = msg.user_name || 'عميل';
-        } else {
-            messageClass = 'admin';
-            senderName = 'أنت (الأدمن)';
+        let orderDate = '';
+        try {
+            orderDate = order.created_at ? new Date(order.created_at).toLocaleString('ar-SA') : 'غير محدد';
+        } catch(e) {
+            orderDate = 'غير محدد';
         }
         
-        const time = new Date(msg.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-        const date = new Date(msg.created_at).toLocaleDateString('ar-SA');
+        const customerName = order.customer_name || 'غير محدد';
+        const customerPhone = order.customer_phone || 'غير محدد';
+        const customerAddress = order.customer_address || 'غير محدد';
+        const customerNotes = order.customer_notes || '';
+        
+        let itemsHtml = '';
+        if (order.items && Array.isArray(order.items)) {
+            itemsHtml = order.items.map(item => `
+                <div class="order-product-item">
+                    <span>${escapeHtml(item.name || 'منتج')}</span>
+                    <span>الكمية: ${item.qty || 0}</span>
+                    <span>${((item.price || 0) * (item.qty || 0)).toLocaleString()} د.ع</span>
+                </div>
+            `).join('');
+        }
+        
+        const totalAmount = order.total_amount || 0;
         
         html += `
-            <div class="chat-message ${messageClass}">
-                <div class="sender">${escapeHtml(senderName)}</div>
-                <div>${escapeHtml(msg.message)}</div>
-                <div class="time">${date} - ${time}</div>
+            <div class="order-card">
+                <div class="order-header">
+                    <div>
+                        <strong><i class='bx bx-receipt'></i> طلب رقم: ${order.id || '?'}</strong>
+                        <span class="order-status ${statusClass} me-2">${statusText}</span>
+                    </div>
+                    <div>
+                        <small>${orderDate}</small>
+                    </div>
+                </div>
+                <div class="order-body">
+                    <div class="order-info">
+                        <p><i class='bx bx-user'></i> <strong>الاسم:</strong> ${escapeHtml(customerName)}</p>
+                        <p><i class='bx bx-phone'></i> <strong>رقم الهاتف:</strong> ${escapeHtml(customerPhone)}</p>
+                        <p><i class='bx bx-location-plus'></i> <strong>العنوان:</strong> ${escapeHtml(customerAddress)}</p>
+                        ${customerNotes ? `<p><i class='bx bx-note'></i> <strong>ملاحظات:</strong> ${escapeHtml(customerNotes)}</p>` : ''}
+                    </div>
+                    
+                    <div class="order-products">
+                        <h6><i class='bx bx-package'></i> المنتجات المطلوبة:</h6>
+                        ${itemsHtml}
+                        <div class="order-product-item fw-bold">
+                            <span>المجموع الكلي:</span>
+                            <span>${totalAmount.toLocaleString()} د.ع</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 d-flex gap-2 justify-content-end">
+                        <button class="btn btn-sm btn-success btn-sm-custom" onclick="updateOrderStatus(${order.id}, 'completed')">
+                            <i class='bx bx-check-circle'></i> تأكيد
+                        </button>
+                        <button class="btn btn-sm btn-warning btn-sm-custom" onclick="updateOrderStatus(${order.id}, 'pending')">
+                            <i class='bx bx-time'></i> قيد المعالجة
+                        </button>
+                        <button class="btn btn-sm btn-danger btn-sm-custom" onclick="updateOrderStatus(${order.id}, 'cancelled')">
+                            <i class='bx bx-x-circle'></i> إلغاء
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
     });
     
     container.innerHTML = html;
-    container.scrollTop = container.scrollHeight;
 }
 
-// إرسال رد من الأدمن
-async function sendAdminMessage() {
-    const input = document.getElementById('chatInput');
-    const message = input.value.trim();
-    if (!message) return;
+// عرض آخر الطلبات في الصفحة الرئيسية
+function displayRecentOrders(orders) {
+    const container = document.getElementById('recentOrders');
+    if (!container) return;
     
+    if (!orders || orders.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center py-4">لا توجد طلبات بعد</p>';
+        return;
+    }
+    
+    const recentOrders = orders.slice(0, 5);
+    let html = '<div class="row">';
+    recentOrders.forEach(order => {
+        const customerName = order.customer_name || 'غير محدد';
+        const customerPhone = order.customer_phone || 'غير محدد';
+        const totalAmount = order.total_amount || 0;
+        let orderDate = '';
+        try {
+            orderDate = order.created_at ? new Date(order.created_at).toLocaleString('ar-SA') : 'غير محدد';
+        } catch(e) {
+            orderDate = 'غير محدد';
+        }
+        
+        html += `
+            <div class="col-md-12 mb-3">
+                <div class="order-card">
+                    <div class="order-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>طلب رقم: ${order.id || '?'}</strong>
+                            <small>${orderDate}</small>
+                        </div>
+                        <p><i class='bx bx-user'></i> ${escapeHtml(customerName)}</p>
+                        <p><i class='bx bx-phone'></i> ${escapeHtml(customerPhone)}</p>
+                        <p class="fw-bold">المجموع: ${totalAmount.toLocaleString()} د.ع</p>
+                        <button class="btn btn-sm btn-primary-custom" onclick="showSection('orders')">
+                            عرض التفاصيل
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// تحديث الإحصائيات
+function updateStats(orders) {
+    if (!orders || orders.length === 0) {
+        document.getElementById('totalOrders').innerText = '0';
+        document.getElementById('totalRevenue').innerText = '0 د.ع';
+        document.getElementById('ordersBadge').style.display = 'none';
+        return;
+    }
+    
+    const totalOrders = orders.length;
+    const totalRevenue = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+    const pendingOrders = orders.filter(o => o.status === 'pending').length;
+    
+    document.getElementById('totalOrders').innerText = totalOrders;
+    document.getElementById('totalRevenue').innerText = totalRevenue.toLocaleString() + ' د.ع';
+    
+    const ordersBadge = document.getElementById('ordersBadge');
+    if (pendingOrders > 0) {
+        ordersBadge.style.display = 'inline-block';
+        ordersBadge.innerText = pendingOrders;
+    } else {
+        ordersBadge.style.display = 'none';
+    }
+    
+    displayRecentOrders(orders);
+}
+
+// تحديث حالة الطلب
+async function updateOrderStatus(orderId, status) {
     try {
-        const response = await fetch('/api/chat/send', {
+        const response = await fetch('/api/orders/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: message,
-                user_id: 999,
-                user_name: 'الدعم الفني',
-                user_email: 'admin@turkishstore.com'
-            })
+            body: JSON.stringify({ order_id: orderId, status: status })
         });
         
         const data = await response.json();
         if (data.success) {
-            input.value = '';
-            loadChatMessages();
-            showAlert("✅ تم إرسال ردك", "success");
+            showAlert(`✅ تم تحديث حالة الطلب بنجاح`, "success");
+            loadOrders();
         } else {
-            showAlert("❌ فشل في إرسال الرد", "danger");
+            showAlert(`❌ ${data.error || 'فشل في تحديث الحالة'}`, "danger");
         }
     } catch (error) {
-        console.error('خطأ في إرسال الرد:', error);
-        showAlert("❌ حدث خطأ في الإرسال", "danger");
+        console.error('خطأ في تحديث الحالة:', error);
+        showAlert("❌ حدث خطأ في الاتصال", "danger");
     }
 }
 
-// تحديث الدردشة
-function refreshChat() {
-    loadChatMessages();
-}
-
-// دالة لتأمين النص من XSS
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// تبديل الأقسام
+function showSection(section) {
+    const dashboardDiv = document.getElementById('dashboardSection');
+    const ordersDiv = document.getElementById('ordersSection');
+    const productsDiv = document.getElementById('productsSection');
+    
+    if (dashboardDiv) dashboardDiv.style.display = 'none';
+    if (ordersDiv) ordersDiv.style.display = 'none';
+    if (productsDiv) productsDiv.style.display = 'none';
+    
+    if (section === 'dashboard' && dashboardDiv) {
+        dashboardDiv.style.display = 'block';
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        navLinks.forEach(link => link.classList.remove('active'));
+        if (navLinks[0]) navLinks[0].classList.add('active');
+    } else if (section === 'orders' && ordersDiv) {
+        ordersDiv.style.display = 'block';
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        navLinks.forEach(link => link.classList.remove('active'));
+        if (navLinks[1]) navLinks[1].classList.add('active');
+        loadOrders();
+    } else if (section === 'products' && productsDiv) {
+        productsDiv.style.display = 'block';
+        const navLinks = document.querySelectorAll('.sidebar .nav-link');
+        navLinks.forEach(link => link.classList.remove('active'));
+        if (navLinks[2]) navLinks[2].classList.add('active');
+    }
 }
 
 // عرض تنبيه
 function showAlert(message, type = "info") {
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    const bgClass = type === "success" ? "success" : type === "danger" ? "danger" : "info";
+    alertDiv.className = `alert alert-${bgClass} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
     alertDiv.style.zIndex = 9999;
     alertDiv.style.minWidth = '300px';
     alertDiv.innerHTML = `
@@ -648,50 +724,26 @@ function showAlert(message, type = "info") {
     setTimeout(() => alertDiv.remove(), 3000);
 }
 
-// تبديل الأقسام
-function showSection(section) {
-    const productsDiv = document.getElementById('productsSection');
-    const chatDiv = document.getElementById('chatSection');
-    const statsDiv = document.getElementById('statsSection');
-    
-    if (section === 'products') {
-        productsDiv.style.display = 'block';
-        chatDiv.style.display = 'none';
-        statsDiv.style.display = 'flex';
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
-        document.querySelectorAll('.sidebar .nav-link')[1].classList.add('active');
-        if (chatInterval) {
-            clearInterval(chatInterval);
-            chatInterval = null;
-        }
-    } else if (section === 'chat') {
-        productsDiv.style.display = 'none';
-        chatDiv.style.display = 'block';
-        statsDiv.style.display = 'none';
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => link.classList.remove('active'));
-        document.querySelectorAll('.sidebar .nav-link')[2].classList.add('active');
-        loadChatMessages();
-        if (!chatInterval) {
-            chatInterval = setInterval(loadChatMessages, 5000);
-        }
-    }
-}
-
 // تبديل القائمة للجوال
 function toggleSidebar() {
     document.getElementById('sidebar').classList.toggle('open');
 }
 
+// دالة لتأمين النص من XSS
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // تحميل البيانات عند فتح الصفحة
 document.addEventListener('DOMContentLoaded', function() {
-    loadChatMessages();
-});
-
-// تنظيف المؤقت عند مغادرة الصفحة
-window.addEventListener('beforeunload', function() {
-    if (chatInterval) {
-        clearInterval(chatInterval);
-    }
+    showSection('dashboard');
+    loadOrders();
+    
+    // تحديث الطلبات كل 30 ثانية
+    setInterval(loadOrders, 30000);
 });
 </script>
 
