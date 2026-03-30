@@ -137,40 +137,28 @@
             transform: scale(1.1);
         }
         
-        .quantity-selector {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            background: #f3f4f6;
-            border-radius: 30px;
-            padding: 2px;
-        }
-        .quantity-btn {
-            width: 28px;
-            height: 28px;
+        /* زر الإضافة فقط */
+        .add-to-cart-btn {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: white;
+            background: linear-gradient(135deg, #1976d2, #1565c0);
             border: none;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            color: #1976d2;
-            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .quantity-btn:hover {
-            background: #1976d2;
+        .add-to-cart-btn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, #1e88e5, #1976d2);
+        }
+        .add-to-cart-btn i {
             color: white;
-        }
-        .quantity-input {
-            width: 40px;
-            text-align: center;
-            border: none;
-            background: transparent;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .quantity-input:focus {
-            outline: none;
+            width: 18px;
+            height: 18px;
         }
     </style>
 </head>
@@ -425,14 +413,10 @@
                   <span class="price-iqd" style="font-weight: bold; color: #1976d2; font-size: 14px;">${formattedPrice} د.ع</span>
                   <span class="price-usd" style="font-size: 11px; color: #6b7280;">≈ ${(p.price / 1300).toFixed(0)} $</span>
                 </div>
-                <div class="quantity-selector">
-                  <button type="button" class="quantity-btn" onclick="event.stopPropagation(); changeProductQty(${p.id}, -1)">-</button>
-                  <input type="number" id="qty_${p.id}" value="1" min="1" class="quantity-input w-12 text-center" onchange="event.stopPropagation();">
-                  <button type="button" class="quantity-btn" onclick="event.stopPropagation(); changeProductQty(${p.id}, 1)">+</button>
-                  <button onclick="event.stopPropagation(); addToCartWithQty(${p.id}, '${p.name}', ${p.price})" class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1976d2] to-[#1565c0] hover:from-[#1e88e5] hover:to-[#1976d2] text-white flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                  </button>
-                </div>
+                <!-- زر الإضافة فقط - بدون أزرار + و - -->
+                <button onclick="event.stopPropagation(); addToCartSimple(${p.id}, '${p.name}', ${p.price})" class="add-to-cart-btn">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -441,12 +425,9 @@
       lucide.createIcons();
     }
 
-    function changeProductQty(productId, delta) {
-      const input = document.getElementById(`qty_${productId}`);
-      if (!input) return;
-      let newVal = parseInt(input.value) + delta;
-      if (newVal < 1) newVal = 1;
-      input.value = newVal;
+    // دالة إضافة بسيطة (تضيف كمية 1 فقط)
+    function addToCartSimple(id, name, price) {
+      addToCart(id, name, price, 1);
     }
 
     function changeModalQty(delta) {
@@ -455,12 +436,6 @@
       let newVal = parseInt(input.value) + delta;
       if (newVal < 1) newVal = 1;
       input.value = newVal;
-    }
-
-    function addToCartWithQty(id, name, price) {
-      const qtyInput = document.getElementById(`qty_${id}`);
-      const quantity = qtyInput ? parseInt(qtyInput.value) : 1;
-      addToCart(id, name, price, quantity);
     }
 
     function addToCartFromModalWithQty() {
@@ -510,13 +485,12 @@
       }).catch(error => { console.error('Error:', error); showToast("❌ حدث خطأ", "error"); });
     }
 
-    // ========== دوال السلة المعدلة بشكل صحيح ==========
+    // ========== دوال السلة ==========
     function decreaseQty(id) {
       const idx = cart.findIndex(i => i.id === id);
       if (idx === -1) return;
       const currentQty = cart[idx].qty;
       if (currentQty <= 1) {
-        // حذف المنتج إذا كانت الكمية 1
         fetch('/api/remove-from-cart', { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
@@ -527,7 +501,6 @@
           } 
         }).catch(error => { console.error('Error:', error); showToast("❌ حدث خطأ", "error"); });
       } else {
-        // تقليل الكمية بمقدار 1
         fetch('/api/add-to-cart', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -543,7 +516,6 @@
     function increaseQty(id) {
       const idx = cart.findIndex(i => i.id === id);
       if (idx === -1) return;
-      // زيادة الكمية بمقدار 1
       fetch('/api/add-to-cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
