@@ -321,10 +321,10 @@ def product_detail(pid):
     main_image = item["image"] if item["image"] else (imgs[0]["filename"] if imgs else None)
     return render_template("product_detail.html", p=item, images=imgs, main_image=main_image)
 
-# ========== API للسلة (مع دعم الكمية) ==========
+# ========== API للسلة (يدعم الكمية الموجبة والسالبة) ==========
 @app.route("/api/add-to-cart", methods=["POST"])
 def api_add_to_cart():
-    """API لإضافة المنتجات للسلة - يدعم تحديد الكمية"""
+    """API لإضافة المنتجات للسلة - يدعم الكمية الموجبة والسالبة"""
     try:
         data = request.json
         product_id = data.get('product_id')
@@ -332,13 +332,14 @@ def api_add_to_cart():
         product_price = data.get('product_price')
         quantity = data.get('quantity', 1)
         
-        # التحقق من أن الكمية رقم صحيح
+        # التحقق من أن الكمية رقم صحيح (قد تكون سالبة)
         try:
             quantity = int(quantity)
-            if quantity < 1:
-                quantity = 1
         except:
             quantity = 1
+        
+        if quantity == 0:
+            return jsonify({'success': True, 'cart_count': len(session.get('cart', []))})
         
         if not session.get('cart'):
             session['cart'] = []
@@ -347,14 +348,20 @@ def api_add_to_cart():
         existing = next((item for item in cart if item['id'] == product_id), None)
         
         if existing:
-            existing['qty'] += quantity
+            new_qty = existing['qty'] + quantity
+            if new_qty <= 0:
+                # حذف المنتج من السلة
+                cart = [item for item in cart if item['id'] != product_id]
+            else:
+                existing['qty'] = new_qty
         else:
-            cart.append({
-                'id': product_id,
-                'name': product_name,
-                'price': float(product_price),
-                'qty': quantity
-            })
+            if quantity > 0:
+                cart.append({
+                    'id': product_id,
+                    'name': product_name,
+                    'price': float(product_price),
+                    'qty': quantity
+                })
         
         session['cart'] = cart
         session.permanent = True
