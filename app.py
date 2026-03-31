@@ -136,9 +136,13 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 items TEXT NOT NULL,
-                total REAL NOT NULL,
+                total REAL DEFAULT 0,
                 status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                customer_name TEXT,
+                customer_phone TEXT,
+                customer_address TEXT,
+                customer_notes TEXT
             )
         """)
     else:
@@ -175,9 +179,13 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 items TEXT NOT NULL,
-                total REAL NOT NULL,
+                total REAL DEFAULT 0,
                 status TEXT DEFAULT 'pending',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                customer_name TEXT,
+                customer_phone TEXT,
+                customer_address TEXT,
+                customer_notes TEXT
             )
         """)
     
@@ -191,11 +199,11 @@ def migrate_db():
     try:
         if USE_POSTGRES:
             cursor.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price REAL DEFAULT 0")
-            # إضافة أعمدة الطلبات الجديدة
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT")
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT")
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address TEXT")
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_notes TEXT")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS total REAL DEFAULT 0")
         else:
             cursor.execute("PRAGMA table_info(products)")
             columns = cursor.fetchall()
@@ -210,6 +218,7 @@ def migrate_db():
             cursor.execute("PRAGMA table_info(orders)")
             order_columns = cursor.fetchall()
             order_col_names = [col['name'] for col in order_columns]
+            
             if 'customer_name' not in order_col_names:
                 cursor.execute("ALTER TABLE orders ADD COLUMN customer_name TEXT")
             if 'customer_phone' not in order_col_names:
@@ -218,6 +227,8 @@ def migrate_db():
                 cursor.execute("ALTER TABLE orders ADD COLUMN customer_address TEXT")
             if 'customer_notes' not in order_col_names:
                 cursor.execute("ALTER TABLE orders ADD COLUMN customer_notes TEXT")
+            if 'total' not in order_col_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN total REAL DEFAULT 0")
         
         conn.commit()
     except Exception as e:
@@ -333,7 +344,6 @@ def api_add_to_cart():
         product_price = data.get('product_price')
         quantity = data.get('quantity', 1)
         
-        # التحقق من أن الكمية رقم صحيح (قد تكون سالبة)
         try:
             quantity = int(quantity)
         except:
@@ -351,7 +361,6 @@ def api_add_to_cart():
         if existing:
             new_qty = existing['qty'] + quantity
             if new_qty <= 0:
-                # حذف المنتج من السلة
                 cart = [item for item in cart if item['id'] != product_id]
             else:
                 existing['qty'] = new_qty
@@ -367,7 +376,6 @@ def api_add_to_cart():
         session['cart'] = cart
         session.permanent = True
         
-        # حساب العدد الإجمالي للعناصر
         total_items = sum(item['qty'] for item in cart)
         
         return jsonify({'success': True, 'cart_count': total_items})
@@ -436,39 +444,12 @@ def checkout():
         # تحويل السلة إلى JSON
         cart_json = json.dumps(cart, ensure_ascii=False)
         
-        # محاولة الإدراج مع جميع الأعمدة
-        try:
-            cursor.execute(
-                f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address, customer_notes) 
-                   VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
-                (user_id, cart_json, total, customer_name, customer_phone, customer_address, customer_notes)
-            )
-        except Exception as db_error:
-            # إذا فشل، حاول بدون customer_notes
-            print(f"⚠️ خطأ في الإدراج مع customer_notes: {db_error}")
-            try:
-                cursor.execute(
-                    f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address) 
-                       VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
-                    (user_id, cart_json, total, customer_name, customer_phone, customer_address)
-                )
-            except Exception as db_error2:
-                # إذا فشل أيضاً، حاول بدون customer_address
-                print(f"⚠️ خطأ في الإدراج مع customer_address: {db_error2}")
-                try:
-                    cursor.execute(
-                        f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone) 
-                           VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
-                        (user_id, cart_json, total, customer_name, customer_phone)
-                    )
-                except Exception as db_error3:
-                    # آخر محاولة - بدون أي حقول إضافية
-                    print(f"⚠️ خطأ في الإدراج مع customer_phone: {db_error3}")
-                    cursor.execute(
-                        f"""INSERT INTO orders (user_id, items, total) 
-                           VALUES ({placeholder}, {placeholder}, {placeholder})""",
-                        (user_id, cart_json, total)
-                    )
+        # إدراج الطلب مع جميع البيانات
+        cursor.execute(
+            f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address, customer_notes) 
+               VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
+            (user_id, cart_json, total, customer_name, customer_phone, customer_address, customer_notes)
+        )
         
         conn.commit()
         
@@ -882,9 +863,67 @@ def fix_db():
         <head><meta charset="UTF-8"><title>إصلاح قاعدة البيانات</title></head>
         <body style="font-family: Arial; padding: 20px;">
             <h1>✅ تم إصلاح قاعدة البيانات بنجاح!</h1>
-            <p>تم إضافة جميع الأعمدة المطلوبة (customer_name, customer_phone, customer_address, customer_notes).</p>
+            <p>تم إضافة جميع الأعمدة المطلوبة (customer_name, customer_phone, customer_address, customer_notes, total).</p>
             <hr>
             <a href="/">العودة للصفحة الرئيسية</a>
+        </body>
+        </html>
+        """
+    except Exception as e:
+        return f"❌ خطأ: {e}"
+
+# ========== route لإصلاح جدول الطلبات فقط ==========
+@app.route("/fix-orders")
+def fix_orders():
+    """إصلاح جدول الطلبات وإضافة عمود total والأعمدة المطلوبة"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        if USE_POSTGRES:
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS total REAL DEFAULT 0")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address TEXT")
+            cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_notes TEXT")
+        else:
+            cursor.execute("PRAGMA table_info(orders)")
+            columns = cursor.fetchall()
+            column_names = [col['name'] for col in columns]
+            
+            if 'total' not in column_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN total REAL DEFAULT 0")
+            if 'customer_name' not in column_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN customer_name TEXT")
+            if 'customer_phone' not in column_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN customer_phone TEXT")
+            if 'customer_address' not in column_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN customer_address TEXT")
+            if 'customer_notes' not in column_names:
+                cursor.execute("ALTER TABLE orders ADD COLUMN customer_notes TEXT")
+        
+        conn.commit()
+        
+        # عرض الأعمدة بعد الإضافة للتأكد
+        if not USE_POSTGRES:
+            cursor.execute("PRAGMA table_info(orders)")
+            columns = cursor.fetchall()
+            cols_html = "<ul>" + "".join([f"<li>{col['name']}</li>" for col in columns]) + "</ul>"
+        else:
+            cols_html = "<p>تم تحديث جدول orders في PostgreSQL</p>"
+        
+        conn.close()
+        
+        return f"""
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head><meta charset="UTF-8"><title>إصلاح جدول الطلبات</title></head>
+        <body style="font-family: Arial; padding: 20px;">
+            <h1>✅ تم إصلاح جدول الطلبات بنجاح!</h1>
+            <p>الأعمدة الموجودة حالياً في جدول orders:</p>
+            {cols_html}
+            <hr>
+            <a href="/admin">الذهاب إلى لوحة التحكم</a>
         </body>
         </html>
         """
