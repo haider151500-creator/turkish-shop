@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="متجر المنتجات التركية - أفضل المنتجات الأصلية من تركيا بأعلى جودة وأفضل الأسعار">
+  <meta name="description" content="مركز المنتجات التركية - أفضل المنتجات الأصلية بأعلى جودة وأفضل الأسعار">
   <meta name="keywords" content="منتجات تركية, متجر تركي, ملابس تركية, اكسسوارات تركية, استيراد من تركيا">
   <meta name="author" content="متجر المنتجات التركية">
-  <title>{% block title %}متجر المنتجات التركية | أفضل متجر إلكتروني تركي{% endblock %}</title>
+  <title>{% block title %}مركز المنتجات التركية | أفضل مركز{% endblock %}</title>
   
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/img/apple-icon.png') }}">
   <link rel="shortcut icon" href="{{ url_for('static', filename='assets/img/favicon.ico') }}" type="image/x-icon">
@@ -16,7 +16,6 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/templatemo.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/custom.css') }}">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   
   <style>
     :root {
@@ -84,7 +83,7 @@
   <div class="container">
     <a class="navbar-brand" href="{{ url_for('index') }}">
       <i class='bx bx-store-alt'></i>
-      <span>متجر المنتجات التركية</span>
+      <span>مركز المنتجات التركية</span>
     </a>
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -94,14 +93,12 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav mx-auto">
 
-        <!-- الرئيسية -->
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
             <i class='bx bx-home'></i> الرئيسية
           </a>
         </li>
 
-        <!-- المنتجات -->
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint == 'products' %}active{% endif %}" href="{{ url_for('products') }}">
             <i class='bx bx-grid-alt'></i> المنتجات
@@ -117,10 +114,6 @@
           </a>
           <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">
             <i class='bx bx-log-out'></i> خروج
-          </a>
-        {% else %}
-          <a href="{{ url_for('admin_login') }}" class="btn btn-outline-primary btn-sm">
-            <i class='bx bx-lock-alt'></i> دخول الأدمن
           </a>
         {% endif %}
       </div>
