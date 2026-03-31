@@ -185,15 +185,41 @@
         }
         
         .order-product-item {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 10px;
             align-items: center;
-            padding: 10px;
+            padding: 12px 10px;
             border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .order-product-item.header {
+            background: #f8f9fa;
+            font-weight: bold;
+            border-bottom: 2px solid #6f42c1;
+            border-radius: 8px;
         }
         
         .order-product-item:last-child {
             border-bottom: none;
+        }
+        
+        .order-product-item .product-name {
+            font-weight: 500;
+        }
+        
+        .order-product-item .product-price {
+            color: #6f42c1;
+        }
+        
+        .order-product-item .product-qty {
+            text-align: center;
+        }
+        
+        .order-product-item .product-total {
+            font-weight: bold;
+            color: #28a745;
+            text-align: left;
         }
         
         .order-status {
@@ -285,6 +311,16 @@
                 padding: 10px;
                 border-radius: 10px;
             }
+            
+            .order-product-item {
+                grid-template-columns: 1fr;
+                gap: 5px;
+                text-align: center;
+            }
+            
+            .order-product-item .product-total {
+                text-align: center;
+            }
         }
         
         @media (min-width: 769px) {
@@ -309,6 +345,13 @@
         .loading {
             text-align: center;
             padding: 40px;
+        }
+        
+        .total-amount-row {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            margin-top: 15px;
+            padding: 12px;
         }
     </style>
 </head>
@@ -469,7 +512,7 @@ async function loadOrders() {
                     <div class="empty-orders">
                         <i class='bx bx-shopping-bag'></i>
                         <h5>لا توجد طلبات بعد</h5>
-                        <p class="text-muted">الطلبات الجديدة ستظهر هنا تلقائياً</p>
+                        <p class="text-muted">الطلبات الجديدة ستظهر هنا</p>
                     </div>
                 `;
             }
@@ -487,7 +530,7 @@ async function loadOrders() {
     }
 }
 
-// عرض الطلبات في واجهة الأدمن
+// عرض الطلبات في واجهة الأدمن مع إظهار السعر الإجمالي لكل منتج
 function displayOrders(orders) {
     const container = document.getElementById('ordersList');
     if (!container) return;
@@ -497,7 +540,7 @@ function displayOrders(orders) {
             <div class="empty-orders">
                 <i class='bx bx-shopping-bag'></i>
                 <h5>لا توجد طلبات بعد</h5>
-                <p class="text-muted">الطلبات الجديدة ستظهر هنا تلقائياً</p>
+                <p class="text-muted">الطلبات الجديدة ستظهر هنا</p>
             </div>
         `;
         return;
@@ -507,7 +550,6 @@ function displayOrders(orders) {
     orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     orders.forEach(order => {
-        // التحقق من وجود البيانات ومنع الأخطاء
         const statusClass = order.status === 'completed' ? 'status-completed' : 
                            order.status === 'cancelled' ? 'status-cancelled' : 'status-pending';
         const statusText = order.status === 'completed' ? 'مكتمل' : 
@@ -525,15 +567,31 @@ function displayOrders(orders) {
         const customerAddress = order.customer_address || 'غير محدد';
         const customerNotes = order.customer_notes || '';
         
-        let itemsHtml = '';
+        // عرض المنتجات مع السعر الإجمالي لكل منتج
+        let itemsHtml = `
+            <div class="order-product-item header">
+                <span>المنتج</span>
+                <span>السعر</span>
+                <span>الكمية</span>
+                <span>الإجمالي</span>
+            </div>
+        `;
+        
         if (order.items && Array.isArray(order.items)) {
-            itemsHtml = order.items.map(item => `
-                <div class="order-product-item">
-                    <span>${escapeHtml(item.name || 'منتج')}</span>
-                    <span>الكمية: ${item.qty || 0}</span>
-                    <span>${((item.price || 0) * (item.qty || 0)).toLocaleString()} د.ع</span>
-                </div>
-            `).join('');
+            order.items.forEach(item => {
+                const itemPrice = item.price || 0;
+                const itemQty = item.qty || 0;
+                const itemTotal = itemPrice * itemQty;
+                
+                itemsHtml += `
+                    <div class="order-product-item">
+                        <span class="product-name">${escapeHtml(item.name || 'منتج')}</span>
+                        <span class="product-price">${itemPrice.toLocaleString()} د.ع</span>
+                        <span class="product-qty">× ${itemQty}</span>
+                        <span class="product-total">${itemTotal.toLocaleString()} د.ع</span>
+                    </div>
+                `;
+            });
         }
         
         const totalAmount = order.total_amount || 0;
@@ -560,9 +618,9 @@ function displayOrders(orders) {
                     <div class="order-products">
                         <h6><i class='bx bx-package'></i> المنتجات المطلوبة:</h6>
                         ${itemsHtml}
-                        <div class="order-product-item fw-bold">
-                            <span>المجموع الكلي:</span>
-                            <span>${totalAmount.toLocaleString()} د.ع</span>
+                        <div class="total-amount-row d-flex justify-content-between align-items-center">
+                            <strong><i class='bx bx-calculator'></i> المجموع الكلي للطلب:</strong>
+                            <span class="fw-bold fs-5 text-success">${totalAmount.toLocaleString()} د.ع</span>
                         </div>
                     </div>
                     
@@ -737,13 +795,12 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// تحميل البيانات عند فتح الصفحة
+// تحميل البيانات عند فتح الصفحة (مرة واحدة فقط - بدون تحديث تلقائي)
 document.addEventListener('DOMContentLoaded', function() {
     showSection('dashboard');
     loadOrders();
-    
-    // تحديث الطلبات كل 30 ثانية
-    setInterval(loadOrders, 30000);
+    // تم إلغاء التحديث التلقائي للطلبات
+    // setInterval(loadOrders, 30000);
 });
 </script>
 
