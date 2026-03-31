@@ -758,7 +758,7 @@ def admin_users():
     conn.close()
     return render_template("admin_users.html", users=users)
 
-# ========== دالة إضافة المنتج ==========
+# ========== دالة إضافة المنتج المعدلة (مع رفع الصور إلى Supabase) ==========
 @app.route("/admin/add", methods=["GET", "POST"])
 @admin_required
 def admin_add():
@@ -780,7 +780,38 @@ def admin_add():
         files = request.files.getlist("images")
         files = [f for f in files if getattr(f, "filename", "")]
         
-        if files:
+        # رفع الصور إلى Supabase
+        if files and supabase:
+            try:
+                # رفع الصورة الرئيسية
+                ext = files[0].filename.split('.')[-1] if '.' in files[0].filename else 'jpg'
+                unique_name = f"{uuid.uuid4()}.{ext}"
+                file_content = files[0].read()
+                supabase.storage.from_("products").upload(unique_name, file_content)
+                image_filename = unique_name
+                print(f"✅ تم رفع الصورة الرئيسية {unique_name} إلى Supabase")
+                
+                # رفع الصور الإضافية (حتى 4 صور)
+                if len(files) > 1:
+                    for i, f in enumerate(files[1:5]):  # حد أقصى 4 صور إضافية
+                        ext2 = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
+                        unique_name2 = f"{uuid.uuid4()}.{ext2}"
+                        f.seek(0)  # إعادة تعيين المؤشر لقراءة الملف مرة أخرى
+                        file_content2 = f.read()
+                        supabase.storage.from_("products").upload(unique_name2, file_content2)
+                        print(f"✅ تم رفع الصورة الإضافية {unique_name2} إلى Supabase")
+            except Exception as e:
+                print(f"❌ خطأ في رفع الصورة إلى Supabase: {e}")
+                # في حالة الفشل، نستخدم التخزين المحلي كنسخة احتياطية
+                image_filename = files[0].filename
+                for f in files:
+                    try:
+                        f.seek(0)
+                        f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
+                    except Exception as e2:
+                        print(f"❌ خطأ في حفظ الصورة محلياً: {e2}")
+        elif files:
+            # تخزين محلي إذا لم يكن Supabase متاحاً
             image_filename = files[0].filename
             for f in files:
                 try:
@@ -818,7 +849,19 @@ def admin_add():
                 )
                 pid = cursor.lastrowid
             
-            if files and len(files) > 1:
+            # حفظ الصور الإضافية في جدول product_images
+            if files and len(files) > 1 and supabase:
+                for i, f in enumerate(files[1:5]):
+                    ext2 = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
+                    unique_name2 = f"{uuid.uuid4()}.{ext2}"
+                    f.seek(0)
+                    file_content2 = f.read()
+                    try:
+                        supabase.storage.from_("products").upload(unique_name2, file_content2)
+                        cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, unique_name2))
+                    except Exception as e:
+                        print(f"⚠️ فشل رفع الصورة الإضافية: {e}")
+            elif files and len(files) > 1:
                 for f in files[1:5]:
                     cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
             
@@ -834,6 +877,7 @@ def admin_add():
 
     return render_template("add_product.html", categories=categories)
 
+# ========== دالة تعديل المنتج المعدلة (مع دعم Supabase) ==========
 @app.route("/admin/edit/<int:pid>", methods=["GET", "POST"])
 @admin_required
 def admin_edit(pid):
@@ -867,13 +911,40 @@ def admin_edit(pid):
             return redirect(url_for("admin_edit", pid=pid))
 
         image_filename = product["image"]
-        if remove_image and image_filename:
+        
+        # حذف الصورة القديمة من Supabase إذا تم طلب الحذف
+        if remove_image and image_filename and supabase:
+            try:
+                supabase.storage.from_("products").remove([image_filename])
+                print(f"✅ تم حذف الصورة القديمة {image_filename} من Supabase")
+            except Exception as e:
+                print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
             image_filename = None
 
         files = request.files.getlist("images")
         files = [f for f in files if getattr(f, "filename", "")]
         
-        if files:
+        # رفع الصور الجديدة إلى Supabase
+        if files and supabase:
+            try:
+                # رفع الصورة الرئيسية الجديدة
+                ext = files[0].filename.split('.')[-1] if '.' in files[0].filename else 'jpg'
+                unique_name = f"{uuid.uuid4()}.{ext}"
+                file_content = files[0].read()
+                supabase.storage.from_("products").upload(unique_name, file_content)
+                image_filename = unique_name
+                print(f"✅ تم رفع الصورة الرئيسية الجديدة {unique_name} إلى Supabase")
+            except Exception as e:
+                print(f"❌ خطأ في رفع الصورة إلى Supabase: {e}")
+                image_filename = files[0].filename
+                for f in files:
+                    try:
+                        f.seek(0)
+                        f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
+                    except Exception as e2:
+                        print(f"❌ خطأ في حفظ الصورة محلياً: {e2}")
+        elif files:
+            # تخزين محلي إذا لم يكن Supabase متاحاً
             image_filename = files[0].filename
             for f in files:
                 f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
@@ -908,6 +979,14 @@ def admin_delete(pid):
     placeholder = get_placeholder()
     cursor.execute(f"SELECT image FROM products WHERE id = {placeholder}", (pid,))
     row = cursor.fetchone()
+    
+    # حذف الصورة من Supabase
+    if row and row["image"] and supabase:
+        try:
+            supabase.storage.from_("products").remove([row["image"]])
+            print(f"✅ تم حذف الصورة {row['image']} من Supabase")
+        except Exception as e:
+            print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
     
     cursor.execute(f"DELETE FROM products WHERE id = {placeholder}", (pid,))
     conn.commit()
