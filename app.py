@@ -272,6 +272,14 @@ def index():
 def about():
     return render_template("about.html")
 
+@app.route("/work")
+def work():
+    return render_template("work.html")
+
+@app.route("/contact")
+def contact():
+    return render_template("contact.html")
+
 @app.route("/products")
 def products():
     cat = request.args.get("cat")
@@ -389,7 +397,7 @@ def api_remove_from_cart():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ========== دالة إتمام الطلب المعدلة (تتعامل مع الأخطاء) ==========
+# ========== دالة إتمام الطلب المعدلة ==========
 @app.route("/checkout", methods=["POST"])
 def checkout():
     """إتمام الطلب - متاح للجميع"""
