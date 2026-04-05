@@ -585,12 +585,12 @@
       }
     }
 
+    // دالة مشاركة المنتج - تم تعديلها لإرسال الرابط فقط بدون السعر
     function shareProduct(id, name, price) {
       const productUrl = window.location.origin + '/product/' + id;
       if (navigator.share) {
         navigator.share({
           title: name,
-          text: `سعر المنتج: ${price.toLocaleString()} د.ع`,
           url: productUrl
         }).catch(() => {
           copyToClipboard(productUrl);
