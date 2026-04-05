@@ -32,7 +32,7 @@
       min-height: 100vh;
     }
 
-    /* 🔥 Navbar */
+    /* Navbar */
     .navbar {
       background: var(--glass) !important;
       backdrop-filter: blur(12px);
@@ -81,7 +81,7 @@
       box-shadow: var(--shadow-sm);
     }
 
-    /* 🔥 Buttons - Unified rounded corners */
+    /* Buttons - Unified rounded corners */
     .btn {
       border-radius: 9999px !important;
       transition: all 0.3s ease !important;
@@ -129,7 +129,7 @@
       background: linear-gradient(135deg, #30d96e, #15a085);
     }
 
-    /* 🔥 Cart Button */
+    /* Cart Button */
     .cart-btn {
       position: relative;
       background: rgba(25,118,210,0.1);
@@ -167,7 +167,7 @@
       box-shadow: var(--shadow-sm);
     }
 
-    /* 🔥 Alerts */
+    /* Alerts */
     .alert {
       border-radius: 16px;
       box-shadow: var(--shadow-md);
@@ -195,7 +195,7 @@
       color: #1e40af;
     }
 
-    /* 🔥 Loader */
+    /* Loader */
     .loader {
       position: fixed;
       inset: 0;
@@ -225,7 +225,7 @@
       to { transform: rotate(360deg); }
     }
 
-    /* 🔥 Toast Container */
+    /* Toast Container */
     .toast-container-custom {
       position: fixed;
       top: 90px;
@@ -259,12 +259,12 @@
       }
     }
 
-    /* 🔥 Smooth animations */
+    /* Smooth animations */
     * {
       transition: all 0.2s ease-in-out;
     }
 
-    /* 🔥 Responsive */
+    /* Responsive */
     @media (max-width: 768px) {
       body {
         padding-top: 70px;
@@ -305,7 +305,7 @@
       }
     }
 
-    /* 🔥 Custom scrollbar */
+    /* Custom scrollbar */
     ::-webkit-scrollbar {
       width: 8px;
     }
@@ -424,6 +424,76 @@
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 
 <script>
+// رقم الواتساب المطلوب
+const WHATSAPP_MESSAGE_LINK = "https://wa.me/message/TVK3PQT626DMO1";
+const WHATSAPP_NUMBER = "9647707772142";
+
+// دالة واتساب للمنتج
+function sendWhatsAppProduct(productName, productPrice) {
+    const message = `مرحباً، أرغب في الاستفسار عن المنتج التالي:\n\nاسم المنتج: ${productName}\nالسعر: ${productPrice.toLocaleString()} د.ع\n\nأرجو تزويدي بالمزيد من التفاصيل.`;
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`${WHATSAPP_MESSAGE_LINK}?text=${encodedMessage}`, '_blank');
+}
+
+// دالة مشاركة المنتج
+function shareProduct(productId, productName, productPrice) {
+    const productUrl = window.location.origin + '/product/' + productId;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: productName,
+            text: `سعر المنتج: ${productPrice.toLocaleString()} د.ع`,
+            url: productUrl
+        }).catch(() => {
+            copyToClipboard(productUrl);
+        });
+    } else {
+        copyToClipboard(productUrl);
+    }
+}
+
+// دالة نسخ الرابط
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast("✅ تم نسخ رابط المنتج", "success");
+    }).catch(() => {
+        showToast("❌ فشل في نسخ الرابط", "error");
+    });
+}
+
+// دالة إضافة إلى السلة
+function addToCart(productId, productName, productPrice, quantity = 1) {
+    fetch('/api/add-to-cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            product_id: productId, 
+            product_name: productName, 
+            product_price: productPrice, 
+            quantity: quantity 
+        })
+    }).then(response => response.json()).then(data => {
+        if (data.success) {
+            showToast(`✨ تم إضافة ${quantity} × "${productName}" إلى السلة`, "success");
+            loadCartCount();
+            // تحديث عداد السلة في الصفحة الرئيسية إذا وجد
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) {
+                const totalItems = data.cart_count;
+                if (totalItems > 0) {
+                    cartCount.innerText = totalItems;
+                    cartCount.classList.remove('hidden');
+                } else {
+                    cartCount.classList.add('hidden');
+                }
+            }
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        showToast("❌ حدث خطأ", "error");
+    });
+}
+
 // دالة عرض الإشعارات
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
