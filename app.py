@@ -295,17 +295,22 @@ def products():
         cursor.execute("SELECT * FROM products ORDER BY id DESC")
     items = cursor.fetchall()
     
-    # جلب الصور الإضافية لكل منتج
+    # جلب جميع الصور لكل منتج (الرئيسية والإضافية)
+    products_list = []
     for product in items:
+        product_dict = dict(product)
+        # جلب الصور الإضافية من جدول product_images
         cursor.execute(f"SELECT filename FROM product_images WHERE product_id = {placeholder} ORDER BY id", (product['id'],))
         extra_images = cursor.fetchall()
-        product['extra_images'] = [img['filename'] for img in extra_images] if extra_images else []
-        if 'old_price' not in product:
-            product['old_price'] = None
+        product_dict['extra_images'] = [img['filename'] for img in extra_images] if extra_images else []
+        # جلب الصورة الرئيسية
+        product_dict['main_image'] = product_dict.get('image')
+        if 'old_price' not in product_dict:
+            product_dict['old_price'] = None
+        products_list.append(product_dict)
     
     conn.close()
     
-    products_list = list(items) if items else []
     categories_list = [r["c"] for r in cats]
     
     return render_template("products.html", products=products_list, categories=categories_list, active_cat=cat)
@@ -323,8 +328,17 @@ def product_detail(pid):
     if not item:
         flash("المنتج غير موجود.", "danger")
         return redirect(url_for("products"))
+    
+    # تجهيز جميع الصور (الرئيسية والإضافية)
+    all_images = []
+    if item["image"]:
+        all_images.append(item["image"])
+    for img in imgs:
+        if img['filename'] not in all_images:
+            all_images.append(img['filename'])
+    
     main_image = item["image"] if item["image"] else (imgs[0]["filename"] if imgs else None)
-    return render_template("product_detail.html", p=item, images=imgs, main_image=main_image)
+    return render_template("product_detail.html", p=item, images=imgs, main_image=main_image, all_images=all_images)
 
 # ========== نظام الحجوزات (العميل يرسل الاسم ورقم الهاتف والعنوان فقط) ==========
 @app.route("/api/create-booking", methods=["POST"])
@@ -855,20 +869,21 @@ def admin_add():
                 pid = cursor.lastrowid
             
             # حفظ الصور الإضافية في جدول product_images
-            if files and len(files) > 1 and supabase:
-                for i, f in enumerate(files[1:5]):
-                    ext2 = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
-                    unique_name2 = f"{uuid.uuid4()}.{ext2}"
-                    f.seek(0)
-                    file_content2 = f.read()
-                    try:
-                        supabase.storage.from_("products").upload(unique_name2, file_content2)
-                        cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, unique_name2))
-                    except Exception as e:
-                        print(f"⚠️ فشل رفع الصورة الإضافية: {e}")
-            elif files and len(files) > 1:
-                for f in files[1:5]:
-                    cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
+            if files and len(files) > 1:
+                if supabase:
+                    for i, f in enumerate(files[1:5]):
+                        ext2 = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
+                        unique_name2 = f"{uuid.uuid4()}.{ext2}"
+                        f.seek(0)
+                        file_content2 = f.read()
+                        try:
+                            supabase.storage.from_("products").upload(unique_name2, file_content2)
+                            cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, unique_name2))
+                        except Exception as e:
+                            print(f"⚠️ فشل رفع الصورة الإضافية: {e}")
+                else:
+                    for f in files[1:5]:
+                        cursor.execute(f"INSERT INTO product_images (product_id, filename) VALUES ({placeholder}, {placeholder})", (pid, f.filename))
             
             conn.commit()
             conn.close()
