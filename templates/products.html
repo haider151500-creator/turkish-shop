@@ -417,7 +417,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <div id="productGallery" class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl flex items-center justify-center p-4 mb-3">
-                <img id="mainGalleryImage" class="w-full h-48 object-contain rounded-xl" src="" alt="Product image">
+                <img id="mainGalleryImage" class="w-full h-48 object-contain rounded-xl cursor-pointer" src="" alt="Product image">
               </div>
               <div id="galleryThumbs" class="flex gap-2 justify-center mt-2 overflow-x-auto pb-2"></div>
               <p class="text-xs text-gray-500 mt-2 text-center">انقر على الصورة لتكبيرها</p>
@@ -764,6 +764,13 @@
       thumbsContainer.innerHTML = images.map((img, idx) => `
         <img src="${img}" class="image-gallery-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage(${idx})" onerror="this.src='https://placehold.co/400x400/1976d2/white?text=خطأ'">
       `).join("");
+      
+      // إضافة حدث النقر على الصورة الرئيسية لفتح المعرض الكامل
+      mainImg.onclick = function() {
+        const currentSrc = mainImg.src;
+        const index = currentProductImages.findIndex(img => img === currentSrc);
+        openFullGallery(index >= 0 ? index : 0);
+      };
     }
 
     function changeMainImage(index) {
@@ -828,11 +835,6 @@
       }
     }
 
-    function openImageGalleryWithSrc(src) {
-      const index = currentProductImages.findIndex(img => img === src);
-      openFullGallery(index >= 0 ? index : 0);
-    }
-
     function closeProductModal() { 
       document.getElementById("productModal").classList.add("hidden"); 
       currentProductId = null;
@@ -855,15 +857,6 @@
         closeImageGallery();
       }
     }
-
-    // إضافة حدث النقر على الصورة الرئيسية لفتح المعرض الكامل
-    document.addEventListener('click', function(e) {
-      if (e.target.id === 'mainGalleryImage') {
-        const currentSrc = document.getElementById("mainGalleryImage").src;
-        const index = currentProductImages.findIndex(img => img === currentSrc);
-        openFullGallery(index >= 0 ? index : 0);
-      }
-    });
 
     function loadCart() {
       fetch('/api/get-cart').then(response => response.json()).then(data => { 
