@@ -232,6 +232,32 @@
         .cart-count-badge {
             border-radius: 9999px;
         }
+        
+        /* أزرار التنقل في معرض الصور المكبر */
+        .gallery-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.8);
+            border: none;
+            border-radius: 9999px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 24px;
+            z-index: 301;
+        }
+        .gallery-nav-btn:hover {
+            background: #1976d2;
+            color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+        .gallery-prev { left: 20px; }
+        .gallery-next { right: 20px; }
     </style>
 </head>
 <body class="h-full bg-[#f8f9fa] text-gray-800 antialiased">
@@ -432,12 +458,15 @@
       </div>
     </div>
 
-    <!-- معرض الصور المكبرة -->
-    <div id="imageGallery" class="fixed inset-0 bg-black z-[300] hidden flex items-center justify-center" onclick="closeImageGallery()">
+    <!-- معرض الصور المكبرة مع أزرار التنقل -->
+    <div id="imageGallery" class="fixed inset-0 bg-black z-[300] hidden flex items-center justify-center" onclick="closeImageGalleryOnOverlay(event)">
       <button onclick="closeImageGallery()" class="absolute top-6 right-6 bg-white text-black p-3 rounded-full hover:bg-gray-200 transition-all z-10"><i data-lucide="x" class="w-6 h-6"></i></button>
+      <button class="gallery-nav-btn gallery-prev" onclick="event.stopPropagation(); prevGalleryImage()">&#10094;</button>
+      <button class="gallery-nav-btn gallery-next" onclick="event.stopPropagation(); nextGalleryImage()">&#10095;</button>
       <div class="flex items-center justify-center w-full h-full p-4">
         <img id="galleryImage" class="max-w-full max-h-full object-contain" src="" alt="منتج">
       </div>
+      <div class="absolute bottom-6 left-0 right-0 text-center text-white text-sm bg-black/50 py-2 px-4 rounded-full w-fit mx-auto" id="galleryCounter"></div>
     </div>
 
     <div id="toastContainer" class="fixed top-24 left-4 z-[120] space-y-2 w-72 pointer-events-none"></div>
@@ -460,6 +489,7 @@
     let currentProductId = null;
     let currentProductData = null;
     let currentProductImages = [];
+    let currentGalleryIndex = 0;
     let products = productsData;
     let activeCategory = 'all';
     let isAdmin = {{ 'true' if session.get('is_admin') else 'false' }};
@@ -551,6 +581,7 @@
         const qtyInput = document.getElementById('modalQuantity');
         const quantity = qtyInput ? parseInt(qtyInput.value) : 1;
         addToCart(currentProductData.id, currentProductData.name, currentProductData.price, quantity);
+        closeProductModal();
       }
     }
 
@@ -704,23 +735,19 @@
       document.body.style.overflow = "hidden";
     }
 
-    // الدالة المعدلة - تستخدم الصور الحقيقية من قاعدة البيانات
     function setupProductGallery(product) {
       const images = [];
       
-      // إضافة الصورة الرئيسية
       if (product.image) {
         images.push(`https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/${product.image}`);
       }
       
-      // إضافة الصور الإضافية من extra_images
       if (product.extra_images && product.extra_images.length > 0) {
         for (let i = 0; i < product.extra_images.length; i++) {
           images.push(`https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/${product.extra_images[i]}`);
         }
       }
       
-      // إذا لم توجد أي صورة، نعرض صورة افتراضية
       if (images.length === 0) {
         images.push("https://placehold.co/400x400/1976d2/white?text=لا+توجد+صورة");
       }
@@ -732,25 +759,78 @@
       
       if (images.length > 0 && images[0]) {
         mainImg.src = images[0];
-        mainImg.onclick = () => openImageGalleryWithSrc(images[0]);
       }
       
       thumbsContainer.innerHTML = images.map((img, idx) => `
-        <img src="${img}" class="image-gallery-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage('${img}', this)" onerror="this.src='https://placehold.co/400x400/1976d2/white?text=خطأ'">
+        <img src="${img}" class="image-gallery-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage(${idx})" onerror="this.src='https://placehold.co/400x400/1976d2/white?text=خطأ'">
       `).join("");
     }
 
-    function changeMainImage(src, thumbElement) {
-      document.getElementById("mainGalleryImage").src = src;
-      document.querySelectorAll('.image-gallery-thumb').forEach(thumb => {
-        thumb.classList.remove('active');
-      });
-      thumbElement.classList.add('active');
+    function changeMainImage(index) {
+      if (index >= 0 && index < currentProductImages.length) {
+        document.getElementById("mainGalleryImage").src = currentProductImages[index];
+        document.querySelectorAll('.image-gallery-thumb').forEach((thumb, i) => {
+          if (i === index) {
+            thumb.classList.add('active');
+          } else {
+            thumb.classList.remove('active');
+          }
+        });
+      }
+    }
+
+    function openFullGallery(index) {
+      if (index === undefined) index = 0;
+      currentGalleryIndex = index;
+      const galleryImg = document.getElementById("galleryImage");
+      const counter = document.getElementById("galleryCounter");
+      
+      if (currentProductImages.length > 0 && currentProductImages[currentGalleryIndex]) {
+        galleryImg.src = currentProductImages[currentGalleryIndex];
+      }
+      
+      if (counter && currentProductImages.length > 1) {
+        counter.innerText = `${currentGalleryIndex + 1} / ${currentProductImages.length}`;
+        counter.style.display = "block";
+      } else if (counter) {
+        counter.style.display = "none";
+      }
+      
+      document.getElementById("imageGallery").classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function prevGalleryImage() {
+      if (currentProductImages.length === 0) return;
+      currentGalleryIndex--;
+      if (currentGalleryIndex < 0) currentGalleryIndex = currentProductImages.length - 1;
+      
+      const galleryImg = document.getElementById("galleryImage");
+      const counter = document.getElementById("galleryCounter");
+      
+      galleryImg.src = currentProductImages[currentGalleryIndex];
+      if (counter && currentProductImages.length > 1) {
+        counter.innerText = `${currentGalleryIndex + 1} / ${currentProductImages.length}`;
+      }
+    }
+
+    function nextGalleryImage() {
+      if (currentProductImages.length === 0) return;
+      currentGalleryIndex++;
+      if (currentGalleryIndex >= currentProductImages.length) currentGalleryIndex = 0;
+      
+      const galleryImg = document.getElementById("galleryImage");
+      const counter = document.getElementById("galleryCounter");
+      
+      galleryImg.src = currentProductImages[currentGalleryIndex];
+      if (counter && currentProductImages.length > 1) {
+        counter.innerText = `${currentGalleryIndex + 1} / ${currentProductImages.length}`;
+      }
     }
 
     function openImageGalleryWithSrc(src) {
-      document.getElementById("galleryImage").src = src;
-      document.getElementById("imageGallery").classList.remove("hidden");
+      const index = currentProductImages.findIndex(img => img === src);
+      openFullGallery(index >= 0 ? index : 0);
     }
 
     function closeProductModal() { 
@@ -765,17 +845,25 @@
       }
     }
     
-    function openImageGallery() {
-      const mainImg = document.getElementById("mainGalleryImage").src;
-      if (mainImg) {
-        document.getElementById("galleryImage").src = mainImg;
-        document.getElementById("imageGallery").classList.remove("hidden");
-      }
-    }
-    
     function closeImageGallery() { 
       document.getElementById("imageGallery").classList.add("hidden"); 
+      document.body.style.overflow = "";
     }
+    
+    function closeImageGalleryOnOverlay(event) {
+      if (event.target === event.currentTarget) {
+        closeImageGallery();
+      }
+    }
+
+    // إضافة حدث النقر على الصورة الرئيسية لفتح المعرض الكامل
+    document.addEventListener('click', function(e) {
+      if (e.target.id === 'mainGalleryImage') {
+        const currentSrc = document.getElementById("mainGalleryImage").src;
+        const index = currentProductImages.findIndex(img => img === currentSrc);
+        openFullGallery(index >= 0 ? index : 0);
+      }
+    });
 
     function loadCart() {
       fetch('/api/get-cart').then(response => response.json()).then(data => { 
