@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>مركز الثقة | المنتجات والبضائع </title>
+    <title>مركز الثقة | المنتجات والبضائع العالمية</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -300,7 +300,7 @@
     <section class="hero-gradient text-white py-12 md:py-16 px-4 relative overflow-hidden">
       <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 40%, #42a5f5 1.5px, transparent 1px); background-size: 40px 40px;"></div>
       <div class="max-w-6xl mx-auto text-center relative z-10">
-        <div class="inline-block bg-[#42a5f5]/20 text-[#42a5f5] px-5 py-1 rounded-full text-sm font-medium mb-4 backdrop-blur-sm border border-[#42a5f5]/30 shadow-lg">🌍 جودة عالمية 🇹🇷</div>
+        <div class="inline-block bg-[#42a5f5]/20 text-[#42a5f5] px-5 py-1 rounded-full text-sm font-medium mb-4 backdrop-blur-sm border border-[#42a5f5]/30 shadow-lg">🌍 جودة عالمية</div>
         <h1 class="text-3xl md:text-5xl font-extrabold mb-3 leading-tight drop-shadow-lg">أفضل المنتجات والبضائع العالمية</h1>
         <p class="text-base md:text-xl text-gray-200 max-w-xl mx-auto drop-shadow-md">جودة موثوقة - أسعار تنافسية - شحن سريع</p>
       </div>
@@ -383,14 +383,13 @@
       </div>
     </div>
 
-    <!-- نافذة عرض المنتج المنبثقة (لا تملأ الشاشة) -->
+    <!-- نافذة عرض المنتج المنبثقة -->
     <div id="productModal" class="fixed inset-0 product-modal-overlay z-[200] hidden flex items-center justify-center p-4" onclick="closeProductModalOnOverlay(event)">
       <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
         <button onclick="closeProductModal()" class="absolute top-4 right-4 z-10 btn-primary p-2 rounded-full shadow-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <!-- معرض الصور المتعددة -->
               <div id="productGallery" class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl flex items-center justify-center p-4 mb-3">
                 <img id="mainGalleryImage" class="w-full h-48 object-contain rounded-xl" src="" alt="Product image">
               </div>
@@ -470,7 +469,6 @@
     const userEmail = "{{ session.get('user_email', '') }}";
     
     // رقم واتساب المطلوب
-    const WHATSAPP_NUMBER = "9647707772142";
     const WHATSAPP_MESSAGE_LINK = "https://wa.me/message/TVK3PQT626DMO1";
 
     function renderProducts(productList) {
@@ -494,7 +492,7 @@
         return `
           <div class="product-card bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl fade-up fade-up-d${(idx % 4) + 1} cursor-pointer" onclick="openProductModal(${p.id})">
             <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 h-36 md:h-44 flex items-center justify-center">
-              ${imageUrl ? `<img src="${imageUrl}" class="w-full h-full object-cover" alt="${p.name}">` : `<span class="text-5xl md:text-6xl drop-shadow-sm">📦</span>`}
+              ${imageUrl ? `<img src="${imageUrl}" class="w-full h-full object-cover" alt="${p.name.replace(/'/g, "\\'")}">` : `<span class="text-5xl md:text-6xl drop-shadow-sm">📦</span>`}
               ${discountBadge}
               <span class="product-category-badge" style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.6); color: white; padding: 2px 8px; border-radius: 20px; font-size: 10px;">${p.category || 'عام'}</span>
               <div class="product-share" onclick="event.stopPropagation(); shareProduct(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price})">
@@ -524,14 +522,12 @@
       lucide.createIcons();
     }
 
-    // دالة واتساب للمنتج (ترسل اسم المنتج وسعره)
     function sendWhatsAppProduct(productName, productPrice) {
       const message = `مرحباً، أرغب في الاستفسار عن المنتج التالي:\n\nاسم المنتج: ${productName}\nالسعر: ${productPrice.toLocaleString()} د.ع\n\nأرجو تزويدي بالمزيد من التفاصيل.`;
       const encodedMessage = encodeURIComponent(message);
       window.open(`${WHATSAPP_MESSAGE_LINK}?text=${encodedMessage}`, '_blank');
     }
 
-    // دالة واتساب من نافذة المنتج
     function sendWhatsAppFromModal() {
       if (currentProductData) {
         sendWhatsAppProduct(currentProductData.name, currentProductData.price);
@@ -665,7 +661,6 @@
       filterProducts();
     }
 
-    // دالة عرض المنتج مع خاصية النص الطويل وعرض المزيد
     function openProductModal(id) {
       currentProductId = id;
       currentProductData = products.find(p => p.id === id);
@@ -677,7 +672,6 @@
       document.getElementById("productOldPrice").innerHTML = currentProductData.old_price ? currentProductData.old_price.toLocaleString() + " د.ع" : '';
       document.getElementById("productPriceUsd").innerHTML = `≈ ${(currentProductData.price / 1300).toFixed(0)} دولار أمريكي`;
       
-      // إعداد وصف المنتج مع خاصية "عرض المزيد"
       const descriptionText = currentProductData.description || "منتج عالي الجودة";
       const descElement = document.getElementById("productDescription");
       const readMoreBtn = document.getElementById("readMoreBtn");
@@ -685,7 +679,6 @@
       descElement.innerText = descriptionText;
       descElement.classList.remove("description-collapse", "description-expanded");
       
-      // التحقق من طول النص (إذا كان أطول من 100 حرف تقريباً)
       if (descriptionText.length > 100 || descriptionText.split('\n').length > 3) {
         descElement.classList.add("description-collapse");
         readMoreBtn.style.display = "inline-block";
@@ -704,7 +697,6 @@
         readMoreBtn.style.display = "none";
       }
       
-      // إعداد معرض الصور
       setupProductGallery(currentProductData);
       
       document.getElementById("modalQuantity").value = 1;
@@ -712,15 +704,26 @@
       document.body.style.overflow = "hidden";
     }
 
+    // الدالة المعدلة - تستخدم الصور الحقيقية من قاعدة البيانات
     function setupProductGallery(product) {
-      // محاكاة صور متعددة (يمكن إضافة صور إضافية من قاعدة البيانات)
       const images = [];
+      
+      // إضافة الصورة الرئيسية
       if (product.image) {
         images.push(`https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/${product.image}`);
       }
-      // إضافة صور وهمية إضافية للعرض (يمكن استبدالها بصور حقيقية من قاعدة البيانات)
-      images.push("https://placehold.co/400x400/1976d2/white?text=صورة+2");
-      images.push("https://placehold.co/400x400/1565c0/white?text=صورة+3");
+      
+      // إضافة الصور الإضافية من extra_images
+      if (product.extra_images && product.extra_images.length > 0) {
+        for (let i = 0; i < product.extra_images.length; i++) {
+          images.push(`https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/${product.extra_images[i]}`);
+        }
+      }
+      
+      // إذا لم توجد أي صورة، نعرض صورة افتراضية
+      if (images.length === 0) {
+        images.push("https://placehold.co/400x400/1976d2/white?text=لا+توجد+صورة");
+      }
       
       currentProductImages = images;
       
@@ -733,7 +736,7 @@
       }
       
       thumbsContainer.innerHTML = images.map((img, idx) => `
-        <img src="${img}" class="image-gallery-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage('${img}', this)">
+        <img src="${img}" class="image-gallery-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage('${img}', this)" onerror="this.src='https://placehold.co/400x400/1976d2/white?text=خطأ'">
       `).join("");
     }
 
