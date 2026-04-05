@@ -224,7 +224,7 @@ function sendWhatsAppProduct(productName, productPrice) {
 function addToCart(id, name, price) {
     fetch('/api/add-to-cart', {
         method: 'POST',
-        headers: { 'Content-Type':application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product_id: id, product_name: name, product_price: price, quantity: 1 })
     }).then(response => response.json()).then(data => {
         if(data.success){
@@ -265,21 +265,21 @@ function copyToClipboard(text) {
 
 // دالة عرض الإشعارات
 function showToast(msg, type = "info") {
-    const toastContainer = document.getElementById('toastContainer');
+    let toastContainer = document.getElementById('toastContainer');
     if(!toastContainer){
         const container = document.createElement('div');
         container.id = 'toastContainer';
         container.style.cssText = 'position:fixed;top:80px;right:20px;z-index:9999;';
         document.body.appendChild(container);
+        toastContainer = container;
     }
-    const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
     const bgColor = type === 'success' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 
                     type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
                     'linear-gradient(135deg, #1976d2, #1565c0)';
     toast.style.cssText = `background: ${bgColor}; color: white; padding: 12px 20px; border-radius: 9999px; margin-bottom: 10px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease; direction: rtl;`;
     toast.innerHTML = msg;
-    container.appendChild(toast);
+    toastContainer.appendChild(toast);
     setTimeout(() => { toast.remove(); }, 3000);
 }
 
@@ -288,75 +288,99 @@ const style = document.createElement('style');
 style.textContent = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
 document.head.appendChild(style);
 
-// Lightbox functionality
+// Lightbox functionality - تم تحسينها لتعمل بشكل صحيح عند النقر على الصورة
 (function(){
   const lb = document.getElementById('lightbox');
   const imgEl = lb.querySelector('.lb-img');
   const btnPrev = lb.querySelector('.lb-prev');
   const btnNext = lb.querySelector('.lb-next');
   const btnClose = lb.querySelector('.lb-close');
-  const main = document.querySelector('img.main-img');
-  const thumbs = Array.from(document.querySelectorAll('button.thumb'));
-  let gallery = [];
-  let current = -1;
+  const mainImg = document.querySelector('img.main-img');
+  const thumbButtons = Array.from(document.querySelectorAll('button.thumb'));
+  let galleryImages = [];
+  let currentIndex = -1;
 
+  // بناء قائمة الصور
   function buildGallery(){
-    gallery = [];
-    if(main && main.src) gallery.push(main.src);
-    thumbs.forEach(b => {
-      const s = b.dataset.src;
-      if(s && !gallery.includes(s)) gallery.push(s);
+    galleryImages = [];
+    if(mainImg && mainImg.src) galleryImages.push(mainImg.src);
+    thumbButtons.forEach(btn => {
+      const src = btn.dataset.src;
+      if(src && !galleryImages.includes(src)) galleryImages.push(src);
     });
   }
-  buildGallery();
 
-  function openAt(idx){
-    if(idx < 0 || idx >= gallery.length) return;
-    current = idx;
-    imgEl.src = gallery[current];
+  // فتح الصورة في الـ Lightbox
+  function openLightbox(index){
+    if(index < 0 || index >= galleryImages.length) return;
+    currentIndex = index;
+    imgEl.src = galleryImages[currentIndex];
     lb.classList.add('show');
-    lb.setAttribute('aria-hidden','false');
+    lb.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
   }
-  function closeLb(){
+
+  // إغلاق الـ Lightbox
+  function closeLightbox(){
     lb.classList.remove('show');
-    lb.setAttribute('aria-hidden','true');
+    lb.setAttribute('aria-hidden', 'true');
     imgEl.removeAttribute('src');
-  }
-  function prev(){
-    if(gallery.length < 2) return;
-    current = (current - 1 + gallery.length) % gallery.length;
-    imgEl.src = gallery[current];
-  }
-  function next(){
-    if(gallery.length < 2) return;
-    current = (current + 1) % gallery.length;
-    imgEl.src = gallery[current];
+    document.body.style.overflow = '';
   }
 
-  btnClose.addEventListener('click', closeLb);
-  lb.addEventListener('click', (e)=>{ if(e.target.dataset.action==='close') closeLb(); });
-  btnPrev.addEventListener('click', prev);
-  btnNext.addEventListener('click', next);
+  // الصورة السابقة
+  function prevImage(){
+    if(galleryImages.length < 2) return;
+    currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+    imgEl.src = galleryImages[currentIndex];
+  }
 
-  if(main){ 
-    main.addEventListener('click', (e)=>{ e.preventDefault(); openAt(0); }); 
+  // الصورة التالية
+  function nextImage(){
+    if(galleryImages.length < 2) return;
+    currentIndex = (currentIndex + 1) % galleryImages.length;
+    imgEl.src = galleryImages[currentIndex];
+  }
+
+  // ربط الأحداث
+  btnClose.addEventListener('click', closeLightbox);
+  lb.addEventListener('click', (e) => { 
+    if(e.target === lb || e.target.classList.contains('lb-backdrop')) closeLightbox(); 
+  });
+  btnPrev.addEventListener('click', prevImage);
+  btnNext.addEventListener('click', nextImage);
+
+  // النقر على الصورة الرئيسية
+  if(mainImg){ 
+    mainImg.addEventListener('click', (e) => { 
+      e.preventDefault(); 
+      e.stopPropagation();
+      buildGallery();
+      openLightbox(0); 
+    }); 
   }
   
-  thumbs.forEach((b, i)=>{
-    b.addEventListener('click', (e)=>{ 
+  // النقر على الصور المصغرة
+  thumbButtons.forEach((btn, idx) => {
+    btn.addEventListener('click', (e) => { 
       e.preventDefault(); 
-      thumbs.forEach(thumb => thumb.classList.remove('active'));
-      b.classList.add('active');
-      openAt(i + (main ? 1 : 0)); 
+      e.stopPropagation();
+      buildGallery();
+      thumbButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      openLightbox(idx + 1); 
     });
   });
 
-  document.addEventListener('keydown', (e)=>{
+  // التنقل باستخدام键盘
+  document.addEventListener('keydown', (e) => {
     if(!lb.classList.contains('show')) return;
-    if(e.key==='Escape') closeLb();
-    if(e.key==='ArrowLeft') prev();
-    if(e.key==='ArrowRight') next();
+    if(e.key === 'Escape') closeLightbox();
+    if(e.key === 'ArrowLeft') prevImage();
+    if(e.key === 'ArrowRight') nextImage();
   });
+
+  buildGallery();
 })();
 
 // ========== دالة النص الطويل مع عرض المزيد ==========
@@ -368,7 +392,6 @@ document.head.appendChild(style);
         const originalText = descText.innerText;
         const textLength = originalText.length;
         
-        // التحقق من طول النص (أكثر من 150 حرف أو 4 أسطر)
         if(textLength > 150 || originalText.split('\n').length > 4){
             descText.classList.add('description-collapse');
             readMoreBtn.style.display = 'inline-block';
