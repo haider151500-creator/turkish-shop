@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>إضافة منتج جديد - متجر المنتجات التركية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>إضافة منتج جديد - مركز الثقة للمنتجات والبضائع العالمية</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}">
     <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -12,15 +12,15 @@
             font-family: 'Cairo', sans-serif;
         }
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%);
             min-height: 100vh;
-            padding: 40px 0;
+            padding: 40px 20px;
         }
         .add-card {
             background: white;
-            border-radius: 30px;
+            border-radius: 32px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
             animation: fadeInUp 0.5s ease;
         }
         @keyframes fadeInUp {
@@ -28,72 +28,84 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .add-header {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
-            padding: 25px 30px;
+            background: linear-gradient(135deg, #1976d2, #1565c0);
+            padding: 30px;
             color: white;
         }
         .add-header h2 {
             margin: 0;
-            font-weight: 700;
+            font-weight: 800;
+            font-size: 1.8rem;
         }
         .add-header p {
-            margin: 5px 0 0;
+            margin: 8px 0 0;
             opacity: 0.9;
         }
         .add-body {
-            padding: 30px;
+            padding: 35px;
         }
         .form-label {
-            font-weight: 600;
-            color: #333;
+            font-weight: 700;
+            color: #1e293b;
             margin-bottom: 8px;
+            font-size: 0.95rem;
         }
         .form-control, .form-select {
-            border-radius: 12px;
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
+            border-radius: 9999px;
+            padding: 12px 18px;
+            border: 2px solid #e2e8f0;
             transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+        textarea.form-control {
+            border-radius: 20px;
         }
         .form-control:focus, .form-select:focus {
-            border-color: #6f42c1;
-            box-shadow: 0 0 0 0.2rem rgba(111,66,193,0.25);
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25,118,210,0.2);
+            outline: none;
         }
         .required-field::after {
             content: "*";
-            color: #dc3545;
-            margin-right: 4px;
+            color: #dc2626;
+            margin-right: 5px;
         }
         .file-upload-area {
-            border: 2px dashed #dee2e6;
-            border-radius: 15px;
-            padding: 30px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 20px;
+            padding: 35px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            background: #f8f9fa;
+            background: #f8fafc;
         }
         .file-upload-area:hover, .file-upload-area.drag-over {
-            border-color: #6f42c1;
-            background: #f5f0ff;
+            border-color: #1976d2;
+            background: #eff6ff;
+            transform: scale(1.02);
         }
         .file-upload-icon {
             font-size: 48px;
-            color: #6f42c1;
+            color: #1976d2;
             margin-bottom: 10px;
         }
         .preview-images {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            margin-top: 15px;
+            margin-top: 20px;
         }
         .preview-item {
             position: relative;
             width: 100px;
             height: 100px;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .preview-item:hover {
+            transform: scale(1.05);
         }
         .preview-item img {
             width: 100%;
@@ -104,12 +116,12 @@
             position: absolute;
             top: 5px;
             right: 5px;
-            background: #dc3545;
+            background: #dc2626;
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            border-radius: 9999px;
+            width: 26px;
+            height: 26px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -119,67 +131,94 @@
         }
         .remove-img-btn:hover {
             transform: scale(1.1);
+            background: #ef4444;
         }
         .categories-container {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             margin-top: 10px;
+            margin-bottom: 15px;
         }
         .category-badge {
-            background: #e9ecef;
-            color: #495057;
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 0.9rem;
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 8px 18px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            font-weight: 500;
         }
         .category-badge:hover {
-            background: #6f42c1;
+            background: #1976d2;
             color: white;
+            transform: translateY(-2px);
         }
         .category-badge.selected {
-            background: #6f42c1;
+            background: linear-gradient(135deg, #1976d2, #1565c0);
             color: white;
+            box-shadow: 0 2px 8px rgba(25,118,210,0.3);
         }
         .category-badge i {
             cursor: pointer;
             font-size: 1rem;
+            transition: all 0.2s;
         }
         .category-badge i:hover {
             color: #ff6b6b;
+            transform: scale(1.1);
         }
         .add-category-group {
-            margin-top: 10px;
             display: flex;
             gap: 10px;
+            margin-top: 5px;
+        }
+        .add-category-group .form-control {
+            flex: 1;
         }
         .btn-primary-custom {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            background: linear-gradient(135deg, #1976d2, #1565c0);
             border: none;
-            border-radius: 12px;
+            border-radius: 9999px;
             padding: 12px 30px;
-            font-weight: 600;
+            font-weight: 700;
             transition: all 0.3s ease;
+            color: white;
         }
         .btn-primary-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(111,66,193,0.4);
+            box-shadow: 0 8px 20px rgba(25,118,210,0.4);
+            background: linear-gradient(135deg, #1e88e5, #1976d2);
         }
         .btn-secondary-custom {
-            background: #6c757d;
+            background: #64748b;
             border: none;
-            border-radius: 12px;
+            border-radius: 9999px;
             padding: 12px 30px;
-            font-weight: 600;
+            font-weight: 700;
             transition: all 0.3s ease;
+            color: white;
         }
         .btn-secondary-custom:hover {
-            background: #5a6268;
+            background: #475569;
+            transform: translateY(-2px);
+        }
+        .btn-outline-custom {
+            background: transparent;
+            border: 2px solid #1976d2;
+            border-radius: 9999px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #1976d2;
+        }
+        .btn-outline-custom:hover {
+            background: #1976d2;
+            color: white;
             transform: translateY(-2px);
         }
         .confirm-modal {
@@ -188,7 +227,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -197,9 +237,9 @@
         }
         .confirm-modal-content {
             background: white;
-            border-radius: 24px;
+            border-radius: 28px;
             padding: 30px;
-            max-width: 400px;
+            max-width: 420px;
             width: 90%;
             text-align: center;
             animation: slideUp 0.3s ease;
@@ -216,56 +256,95 @@
             display: flex;
             gap: 15px;
             justify-content: center;
-            margin-top: 20px;
+            margin-top: 25px;
         }
         .price-options {
             display: flex;
             gap: 15px;
-            margin-top: 10px;
+            margin-bottom: 15px;
         }
         .price-option {
             flex: 1;
             text-align: center;
             cursor: pointer;
-            padding: 10px;
-            border-radius: 12px;
-            border: 2px solid #e9ecef;
+            padding: 12px;
+            border-radius: 9999px;
+            border: 2px solid #e2e8f0;
             transition: all 0.3s ease;
+            background: white;
         }
         .price-option:hover {
-            border-color: #6f42c1;
-            background: #f8f9fa;
+            border-color: #1976d2;
+            background: #eff6ff;
+            transform: translateY(-2px);
         }
         .price-option.active {
-            border-color: #6f42c1;
-            background: linear-gradient(135deg, rgba(111,66,193,0.1), rgba(255,107,107,0.1));
+            border-color: #1976d2;
+            background: linear-gradient(135deg, rgba(25,118,210,0.1), rgba(21,101,192,0.1));
+            box-shadow: 0 2px 8px rgba(25,118,210,0.2);
         }
         .price-option i {
-            font-size: 24px;
-            color: #6f42c1;
+            font-size: 28px;
+            color: #1976d2;
+        }
+        .price-option div {
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        .price-option small {
+            font-size: 11px;
+            color: #64748b;
         }
         .price-input-group {
-            margin-top: 15px;
             display: none;
+            margin-top: 10px;
         }
         .price-input-group.active {
             display: block;
         }
+        .price-input-group input {
+            border-radius: 9999px;
+        }
         @media (max-width: 768px) {
-            .add-body { padding: 20px; }
+            .add-body { padding: 25px; }
+            .add-header h2 { font-size: 1.4rem; }
             .btn-primary-custom, .btn-secondary-custom {
                 width: 100%;
                 margin-bottom: 10px;
             }
+            .d-flex.gap-3 {
+                flex-direction: column;
+            }
+            .price-options {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .categories-container {
+                max-height: 150px;
+                overflow-y: auto;
+            }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #1976d2, #1565c0);
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="container" style="max-width: 800px;">
+    <div class="container" style="max-width: 850px;">
         <div class="add-card">
             <div class="add-header">
                 <h2><i class='bx bx-plus-circle'></i> إضافة منتج جديد</h2>
-                <p>أدخل بيانات المنتج وأضف صوره</p>
+                <p>مركز الثقة للمنتجات والبضائع العالمية - أدخل بيانات المنتج وأضف صوره</p>
             </div>
             <div class="add-body">
                 <form method="POST" enctype="multipart/form-data" id="addProductForm">
@@ -278,7 +357,7 @@
                     <!-- الوصف -->
                     <div class="mb-4">
                         <label class="form-label">الوصف</label>
-                        <textarea name="description" class="form-control" rows="5" placeholder="أدخل وصفاً مفصلاً للمنتج..."></textarea>
+                        <textarea name="description" class="form-control" rows="4" placeholder="أدخل وصفاً مفصلاً للمنتج..."></textarea>
                     </div>
 
                     <!-- الفئة -->
@@ -292,9 +371,9 @@
                         <input type="hidden" name="category" id="selectedCategory" required>
                         <div class="add-category-group">
                             <input type="text" id="newCategoryInput" class="form-control" placeholder="أضف فئة جديدة">
-                            <button type="button" id="addCategoryBtn" class="btn btn-outline-primary">إضافة</button>
+                            <button type="button" id="addCategoryBtn" class="btn-outline-custom">إضافة</button>
                         </div>
-                        <small class="text-muted">اختر فئة موجودة أو أضف فئة جديدة. اضغط على × لحذف فئة (يتطلب تأكيد 3 مرات)</small>
+                        <small class="text-muted mt-2 d-block">⭐ اختر فئة موجودة أو أضف فئة جديدة. اضغط على × لحذف فئة (يتطلب تأكيد 3 مرات)</small>
                     </div>
 
                     <!-- السعر مع خيار العملة -->
@@ -320,7 +399,7 @@
                         </div>
                         <input type="hidden" name="price" id="finalPrice" value="">
                         <input type="hidden" name="currency" id="selectedCurrency" value="iqd">
-                        <small class="text-muted">اختر العملة المناسبة للمنتج</small>
+                        <small class="text-muted">💰 اختر العملة المناسبة للمنتج</small>
                     </div>
 
                     <!-- رفع الصور -->
@@ -328,20 +407,20 @@
                         <label class="form-label">الصور (حتى 5 صور)</label>
                         <div class="file-upload-area" id="fileUploadArea">
                             <i class='bx bx-cloud-upload file-upload-icon'></i>
-                            <p class="mb-1">اسحب الصور هنا أو انقر للاختيار</p>
-                            <small class="text-muted">يمكنك اختيار ما يصل إلى 5 صور (jpg, png, gif)</small>
+                            <p class="mb-1 fw-semibold">اسحب الصور هنا أو انقر للاختيار</p>
+                            <small class="text-muted">يمكنك اختيار ما يصل إلى 5 صور (jpg, png, gif, webp)</small>
                             <input type="file" name="images" id="fileInput" class="d-none" multiple accept="image/*">
                         </div>
                         <div id="previewContainer" class="preview-images"></div>
-                        <small class="text-muted mt-2 d-block">* يمكنك إزالة الصور قبل الرفع بالضغط على علامة ×</small>
+                        <small class="text-muted mt-2 d-block">📸 * يمكنك إزالة الصور قبل الرفع بالضغط على علامة ×</small>
                     </div>
 
                     <!-- أزرار التحكم -->
                     <div class="d-flex gap-3 mt-4">
-                        <button type="submit" class="btn btn-primary-custom text-white flex-grow-1">
+                        <button type="submit" class="btn btn-primary-custom flex-grow-1">
                             <i class='bx bx-save'></i> حفظ المنتج
                         </button>
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary-custom text-white">
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary-custom">
                             <i class='bx bx-x'></i> إلغاء
                         </a>
                     </div>
@@ -369,7 +448,7 @@
                 badge.className = 'category-badge';
                 if (selectedCategory === cat) badge.classList.add('selected');
                 badge.setAttribute('data-cat', cat);
-                badge.innerHTML = `${cat} <i class='bx bx-x' onclick="event.stopPropagation(); confirmDeleteCategory('${cat}')"></i>`;
+                badge.innerHTML = `${cat} <i class='bx bx-x' onclick="event.stopPropagation(); confirmDeleteCategory('${cat.replace(/'/g, "\\'")}')"></i>`;
                 badge.onclick = () => selectCategory(cat);
                 container.appendChild(badge);
             });
@@ -401,26 +480,35 @@
         }
         
         function showConfirmModal(cat, remaining) {
+            // إزالة أي مودال موجود مسبقاً
+            const existingModal = document.querySelector('.confirm-modal');
+            if (existingModal) existingModal.remove();
+            
             const modal = document.createElement('div');
             modal.className = 'confirm-modal';
             modal.innerHTML = `
                 <div class="confirm-modal-content">
-                    <i class='bx bx-error' style="font-size: 48px; color: #ff6b6b;"></i>
-                    <h4 class="mt-3">تأكيد حذف الفئة</h4>
-                    <p class="text-muted">هل أنت متأكد من حذف الفئة <strong>"${cat}"</strong>؟</p>
+                    <i class='bx bx-error-circle' style="font-size: 52px; color: #dc2626;"></i>
+                    <h4 class="mt-3 fw-bold">تأكيد حذف الفئة</h4>
+                    <p class="text-muted">هل أنت متأكد من حذف الفئة <strong class="text-primary">"${cat}"</strong>؟</p>
                     <p class="text-danger">⚠️ تحتوي هذه الفئة على منتجات!</p>
-                    <p class="text-warning">تأكيدات متبقية: <strong>${remaining}</strong> من 3</p>
+                    <p class="text-warning fw-semibold">تأكيدات متبقية: <strong>${remaining}</strong> من 3</p>
                     <div class="confirm-modal-buttons">
-                        <button class="btn btn-danger" onclick="this.closest('.confirm-modal').remove(); confirmDeleteCategory('${cat}')">
+                        <button class="btn btn-danger rounded-pill px-4" onclick="this.closest('.confirm-modal').remove(); confirmDeleteCategory('${cat.replace(/'/g, "\\'")}')">
                             <i class='bx bx-check'></i> تأكيد (${remaining}/3)
                         </button>
-                        <button class="btn btn-secondary" onclick="this.closest('.confirm-modal').remove()">
+                        <button class="btn btn-secondary rounded-pill px-4" onclick="this.closest('.confirm-modal').remove()">
                             <i class='bx bx-x'></i> إلغاء
                         </button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
+            
+            // إغلاق المودال عند النقر خارج المحتوى
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
         }
         
         function deleteCategory(cat) {
@@ -432,7 +520,24 @@
             }
             deleteConfirmations[cat] = 0;
             renderCategories();
-            alert(`✅ تم حذف الفئة "${cat}" بنجاح`);
+            showToast(`✅ تم حذف الفئة "${cat}" بنجاح`, 'success');
+        }
+        
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                const container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;';
+                document.body.appendChild(container);
+            }
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? '#22c55e' : '#ef4444';
+            toast.style.cssText = `background: ${bgColor}; color: white; padding: 12px 24px; border-radius: 9999px; margin-top: 10px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideInRight 0.3s ease; direction: rtl;`;
+            toast.innerHTML = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
 
         function addNewCategory() {
@@ -440,18 +545,18 @@
             if (!input) return;
             const newCat = input.value.trim();
             if (newCat === '') {
-                alert('الرجاء إدخال اسم الفئة');
+                showToast('⚠️ الرجاء إدخال اسم الفئة', 'error');
                 return;
             }
             if (categories.includes(newCat)) {
-                alert('⚠️ هذه الفئة موجودة بالفعل');
+                showToast('⚠️ هذه الفئة موجودة بالفعل', 'error');
                 return;
             }
             categories.push(newCat);
             selectCategory(newCat);
             input.value = '';
             renderCategories();
-            alert(`✅ تم إضافة الفئة "${newCat}" بنجاح`);
+            showToast(`✅ تم إضافة الفئة "${newCat}" بنجاح`, 'success');
         }
 
         const addBtn = document.getElementById('addCategoryBtn');
@@ -533,16 +638,16 @@
         function addFiles(files) {
             const totalNew = selectedFiles.length + files.length;
             if (totalNew > 5) {
-                alert('لا يمكن إضافة أكثر من 5 صور');
+                showToast('⚠️ لا يمكن إضافة أكثر من 5 صور', 'error');
                 return;
             }
             files.forEach(file => {
                 if (!file.type.startsWith('image/')) {
-                    alert(`الملف ${file.name} ليس صورة`);
+                    showToast(`⚠️ الملف ${file.name} ليس صورة`, 'error');
                     return;
                 }
                 if (file.size > 5 * 1024 * 1024) {
-                    alert(`حجم الصورة ${file.name} يتجاوز 5 ميجابايت`);
+                    showToast(`⚠️ حجم الصورة ${file.name} يتجاوز 5 ميجابايت`, 'error');
                     return;
                 }
                 selectedFiles.push(file);
@@ -556,6 +661,8 @@
             updatePreview();
             updateFileInput();
         }
+        
+        window.removeFile = removeFile;
 
         function updatePreview() {
             if (!previewContainer) return;
@@ -594,18 +701,18 @@
                 let price = 0;
                 if (currentCurrency === 'usd') {
                     price = document.querySelector('[name="price_usd"]')?.value;
-                    if (!price || price <= 0) {
+                    if (!price || parseFloat(price) <= 0) {
                         e.preventDefault();
-                        alert('الرجاء إدخال سعر صحيح بالدولار');
+                        showToast('⚠️ الرجاء إدخال سعر صحيح بالدولار', 'error');
                         return false;
                     }
                     const finalPrice = document.getElementById('finalPrice');
                     if (finalPrice) finalPrice.value = price;
                 } else {
                     price = document.querySelector('[name="price_iqd"]')?.value;
-                    if (!price || price <= 0) {
+                    if (!price || parseFloat(price) <= 0) {
                         e.preventDefault();
-                        alert('الرجاء إدخال سعر صحيح بالدينار العراقي');
+                        showToast('⚠️ الرجاء إدخال سعر صحيح بالدينار العراقي', 'error');
                         return false;
                     }
                     const finalPrice = document.getElementById('finalPrice');
@@ -614,17 +721,27 @@
 
                 if (!name) {
                     e.preventDefault();
-                    alert('الرجاء إدخال اسم المنتج');
+                    showToast('⚠️ الرجاء إدخال اسم المنتج', 'error');
                     return false;
                 }
                 if (!category) {
                     e.preventDefault();
-                    alert('الرجاء اختيار أو إضافة فئة للمنتج');
+                    showToast('⚠️ الرجاء اختيار أو إضافة فئة للمنتج', 'error');
                     return false;
                 }
                 return true;
             });
         }
+
+        // إضافة CSS للحركة
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(styleSheet);
 
         // تهيئة الفئات
         if (categories.length > 0) {

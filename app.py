@@ -294,13 +294,18 @@ def products():
     else:
         cursor.execute("SELECT * FROM products ORDER BY id DESC")
     items = cursor.fetchall()
-    conn.close()
     
-    products_list = list(items) if items else []
-    for product in products_list:
+    # جلب الصور الإضافية لكل منتج
+    for product in items:
+        cursor.execute(f"SELECT filename FROM product_images WHERE product_id = {placeholder} ORDER BY id", (product['id'],))
+        extra_images = cursor.fetchall()
+        product['extra_images'] = [img['filename'] for img in extra_images] if extra_images else []
         if 'old_price' not in product:
             product['old_price'] = None
     
+    conn.close()
+    
+    products_list = list(items) if items else []
     categories_list = [r["c"] for r in cats]
     
     return render_template("products.html", products=products_list, categories=categories_list, active_cat=cat)
@@ -758,7 +763,7 @@ def admin_users():
     conn.close()
     return render_template("admin_users.html", users=users)
 
-# ========== دالة إضافة المنتج المعدلة (مع رفع الصور إلى Supabase) ==========
+# ========== دالة إضافة المنتج المعدلة (مع رفع الصور إلى Supabase ودعم الصور المتعددة) ==========
 @app.route("/admin/add", methods=["GET", "POST"])
 @admin_required
 def admin_add():
@@ -877,7 +882,7 @@ def admin_add():
 
     return render_template("add_product.html", categories=categories)
 
-# ========== دالة تعديل المنتج المعدلة (مع دعم Supabase) ==========
+# ========== دالة تعديل المنتج المعدلة (مع دعم Supabase والصور المتعددة) ==========
 @app.route("/admin/edit/<int:pid>", methods=["GET", "POST"])
 @admin_required
 def admin_edit(pid):
@@ -988,6 +993,17 @@ def admin_delete(pid):
         except Exception as e:
             print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
     
+    # حذف الصور الإضافية
+    cursor.execute(f"SELECT filename FROM product_images WHERE product_id = {placeholder}", (pid,))
+    extra_images = cursor.fetchall()
+    for img in extra_images:
+        if supabase and img['filename']:
+            try:
+                supabase.storage.from_("products").remove([img['filename']])
+            except:
+                pass
+    
+    cursor.execute(f"DELETE FROM product_images WHERE product_id = {placeholder}", (pid,))
     cursor.execute(f"DELETE FROM products WHERE id = {placeholder}", (pid,))
     conn.commit()
     conn.close()

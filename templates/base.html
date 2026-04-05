@@ -2,9 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="مركز المنتجات التركية - أفضل المنتجات الأصلية بأعلى جودة وأفضل الأسعار">
-  <title>{% block title %}مركز المنتجات التركية | أفضل مركز{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="مركز الثقة للمنتجات والبضائع العالمية - أفضل المنتجات الأصلية بأعلى جودة وأفضل الأسعار">
+  <title>{% block title %}مركز الثقة | المنتجات والبضائع العالمية{% endblock %}</title>
   
   <link href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
@@ -12,91 +12,204 @@
   
   <style>
     :root {
-      --primary: #6f42c1;
+      --primary: #1976d2;
+      --primary-dark: #1565c0;
+      --primary-light: #42a5f5;
       --secondary: #ff6b6b;
-      --bg: #f5f7fa;
-      --glass: rgba(255,255,255,0.7);
+      --whatsapp: #25D366;
+      --whatsapp-dark: #128C7E;
+      --bg: #f8f9fa;
+      --glass: rgba(255,255,255,0.95);
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
     }
 
     body {
       font-family: 'Cairo', sans-serif;
-      background: linear-gradient(135deg,#eef2f6,#f8fafc);
+      background: linear-gradient(135deg, #f5f7fa 0%, #eef2f6 100%);
       padding-top: 80px;
+      min-height: 100vh;
     }
 
     /* 🔥 Navbar */
     .navbar {
       background: var(--glass) !important;
       backdrop-filter: blur(12px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-      border-bottom: 1px solid rgba(0,0,0,0.05);
+      box-shadow: var(--shadow-md);
+      border-bottom: 1px solid rgba(25,118,210,0.1);
+      padding: 0.75rem 0;
     }
 
     .navbar-brand {
       font-weight: 800;
-      font-size: 1.5rem;
-      background: linear-gradient(135deg,var(--primary),var(--secondary));
+      font-size: 1.35rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .navbar-brand i {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 1.6rem;
     }
 
     .nav-link {
       font-weight: 600;
-      margin: 0 6px;
-      padding: 8px 16px !important;
-      border-radius: 30px;
-      transition: 0.3s;
+      margin: 0 4px;
+      padding: 8px 18px !important;
+      border-radius: 9999px;
+      transition: all 0.3s ease;
+      color: #374151;
     }
 
     .nav-link:hover {
-      background: rgba(111,66,193,0.1);
+      background: rgba(25,118,210,0.1);
       transform: translateY(-2px);
+      color: var(--primary);
     }
 
     .nav-link.active {
-      background: linear-gradient(135deg,var(--primary),var(--secondary));
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: white !important;
+      box-shadow: var(--shadow-sm);
     }
 
-    /* 🔥 Buttons */
+    /* 🔥 Buttons - Unified rounded corners */
+    .btn {
+      border-radius: 9999px !important;
+      transition: all 0.3s ease !important;
+      font-weight: 500;
+      padding: 8px 20px;
+    }
+
     .btn-primary {
-      background: linear-gradient(135deg,var(--primary),var(--secondary));
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       border: none;
-      border-radius: 30px;
-      padding: 6px 18px;
-      transition: 0.3s;
+      box-shadow: var(--shadow-sm);
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(111,66,193,0.3);
+      box-shadow: var(--shadow-md);
+      background: linear-gradient(135deg, var(--primary-light), var(--primary));
     }
 
     .btn-outline-danger {
-      border-radius: 30px;
+      border-radius: 9999px !important;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-outline-danger:hover {
+      background: #fee2e2;
+      border-color: #dc2626;
+      color: #dc2626;
+      transform: translateY(-2px);
+    }
+
+    .btn-whatsapp {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      border: none;
+      color: white;
+      border-radius: 9999px;
+      padding: 8px 18px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-whatsapp:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37,211,102,0.3);
+      background: linear-gradient(135deg, #30d96e, #15a085);
+    }
+
+    /* 🔥 Cart Button */
+    .cart-btn {
+      position: relative;
+      background: rgba(25,118,210,0.1);
+      border: none;
+      border-radius: 9999px;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .cart-btn:hover {
+      background: rgba(25,118,210,0.2);
+      transform: scale(1.05);
+    }
+
+    .cart-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+      min-width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+      box-shadow: var(--shadow-sm);
     }
 
     /* 🔥 Alerts */
     .alert {
-      border-radius: 15px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      border: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .alert-success {
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      color: #065f46;
+    }
+
+    .alert-danger {
+      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      color: #991b1b;
+    }
+
+    .alert-warning {
+      background: linear-gradient(135deg, #fed7aa, #fde68a);
+      color: #92400e;
+    }
+
+    .alert-info {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      color: #1e40af;
     }
 
     /* 🔥 Loader */
     .loader {
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg,var(--primary),var(--secondary));
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
     }
 
     .loader.hide {
       opacity: 0;
       visibility: hidden;
-      transition: 0.5s;
     }
 
     .spinner {
@@ -112,9 +225,103 @@
       to { transform: rotate(360deg); }
     }
 
-    /* ✨ Smooth animation */
+    /* 🔥 Toast Container */
+    .toast-container-custom {
+      position: fixed;
+      top: 90px;
+      right: 20px;
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast-custom {
+      background: white;
+      border-radius: 9999px;
+      padding: 12px 24px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideInRight 0.3s ease;
+      direction: rtl;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* 🔥 Smooth animations */
     * {
       transition: all 0.2s ease-in-out;
+    }
+
+    /* 🔥 Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding-top: 70px;
+      }
+      
+      .navbar-brand {
+        font-size: 1.1rem;
+      }
+      
+      .navbar-brand i {
+        font-size: 1.3rem;
+      }
+      
+      .nav-link {
+        padding: 6px 14px !important;
+        font-size: 14px;
+      }
+      
+      .btn {
+        padding: 6px 16px;
+        font-size: 13px;
+      }
+      
+      .cart-btn {
+        width: 38px;
+        height: 38px;
+      }
+      
+      .toast-container-custom {
+        top: 70px;
+        right: 10px;
+        left: 10px;
+      }
+      
+      .toast-custom {
+        padding: 10px 18px;
+        font-size: 13px;
+      }
+    }
+
+    /* 🔥 Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-dark);
     }
   </style>
   
@@ -126,43 +333,84 @@
   <div class="spinner"></div>
 </div>
 
+<div id="toastContainer" class="toast-container-custom"></div>
+
 <nav class="navbar navbar-expand-lg fixed-top">
   <div class="container">
     <a class="navbar-brand" href="{{ url_for('index') }}">
-      <i class='bx bx-store-alt'></i> مركز المنتجات التركية
+      <i class='bx bxs-trophy'></i>
+      <span>مركز الثقة للمنتجات والبضائع العالمية</span>
     </a>
 
-    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-label="القائمة">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="nav">
       <ul class="navbar-nav mx-auto">
-
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
             <i class='bx bx-home'></i> الرئيسية
           </a>
         </li>
-
         <li class="nav-item">
           <a class="nav-link {% if request.endpoint == 'products' %}active{% endif %}" href="{{ url_for('products') }}">
             <i class='bx bx-grid-alt'></i> المنتجات
           </a>
         </li>
-
+        {% if not session.get('is_admin') %}
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'about' %}active{% endif %}" href="{{ url_for('about') }}">
+            <i class='bx bx-info-circle'></i> من نحن
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}" href="{{ url_for('contact') }}">
+            <i class='bx bx-envelope'></i> اتصل بنا
+          </a>
+        </li>
+        {% endif %}
       </ul>
 
-      {% if session.get('is_admin') %}
-      <div class="d-flex gap-2">
+      <div class="d-flex gap-2 align-items-center">
+        <!-- زر السلة -->
+        <div class="cart-btn" onclick="toggleCartDrawer()" id="cartBtn">
+          <i class='bx bx-shopping-bag' style="font-size: 1.3rem; color: var(--primary);"></i>
+          <span class="cart-count" id="cartCountNav" style="display: none;">0</span>
+        </div>
+
+        {% if session.get('is_admin') %}
         <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary btn-sm">
           <i class='bx bx-dashboard'></i>
+          <span class="d-none d-md-inline"> لوحة التحكم</span>
         </a>
         <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">
           <i class='bx bx-log-out'></i>
+          <span class="d-none d-md-inline"> خروج</span>
         </a>
+        {% elif session.get('user_id') %}
+        <div class="dropdown">
+          <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class='bx bx-user'></i>
+            <span class="d-none d-md-inline">{{ session.get('user_name', 'مستخدم') }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('user_profile') }}"><i class='bx bx-user-circle'></i> حسابي</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('user_logout') }}"><i class='bx bx-log-out'></i> تسجيل خروج</a></li>
+          </ul>
+        </div>
+        {% else %}
+        <a href="{{ url_for('user_login') }}" class="btn btn-primary btn-sm">
+          <i class='bx bx-log-in'></i>
+          <span class="d-none d-md-inline"> دخول</span>
+        </a>
+        <a href="{{ url_for('user_register') }}" class="btn btn-outline-primary btn-sm">
+          <i class='bx bx-user-plus'></i>
+          <span class="d-none d-md-inline"> تسجيل</span>
+        </a>
+        {% endif %}
       </div>
-      {% endif %}
     </div>
   </div>
 </nav>
@@ -172,9 +420,10 @@
     {% if messages %}
       <div class="container mt-3">
         {% for cat, msg in messages %}
-          <div class="alert alert-{{ cat if cat != 'message' else 'info' }} alert-dismissible fade show">
+          <div class="alert alert-{{ cat if cat != 'message' else 'info' }} alert-dismissible fade show shadow-sm rounded-4">
+            <i class='bx bx-{{ "check-circle" if cat == "success" else "error" if cat == "danger" else "info-circle" }}'></i>
             {{ msg }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button>
           </div>
         {% endfor %}
       </div>
@@ -187,10 +436,134 @@
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 
 <script>
+// دالة عرض الإشعارات
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'toast-custom';
+    
+    let icon = '✅';
+    let bgColor = 'linear-gradient(135deg, #22c55e, #16a34a)';
+    
+    if (type === 'error') {
+        icon = '❌';
+        bgColor = 'linear-gradient(135deg, #ef4444, #dc2626)';
+    } else if (type === 'warning') {
+        icon = '⚠️';
+        bgColor = 'linear-gradient(135deg, #f59e0b, #d97706)';
+    } else if (type === 'info') {
+        icon = 'ℹ️';
+        bgColor = 'linear-gradient(135deg, #1976d2, #1565c0)';
+    }
+    
+    toast.style.background = bgColor;
+    toast.style.color = 'white';
+    toast.innerHTML = `<span style="font-size: 1.2rem;">${icon}</span><span>${message}</span>`;
+    
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// دالة تحميل السلة وعرض العدد
+function loadCartCount() {
+    fetch('/api/get-cart')
+        .then(response => response.json())
+        .then(data => {
+            const cart = data.cart || [];
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            const cartCountSpan = document.getElementById('cartCountNav');
+            if (totalItems > 0) {
+                cartCountSpan.innerText = totalItems > 99 ? '99+' : totalItems;
+                cartCountSpan.style.display = 'flex';
+            } else {
+                cartCountSpan.style.display = 'none';
+            }
+        })
+        .catch(error => console.error('Error loading cart:', error));
+}
+
+// دالة فتح وإغلاق درج السلة
+function toggleCartDrawer() {
+    const overlay = document.getElementById('cartOverlay');
+    const drawer = document.getElementById('cartDrawer');
+    
+    if (!overlay || !drawer) {
+        // إذا لم توجد عناصر السلة في الصفحة، ننقل المستخدم لصفحة المنتجات
+        window.location.href = '/products';
+        return;
+    }
+    
+    const isHidden = overlay.classList.contains('hidden');
+    if (isHidden) {
+        overlay.classList.remove('hidden');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+        drawer.style.transform = 'translateX(0)';
+    } else {
+        overlay.classList.add('opacity-0');
+        drawer.style.transform = 'translateX(100%)';
+        setTimeout(() => overlay.classList.add('hidden'), 250);
+    }
+}
+
+// تحميل السلة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    loadCartCount();
+});
+
+// إضافة CSS للحركة
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .dropdown-menu {
+        border-radius: 16px;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        border: none;
+        margin-top: 8px;
+    }
+    
+    .dropdown-item {
+        border-radius: 12px;
+        margin: 4px 8px;
+        transition: all 0.2s ease;
+    }
+    
+    .dropdown-item:hover {
+        background: #f3f4f6;
+        transform: translateX(-4px);
+    }
+    
+    .btn-close {
+        filter: invert(1);
+        opacity: 0.7;
+    }
+`;
+document.head.appendChild(styleSheet);
+
+// إخفاء اللودر
 window.addEventListener('load', function() {
-  setTimeout(() => {
-    document.getElementById('loader').classList.add('hide');
-  }, 700);
+    setTimeout(() => {
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.classList.add('hide');
+            setTimeout(() => {
+                if (loader.parentNode) loader.parentNode.removeChild(loader);
+            }, 500);
+        }
+    }, 500);
 });
 </script>
 
