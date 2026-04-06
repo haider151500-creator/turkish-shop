@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>لوحة تحكم الأدمن - متجر المنتجات التركية</title>
+    <title>لوحة تحكم الأدمن - مركز الثقة للمنتجات والبضائع العالمية</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}">
     <link href="{{ url_for('static', filename='assets/css/boxicon.min.css') }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
             right: 0;
             width: 280px;
             height: 100vh;
-            background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+            background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
             color: white;
             padding: 20px 0;
             transition: all 0.3s ease;
@@ -40,12 +40,17 @@
         }
         
         .sidebar .logo h3 {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
         }
         
         .sidebar .logo h3 span {
             color: #ff6b6b;
+        }
+        
+        .sidebar .logo p {
+            font-size: 0.8rem;
+            opacity: 0.8;
         }
         
         .sidebar .nav-link {
@@ -66,9 +71,9 @@
         }
         
         .sidebar .nav-link.active {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
             color: white;
-            border-right: 4px solid #ff6b6b;
+            border-right: 4px solid #42a5f5;
         }
         
         .sidebar .nav-link i {
@@ -90,7 +95,7 @@
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: all 0.3s ease;
-            border-bottom: 3px solid #6f42c1;
+            border-bottom: 3px solid #1976d2;
         }
         
         .stat-card:hover {
@@ -101,7 +106,7 @@
         .stat-card h3 {
             font-size: 2rem;
             font-weight: 700;
-            color: #6f42c1;
+            color: #1976d2;
             margin-bottom: 5px;
         }
         
@@ -151,7 +156,7 @@
         }
         
         .order-header {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            background: linear-gradient(135deg, #1976d2, #42a5f5);
             color: white;
             padding: 15px 20px;
             display: flex;
@@ -176,7 +181,7 @@
         }
         
         .order-info i {
-            color: #6f42c1;
+            color: #1976d2;
             width: 25px;
         }
         
@@ -196,7 +201,7 @@
         .order-product-item.header {
             background: #f8f9fa;
             font-weight: bold;
-            border-bottom: 2px solid #6f42c1;
+            border-bottom: 2px solid #1976d2;
             border-radius: 8px;
         }
         
@@ -209,7 +214,7 @@
         }
         
         .order-product-item .product-price {
-            color: #6f42c1;
+            color: #1976d2;
         }
         
         .order-product-item .product-qty {
@@ -253,7 +258,7 @@
         }
         
         .btn-primary-custom {
-            background: linear-gradient(135deg, #6f42c1, #ff6b6b);
+            background: linear-gradient(135deg, #1976d2, #1565c0);
             border: none;
             border-radius: 10px;
             padding: 8px 20px;
@@ -263,7 +268,7 @@
         
         .btn-primary-custom:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(111,66,193,0.3);
+            box-shadow: 0 5px 15px rgba(25,118,210,0.3);
         }
         
         .product-card .card-footer {
@@ -305,7 +310,7 @@
                 top: 20px;
                 right: 20px;
                 z-index: 1001;
-                background: #6f42c1;
+                background: #1976d2;
                 color: white;
                 border: none;
                 padding: 10px;
@@ -353,6 +358,21 @@
             margin-top: 15px;
             padding: 12px;
         }
+        
+        .btn-delete {
+            background: #dc3545;
+            border: none;
+            color: white;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -365,19 +385,19 @@
 <!-- الشريط الجانبي -->
 <div class="sidebar" id="sidebar">
     <div class="logo">
-        <h3>متجر <span>تركي</span></h3>
-        <small class="text-muted">لوحة التحكم</small>
+        <h3>مركز <span>الثقة</span></h3>
+        <p>للمنتجات والبضائع العالمية</p>
     </div>
     <div class="nav flex-column">
-        <a class="nav-link active" href="#" onclick="showSection('dashboard')">
-            <i class='bx bx-dashboard'></i> الرئيسية
+        <a class="nav-link" href="#" onclick="showSection('products')">
+            <i class='bx bx-package'></i> المنتجات
         </a>
         <a class="nav-link" href="#" onclick="showSection('orders')">
             <i class='bx bx-shopping-bag'></i> الطلبات
             <span class="badge bg-danger ms-auto" id="ordersBadge" style="display: none;">0</span>
         </a>
-        <a class="nav-link" href="#" onclick="showSection('products')">
-            <i class='bx bx-package'></i> المنتجات
+        <a class="nav-link" href="#" onclick="showSection('dashboard')">
+            <i class='bx bx-dashboard'></i> الإحصائيات
         </a>
         <a class="nav-link" href="{{ url_for('products') }}">
             <i class='bx bx-store'></i> المتجر
@@ -390,52 +410,8 @@
 
 <!-- المحتوى الرئيسي -->
 <div class="main-content">
-    <!-- قسم الإحصائيات الرئيسية -->
-    <div id="dashboardSection">
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <i class='bx bx-package bx-lg text-primary'></i>
-                    <h3>{{ products|length }}</h3>
-                    <p class="text-muted mb-0">إجمالي المنتجات</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <i class='bx bx-shopping-bag bx-lg text-primary'></i>
-                    <h3 id="totalOrders">0</h3>
-                    <p class="text-muted mb-0">إجمالي الطلبات</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stat-card text-center">
-                    <i class='bx bx-trending-up bx-lg text-primary'></i>
-                    <h3 id="totalRevenue">0</h3>
-                    <p class="text-muted mb-0">إجمالي الإيرادات</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- آخر الطلبات -->
-        <div class="mt-4">
-            <h4><i class='bx bx-time'></i> آخر الطلبات</h4>
-            <div id="recentOrders"></div>
-        </div>
-    </div>
-
-    <!-- قسم الطلبات -->
-    <div id="ordersSection" style="display: none;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3><i class='bx bx-shopping-bag'></i> جميع الطلبات</h3>
-            <button class="btn btn-primary-custom" onclick="loadOrders()">
-                <i class='bx bx-refresh'></i> تحديث
-            </button>
-        </div>
-        <div id="ordersList"></div>
-    </div>
-
-    <!-- قسم المنتجات -->
-    <div id="productsSection" style="display: none;">
+    <!-- قسم المنتجات (يظهر أولاً) -->
+    <div id="productsSection">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3><i class='bx bx-package'></i> إدارة المنتجات</h3>
             <a class="btn btn-primary-custom" href="{{ url_for('admin_add') }}">
@@ -480,6 +456,50 @@
                 {% endfor %}
             </div>
         {% endif %}
+    </div>
+
+    <!-- قسم الإحصائيات الرئيسية -->
+    <div id="dashboardSection" style="display: none;">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <i class='bx bx-package bx-lg text-primary'></i>
+                    <h3>{{ products|length }}</h3>
+                    <p class="text-muted mb-0">إجمالي المنتجات</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <i class='bx bx-shopping-bag bx-lg text-primary'></i>
+                    <h3 id="totalOrders">0</h3>
+                    <p class="text-muted mb-0">إجمالي الطلبات</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card text-center">
+                    <i class='bx bx-trending-up bx-lg text-primary'></i>
+                    <h3 id="totalRevenue">0</h3>
+                    <p class="text-muted mb-0">إجمالي الإيرادات</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- آخر الطلبات -->
+        <div class="mt-4">
+            <h4><i class='bx bx-time'></i> آخر الطلبات</h4>
+            <div id="recentOrders"></div>
+        </div>
+    </div>
+
+    <!-- قسم الطلبات -->
+    <div id="ordersSection" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class='bx bx-shopping-bag'></i> جميع الطلبات</h3>
+            <button class="btn btn-primary-custom" onclick="loadOrders()">
+                <i class='bx bx-refresh'></i> تحديث
+            </button>
+        </div>
+        <div id="ordersList"></div>
     </div>
 </div>
 
@@ -624,7 +644,7 @@ function displayOrders(orders) {
                         </div>
                     </div>
                     
-                    <div class="mt-3 d-flex gap-2 justify-content-end">
+                    <div class="mt-3 d-flex gap-2 justify-content-end flex-wrap">
                         <button class="btn btn-sm btn-success btn-sm-custom" onclick="updateOrderStatus(${order.id}, 'completed')">
                             <i class='bx bx-check-circle'></i> تأكيد
                         </button>
@@ -634,6 +654,9 @@ function displayOrders(orders) {
                         <button class="btn btn-sm btn-danger btn-sm-custom" onclick="updateOrderStatus(${order.id}, 'cancelled')">
                             <i class='bx bx-x-circle'></i> إلغاء
                         </button>
+                        <button class="btn btn-delete" onclick="deleteOrder(${order.id})">
+                            <i class='bx bx-trash'></i> حذف
+                        </button>
                     </div>
                 </div>
             </div>
@@ -641,6 +664,31 @@ function displayOrders(orders) {
     });
     
     container.innerHTML = html;
+}
+
+// حذف طلب
+async function deleteOrder(orderId) {
+    if (!confirm('⚠️ هل أنت متأكد من حذف هذا الطلب؟\n\nلا يمكن التراجع عن هذا الإجراء.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/orders/delete/${orderId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showAlert(`✅ تم حذف الطلب رقم ${orderId} بنجاح`, "success");
+            loadOrders();
+        } else {
+            showAlert(`❌ ${data.error || 'فشل في حذف الطلب'}`, "danger");
+        }
+    } catch (error) {
+        console.error('خطأ في حذف الطلب:', error);
+        showAlert("❌ حدث خطأ في الاتصال", "danger");
+    }
 }
 
 // عرض آخر الطلبات في الصفحة الرئيسية
@@ -750,19 +798,22 @@ function showSection(section) {
     
     if (section === 'dashboard' && dashboardDiv) {
         dashboardDiv.style.display = 'block';
-        const navLinks = document.querySelectorAll('.sidebar .nav-link');
-        navLinks.forEach(link => link.classList.remove('active'));
-        if (navLinks[0]) navLinks[0].classList.add('active');
     } else if (section === 'orders' && ordersDiv) {
         ordersDiv.style.display = 'block';
-        const navLinks = document.querySelectorAll('.sidebar .nav-link');
-        navLinks.forEach(link => link.classList.remove('active'));
-        if (navLinks[1]) navLinks[1].classList.add('active');
         loadOrders();
     } else if (section === 'products' && productsDiv) {
         productsDiv.style.display = 'block';
-        const navLinks = document.querySelectorAll('.sidebar .nav-link');
-        navLinks.forEach(link => link.classList.remove('active'));
+    }
+    
+    // تحديث حالة الأزرار في الشريط الجانبي
+    const navLinks = document.querySelectorAll('.sidebar .nav-link');
+    navLinks.forEach(link => link.classList.remove('active'));
+    
+    if (section === 'products') {
+        if (navLinks[0]) navLinks[0].classList.add('active');
+    } else if (section === 'orders') {
+        if (navLinks[1]) navLinks[1].classList.add('active');
+    } else if (section === 'dashboard') {
         if (navLinks[2]) navLinks[2].classList.add('active');
     }
 }
@@ -795,12 +846,10 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// تحميل البيانات عند فتح الصفحة (مرة واحدة فقط - بدون تحديث تلقائي)
+// تحميل البيانات عند فتح الصفحة - نبدأ بقسم المنتجات أولاً
 document.addEventListener('DOMContentLoaded', function() {
-    showSection('dashboard');
+    showSection('products');
     loadOrders();
-    // تم إلغاء التحديث التلقائي للطلبات
-    // setInterval(loadOrders, 30000);
 });
 </script>
 
