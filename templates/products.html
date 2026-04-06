@@ -10,7 +10,7 @@
     <style>
         * { font-family: 'Noto Kufi Arabic', sans-serif; }
         
-        /* شريط العبارة المتحرك - سرعة بطيئة مريحة للعين */
+        /* شريط العبارة المتحرك */
         .marquee-container {
             background: linear-gradient(135deg, #1976d2, #1565c0);
             overflow: hidden;
@@ -41,13 +41,11 @@
             100% { transform: translateX(-100%); }
         }
         
-        /* تأثيرات إضافية */
         .product-card {
             position: relative;
             z-index: 1;
         }
         
-        /* نبضات على زر السلة */
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(66, 165, 245, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(66, 165, 245, 0); }
@@ -58,7 +56,6 @@
             animation: pulse 2s infinite;
         }
         
-        /* تأثير دخول المنتجات */
         .product-card {
             opacity: 0;
             transform: translateY(30px);
@@ -72,7 +69,6 @@
             }
         }
         
-        /* تأثيرات على البطاقات عند التحميل بتأخير */
         .product-card:nth-child(1) { animation-delay: 0.1s; }
         .product-card:nth-child(2) { animation-delay: 0.2s; }
         .product-card:nth-child(3) { animation-delay: 0.3s; }
@@ -314,7 +310,6 @@
             border-radius: 9999px;
         }
         
-        /* أزرار التنقل في معرض الصور المكبر */
         .gallery-nav-btn {
             position: absolute;
             top: 50%;
@@ -340,7 +335,6 @@
         .gallery-prev { left: 20px; }
         .gallery-next { right: 20px; }
         
-        /* علامة الخصم */
         .discount-badge {
             position: absolute;
             top: 10px;
@@ -354,11 +348,40 @@
             z-index: 15;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        
+        /* تنسيق عرض خصم الكميات */
+        .bulk-discount-info {
+            background: #fef3c7;
+            border-radius: 12px;
+            padding: 6px 10px;
+            margin-top: 8px;
+            font-size: 11px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        .bulk-discount-tag {
+            background: #f59e0b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .price-iqd {
+            font-weight: bold;
+            color: #1976d2;
+            font-size: 14px;
+        }
+        .price-usd {
+            font-size: 11px;
+            color: #6b7280;
+        }
     </style>
 </head>
 <body class="h-full bg-[#f8f9fa] text-gray-800 antialiased">
   
-  <!-- شريط العبارة المتحرك -->
   <div class="marquee-container">
     <div class="marquee-content">
       <span>✨ أفضل المنتجات والبضائع العالمية ✨</span>
@@ -517,7 +540,6 @@
       </div>
     </div>
 
-    <!-- نافذة عرض المنتج المنبثقة -->
     <div id="productModal" class="fixed inset-0 product-modal-overlay z-[200] hidden flex items-center justify-center p-4" onclick="closeProductModalOnOverlay(event)">
       <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
         <button onclick="closeProductModal()" class="absolute top-4 right-4 z-10 btn-primary p-2 rounded-full shadow-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -537,6 +559,7 @@
                 <div class="flex items-center gap-3"><span id="productPrice" class="text-3xl font-bold text-[#1976d2]"></span><span id="productOldPrice" class="text-lg text-gray-400 line-through"></span></div>
                 <div id="productPriceUsd" class="text-sm text-gray-500 mt-1"></div>
               </div>
+              <div id="bulkDiscountsModal" class="mb-4 text-center"></div>
               <div class="mb-4">
                 <label class="block text-gray-700 font-semibold mb-2">الكمية</label>
                 <div class="quantity-selector inline-flex">
@@ -566,7 +589,6 @@
       </div>
     </div>
 
-    <!-- معرض الصور المكبرة مع أزرار التنقل -->
     <div id="imageGallery" class="fixed inset-0 bg-black z-[300] hidden flex items-center justify-center" onclick="closeImageGalleryOnOverlay(event)">
       <button onclick="closeImageGallery()" class="absolute top-6 right-6 bg-white text-black p-3 rounded-full hover:bg-gray-200 transition-all z-10"><i data-lucide="x" class="w-6 h-6"></i></button>
       <button class="gallery-nav-btn gallery-prev" onclick="event.stopPropagation(); prevGalleryImage()">&#10094;</button>
@@ -606,8 +628,34 @@
     const userName = "{{ session.get('user_name', 'زائر') }}";
     const userEmail = "{{ session.get('user_email', '') }}";
     
-    // رقم واتساب المطلوب
     const WHATSAPP_MESSAGE_LINK = "https://wa.me/message/TVK3PQT626DMO1";
+
+    // دالة حساب السعر بعد خصم الكميات
+    function calculateBulkDiscount(price, quantity, bulkDiscounts) {
+        if (!bulkDiscounts || bulkDiscounts.length === 0 || quantity < 2) {
+            return price;
+        }
+        // ترتيب الخصومات تنازلياً (أكبر كمية أولاً)
+        const sorted = [...bulkDiscounts].sort((a, b) => b.minQty - a.minQty);
+        for (let discount of sorted) {
+            if (quantity >= discount.minQty) {
+                const discountPercent = discount.percent;
+                return price * (1 - discountPercent / 100);
+            }
+        }
+        return price;
+    }
+
+    // دالة عرض خصم الكميات في بطاقة المنتج
+    function renderBulkDiscountInfo(bulkDiscounts) {
+        if (!bulkDiscounts || bulkDiscounts.length === 0) return '';
+        let html = '<div class="bulk-discount-info">';
+        for (let d of bulkDiscounts) {
+            html += `<span class="bulk-discount-tag">🛒 ${d.minQty}+ قطعة خصم ${d.percent}%</span>`;
+        }
+        html += '</div>';
+        return html;
+    }
 
     function renderProducts(productList) {
       const grid = document.getElementById("productsGrid");
@@ -627,6 +675,8 @@
         const discountBadge = discount > 0 ? `<span class="discount-badge">🔥 -${discount}%</span>` : '';
         const formattedPrice = p.price.toLocaleString();
         const imageUrl = p.image ? `https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/${p.image}` : null;
+        const bulkDiscountsHtml = p.bulk_discounts ? renderBulkDiscountInfo(p.bulk_discounts) : '';
+        
         return `
           <div class="product-card bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl fade-up fade-up-d${(idx % 4) + 1} cursor-pointer" onclick="openProductModal(${p.id})">
             <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 h-36 md:h-44 flex items-center justify-center">
@@ -653,6 +703,7 @@
                   </button>
                 </div>
               </div>
+              ${bulkDiscountsHtml}
             </div>
           </div>
         `;
@@ -673,7 +724,13 @@
     }
 
     function addToCartSimple(id, name, price) {
-      addToCart(id, name, price, 1);
+      const product = products.find(p => p.id === id);
+      const quantity = 1;
+      let finalPrice = price;
+      if (product && product.bulk_discounts && product.bulk_discounts.length > 0) {
+        finalPrice = calculateBulkDiscount(price, quantity, product.bulk_discounts);
+      }
+      addToCart(id, name, finalPrice, quantity);
     }
 
     function changeModalQty(delta) {
@@ -682,13 +739,31 @@
       let newVal = parseInt(input.value) + delta;
       if (newVal < 1) newVal = 1;
       input.value = newVal;
+      updateModalPrice();
+    }
+
+    function updateModalPrice() {
+      if (!currentProductData) return;
+      const quantity = parseInt(document.getElementById('modalQuantity').value) || 1;
+      let finalPrice = currentProductData.price;
+      if (currentProductData.bulk_discounts && currentProductData.bulk_discounts.length > 0) {
+        finalPrice = calculateBulkDiscount(currentProductData.price, quantity, currentProductData.bulk_discounts);
+      }
+      const priceSpan = document.getElementById('productPrice');
+      if (priceSpan) {
+        priceSpan.innerText = finalPrice.toLocaleString() + " د.ع";
+      }
     }
 
     function addToCartFromModalWithQty() {
       if (currentProductData) {
         const qtyInput = document.getElementById('modalQuantity');
         const quantity = qtyInput ? parseInt(qtyInput.value) : 1;
-        addToCart(currentProductData.id, currentProductData.name, currentProductData.price, quantity);
+        let finalPrice = currentProductData.price;
+        if (currentProductData.bulk_discounts && currentProductData.bulk_discounts.length > 0) {
+          finalPrice = calculateBulkDiscount(currentProductData.price, quantity, currentProductData.bulk_discounts);
+        }
+        addToCart(currentProductData.id, currentProductData.name, finalPrice, quantity);
         closeProductModal();
       }
     }
@@ -809,6 +884,20 @@
       document.getElementById("productPrice").innerText = currentProductData.price.toLocaleString() + " د.ع";
       document.getElementById("productOldPrice").innerHTML = currentProductData.old_price ? currentProductData.old_price.toLocaleString() + " د.ع" : '';
       document.getElementById("productPriceUsd").innerHTML = `≈ ${(currentProductData.price / 1300).toFixed(0)} دولار أمريكي`;
+      
+      // عرض خصم الكميات في المودال
+      const bulkContainer = document.getElementById('bulkDiscountsModal');
+      if (currentProductData.bulk_discounts && currentProductData.bulk_discounts.length > 0) {
+        let bulkHtml = '<div class="bg-yellow-50 rounded-xl p-2 text-center">';
+        bulkHtml += '<span class="text-yellow-700 text-xs font-bold">📦 خصم على الكميات:</span><div class="flex flex-wrap gap-2 justify-center mt-1">';
+        for (let d of currentProductData.bulk_discounts) {
+          bulkHtml += `<span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">${d.minQty}+ قطعة خصم ${d.percent}%</span>`;
+        }
+        bulkHtml += '</div></div>';
+        bulkContainer.innerHTML = bulkHtml;
+      } else {
+        bulkContainer.innerHTML = '';
+      }
       
       const descriptionText = currentProductData.description || "منتج عالي الجودة";
       const descElement = document.getElementById("productDescription");
