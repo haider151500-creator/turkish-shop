@@ -305,6 +305,134 @@
         .price-input-group input {
             border-radius: 9999px;
         }
+        
+        /* تنسيق قسم الخصم */
+        .discount-section {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #f59e0b;
+        }
+        .discount-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        .discount-header i {
+            font-size: 24px;
+            color: #f59e0b;
+            transition: transform 0.3s ease;
+        }
+        .discount-header h4 {
+            margin: 0;
+            font-weight: 700;
+            color: #92400e;
+        }
+        .discount-body {
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        .discount-body.show {
+            display: block;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .discount-input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .discount-input-group .form-control {
+            flex: 1;
+            min-width: 120px;
+        }
+        .discount-preview {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .discount-preview .original-price {
+            text-decoration: line-through;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        .discount-preview .final-price {
+            font-size: 24px;
+            font-weight: 800;
+            color: #16a34a;
+        }
+        .discount-preview .discount-badge-preview {
+            display: inline-block;
+            background: #ef4444;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #f59e0b;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .discount-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #f59e0b;
+        }
+        
         @media (max-width: 768px) {
             .add-body { padding: 25px; }
             .add-header h2 { font-size: 1.4rem; }
@@ -322,6 +450,9 @@
             .categories-container {
                 max-height: 150px;
                 overflow-y: auto;
+            }
+            .discount-input-group {
+                flex-direction: column;
             }
         }
         
@@ -378,7 +509,7 @@
 
                     <!-- السعر مع خيار العملة -->
                     <div class="mb-4">
-                        <label class="form-label required-field">السعر</label>
+                        <label class="form-label required-field">السعر الأصلي</label>
                         <div class="price-options">
                             <div class="price-option" data-currency="usd" onclick="selectCurrency('usd')">
                                 <i class='bx bx-dollar-circle'></i>
@@ -392,14 +523,48 @@
                             </div>
                         </div>
                         <div id="usdPriceGroup" class="price-input-group">
-                            <input type="number" step="0.01" name="price_usd" class="form-control" placeholder="السعر بالدولار الأمريكي">
+                            <input type="number" step="0.01" name="price_usd" id="price_usd" class="form-control" placeholder="السعر بالدولار الأمريكي" oninput="updateDiscountPreview()">
                         </div>
                         <div id="iqdPriceGroup" class="price-input-group active">
-                            <input type="number" step="1000" name="price_iqd" class="form-control" placeholder="السعر بالدينار العراقي">
+                            <input type="number" step="1000" name="price_iqd" id="price_iqd" class="form-control" placeholder="السعر بالدينار العراقي" oninput="updateDiscountPreview()">
                         </div>
                         <input type="hidden" name="price" id="finalPrice" value="">
+                        <input type="hidden" name="old_price" id="oldPriceHidden" value="">
                         <input type="hidden" name="currency" id="selectedCurrency" value="iqd">
                         <small class="text-muted">💰 اختر العملة المناسبة للمنتج</small>
+                    </div>
+
+                    <!-- قسم الخصم -->
+                    <div class="discount-section">
+                        <div class="discount-toggle">
+                            <div class="discount-header" onclick="toggleDiscount()">
+                                <i class='bx bx-gift' id="discountIcon"></i>
+                                <h4>🏷️ إضافة خصم على المنتج</h4>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="discountToggle" onchange="toggleDiscountEnable()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div id="discountBody" class="discount-body">
+                            <div class="discount-input-group">
+                                <div style="flex: 2;">
+                                    <label class="form-label small">نسبة الخصم (%)</label>
+                                    <input type="number" id="discountPercent" class="form-control" placeholder="مثال: 10" min="0" max="100" step="1" oninput="calculateDiscount()" disabled>
+                                </div>
+                                <div style="flex: 3;">
+                                    <label class="form-label small">قيمة الخصم (المبلغ المخفض)</label>
+                                    <input type="number" id="discountAmount" class="form-control" placeholder="يتغير تلقائياً" readonly disabled>
+                                </div>
+                            </div>
+                            <div class="discount-preview" id="discountPreview">
+                                <span class="original-price" id="previewOriginalPrice">0 د.ع</span>
+                                <span class="discount-badge-preview" id="previewBadge" style="display: none;">خصم 0%</span>
+                                <div class="final-price" id="previewFinalPrice">0 د.ع</div>
+                                <small class="text-muted">💰 السعر بعد الخصم</small>
+                            </div>
+                            <input type="hidden" name="old_price_display" id="oldPriceDisplay" value="">
+                        </div>
                     </div>
 
                     <!-- رفع الصور -->
@@ -438,6 +603,9 @@
         ];
         let selectedCategory = null;
         let deleteConfirmations = {};
+        let discountEnabled = false;
+        let currentPrice = 0;
+        let currentCurrencySymbol = 'IQD';
 
         function renderCategories() {
             const container = document.getElementById('categoriesList');
@@ -480,7 +648,6 @@
         }
         
         function showConfirmModal(cat, remaining) {
-            // إزالة أي مودال موجود مسبقاً
             const existingModal = document.querySelector('.confirm-modal');
             if (existingModal) existingModal.remove();
             
@@ -505,7 +672,6 @@
             `;
             document.body.appendChild(modal);
             
-            // إغلاق المودال عند النقر خارج المحتوى
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) modal.remove();
             });
@@ -524,19 +690,19 @@
         }
         
         function showToast(message, type = 'success') {
-            const toastContainer = document.getElementById('toastContainer');
+            let toastContainer = document.getElementById('toastContainer');
             if (!toastContainer) {
                 const container = document.createElement('div');
                 container.id = 'toastContainer';
                 container.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;';
                 document.body.appendChild(container);
+                toastContainer = container;
             }
-            const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
             const bgColor = type === 'success' ? '#22c55e' : '#ef4444';
             toast.style.cssText = `background: ${bgColor}; color: white; padding: 12px 24px; border-radius: 9999px; margin-top: 10px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideInRight 0.3s ease; direction: rtl;`;
             toast.innerHTML = message;
-            container.appendChild(toast);
+            toastContainer.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
 
@@ -574,6 +740,7 @@
         
         function selectCurrency(currency) {
             currentCurrency = currency;
+            currentCurrencySymbol = currency === 'usd' ? 'USD' : 'IQD';
             const selectedCurrency = document.getElementById('selectedCurrency');
             if (selectedCurrency) selectedCurrency.value = currency;
             
@@ -596,14 +763,137 @@
                 if (usdInput) usdInput.required = true;
                 const iqdInput = document.querySelector('[name="price_iqd"]');
                 if (iqdInput) iqdInput.required = false;
+                currentPrice = parseFloat(document.getElementById('price_usd').value) || 0;
             } else {
                 if (iqdGroup) iqdGroup.classList.add('active');
                 const usdInput = document.querySelector('[name="price_usd"]');
                 if (usdInput) usdInput.required = false;
                 const iqdInput = document.querySelector('[name="price_iqd"]');
                 if (iqdInput) iqdInput.required = true;
+                currentPrice = parseFloat(document.getElementById('price_iqd').value) || 0;
+            }
+            updateDiscountPreview();
+        }
+        
+        // ---------- إدارة الخصم ----------
+        function toggleDiscount() {
+            const body = document.getElementById('discountBody');
+            const icon = document.getElementById('discountIcon');
+            body.classList.toggle('show');
+            if (body.classList.contains('show')) {
+                icon.style.transform = 'rotate(90deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
             }
         }
+        
+        function toggleDiscountEnable() {
+            const toggle = document.getElementById('discountToggle');
+            const percentInput = document.getElementById('discountPercent');
+            const amountInput = document.getElementById('discountAmount');
+            
+            discountEnabled = toggle.checked;
+            
+            if (discountEnabled) {
+                percentInput.disabled = false;
+                amountInput.disabled = false;
+                percentInput.placeholder = "مثال: 10";
+                calculateDiscount();
+            } else {
+                percentInput.disabled = true;
+                amountInput.disabled = true;
+                percentInput.value = '';
+                amountInput.value = '';
+                percentInput.placeholder = "أدخل نسبة الخصم";
+                updateDiscountPreview();
+            }
+        }
+        
+        function calculateDiscount() {
+            if (!discountEnabled) return;
+            
+            let price = 0;
+            if (currentCurrency === 'usd') {
+                price = parseFloat(document.getElementById('price_usd').value) || 0;
+            } else {
+                price = parseFloat(document.getElementById('price_iqd').value) || 0;
+            }
+            
+            const percent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            
+            if (percent > 0 && percent <= 100 && price > 0) {
+                const discountAmount = (price * percent) / 100;
+                const finalPrice = price - discountAmount;
+                
+                document.getElementById('discountAmount').value = discountAmount.toFixed(currentCurrency === 'usd' ? 2 : 0);
+                updateDiscountPreview(price, finalPrice, percent);
+            } else if (percent > 100) {
+                document.getElementById('discountPercent').value = 100;
+                calculateDiscount();
+            } else {
+                document.getElementById('discountAmount').value = '';
+                updateDiscountPreview(price, price, 0);
+            }
+        }
+        
+        function updateDiscountPreview(originalPrice, finalPrice, percent) {
+            let price = originalPrice;
+            if (price === undefined) {
+                if (currentCurrency === 'usd') {
+                    price = parseFloat(document.getElementById('price_usd').value) || 0;
+                } else {
+                    price = parseFloat(document.getElementById('price_iqd').value) || 0;
+                }
+            }
+            
+            let final = finalPrice;
+            let discountPercent = percent;
+            
+            if (discountEnabled && discountPercent === undefined && price > 0) {
+                discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+                if (discountPercent > 0 && discountPercent <= 100) {
+                    final = price - ((price * discountPercent) / 100);
+                } else {
+                    final = price;
+                    discountPercent = 0;
+                }
+            } else if (final === undefined) {
+                final = price;
+                discountPercent = 0;
+            }
+            
+            const currencySymbol = currentCurrency === 'usd' ? '$' : 'د.ع';
+            const formattedPrice = price.toLocaleString() + ' ' + currencySymbol;
+            const formattedFinal = final.toLocaleString() + ' ' + currencySymbol;
+            
+            const originalSpan = document.getElementById('previewOriginalPrice');
+            const finalSpan = document.getElementById('previewFinalPrice');
+            const badgeSpan = document.getElementById('previewBadge');
+            
+            if (originalSpan) originalSpan.innerText = formattedPrice;
+            if (finalSpan) finalSpan.innerText = formattedFinal;
+            
+            if (discountEnabled && discountPercent > 0 && discountPercent <= 100) {
+                if (badgeSpan) {
+                    badgeSpan.style.display = 'inline-block';
+                    badgeSpan.innerText = `🔥 خصم ${discountPercent}%`;
+                }
+                if (originalSpan) originalSpan.style.display = 'inline';
+            } else {
+                if (badgeSpan) badgeSpan.style.display = 'none';
+                if (originalSpan) originalSpan.style.display = 'none';
+            }
+        }
+        
+        // الاستماع لتغيرات حقل السعر
+        document.getElementById('price_usd')?.addEventListener('input', function() {
+            currentPrice = parseFloat(this.value) || 0;
+            if (currentCurrency === 'usd') updateDiscountPreview();
+        });
+        document.getElementById('price_iqd')?.addEventListener('input', function() {
+            currentPrice = parseFloat(this.value) || 0;
+            if (currentCurrency === 'iqd') updateDiscountPreview();
+        });
         
         // ---------- إدارة الصور ----------
         const fileInput = document.getElementById('fileInput');
@@ -699,6 +989,8 @@
                 const category = document.getElementById('selectedCategory')?.value;
                 
                 let price = 0;
+                let oldPrice = 0;
+                
                 if (currentCurrency === 'usd') {
                     price = document.querySelector('[name="price_usd"]')?.value;
                     if (!price || parseFloat(price) <= 0) {
@@ -706,8 +998,7 @@
                         showToast('⚠️ الرجاء إدخال سعر صحيح بالدولار', 'error');
                         return false;
                     }
-                    const finalPrice = document.getElementById('finalPrice');
-                    if (finalPrice) finalPrice.value = price;
+                    price = parseFloat(price);
                 } else {
                     price = document.querySelector('[name="price_iqd"]')?.value;
                     if (!price || parseFloat(price) <= 0) {
@@ -715,9 +1006,23 @@
                         showToast('⚠️ الرجاء إدخال سعر صحيح بالدينار العراقي', 'error');
                         return false;
                     }
-                    const finalPrice = document.getElementById('finalPrice');
-                    if (finalPrice) finalPrice.value = price;
+                    price = parseFloat(price);
                 }
+                
+                // معالجة الخصم
+                if (discountEnabled) {
+                    const discountPercent = parseFloat(document.getElementById('discountPercent')?.value) || 0;
+                    if (discountPercent > 0 && discountPercent <= 100) {
+                        const discountAmount = (price * discountPercent) / 100;
+                        oldPrice = price;
+                        price = price - discountAmount;
+                    }
+                }
+                
+                const finalPriceInput = document.getElementById('finalPrice');
+                const oldPriceInput = document.getElementById('oldPriceHidden');
+                if (finalPriceInput) finalPriceInput.value = price;
+                if (oldPriceInput) oldPriceInput.value = oldPrice;
 
                 if (!name) {
                     e.preventDefault();
@@ -752,6 +1057,10 @@
         
         // تهيئة العملة الافتراضية
         selectCurrency('iqd');
+        
+        // تهيئة قسم الخصم
+        const discountBody = document.getElementById('discountBody');
+        if (discountBody) discountBody.classList.add('show');
     </script>
 </body>
 </html>
