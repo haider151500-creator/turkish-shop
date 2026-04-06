@@ -9,7 +9,130 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Noto Kufi Arabic', sans-serif; }
-        .product-card { transition: transform 0.3s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.3s ease; }
+        
+        /* تأثير الفراشات/النجوم المتطايرة */
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .float-element {
+            position: absolute;
+            font-size: 20px;
+            opacity: 0.6;
+            animation: floatAround 15s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes floatAround {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translate(100px, -100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* شريط العروض المتحرك */
+        .marquee-container {
+            background: linear-gradient(135deg, #ff6b6b, #f59e0b);
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 10px 0;
+            position: relative;
+            z-index: 5;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .marquee-content span {
+            margin: 0 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* تأثيرات إضافية */
+        .product-card {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* نبضات على زر السلة */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(66, 165, 245, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(66, 165, 245, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(66, 165, 245, 0); }
+        }
+        
+        #cartTopBtn {
+            animation: pulse 2s infinite;
+        }
+        
+        /* تأثير دخول المنتجات */
+        .product-card {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* تأثيرات على البطاقات عند التحميل بتأخير */
+        .product-card:nth-child(1) { animation-delay: 0.1s; }
+        .product-card:nth-child(2) { animation-delay: 0.2s; }
+        .product-card:nth-child(3) { animation-delay: 0.3s; }
+        .product-card:nth-child(4) { animation-delay: 0.4s; }
+        .product-card:nth-child(5) { animation-delay: 0.5s; }
+        .product-card:nth-child(6) { animation-delay: 0.6s; }
+        
+        /* توهج للصورة عند التحميل */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        .product-card img {
+            transition: transform 0.5s ease;
+        }
+        
+        .product-card:hover img {
+            transform: scale(1.05);
+        }
+        
+        .product-card {
+            transition: transform 0.3s cubic-bezier(0.34,1.2,0.64,1), box-shadow 0.3s ease;
+        }
         .product-card:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 25px 50px -12px rgba(25,118,210,0.15); }
         .cat-pill { transition: all 0.3s ease; cursor: pointer; border-radius: 9999px; }
         .cat-pill:hover { transform: translateY(-2px); }
@@ -258,11 +381,40 @@
         }
         .gallery-prev { left: 20px; }
         .gallery-next { right: 20px; }
+        
+        /* تأثيرات إضافية للشريط العلوي */
+        .announcement-bar {
+            background: linear-gradient(135deg, #ff6b6b, #f59e0b);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            position: relative;
+            z-index: 51;
+        }
+        
+        .announcement-bar i {
+            margin: 0 5px;
+        }
     </style>
 </head>
 <body class="h-full bg-[#f8f9fa] text-gray-800 antialiased">
   
-  <div id="app" class="w-full h-full overflow-auto relative">
+  <!-- شريط الإعلانات المتحرك -->
+  <div class="announcement-bar">
+    <i data-lucide="truck" class="w-4 h-4 inline"></i>
+    توصيل مجاني للطلبات فوق 100,000 د.ع
+    <i data-lucide="heart" class="w-4 h-4 inline mx-2"></i>
+    خصم 15% على أول طلب
+    <i data-lucide="shield-check" class="w-4 h-4 inline mx-2"></i>
+    ضمان استرجاع 30 يوم
+  </div>
+  
+  <!-- العناصر المتطايرة (فراشات/نجوم) -->
+  <div class="floating-elements" id="floatingElements"></div>
+  
+  <div id="app" class="w-full h-full overflow-auto relative" style="z-index: 1;">
     <nav class="sticky top-0 z-50 bg-[#1565c0] shadow-md border-b border-white/20">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
         <div class="flex items-center gap-2 shrink-0">
@@ -484,6 +636,62 @@
   </div>
 
   <script>
+    // إنشاء العناصر المتطايرة (فراشات/نجوم)
+    function createFloatingElements() {
+        const container = document.getElementById('floatingElements');
+        const icons = ['🦋', '⭐', '✨', '💫', '🌟', '🪶', '🍃', '🌸', '🎈', '🔮'];
+        
+        for (let i = 0; i < 30; i++) {
+            const element = document.createElement('div');
+            element.className = 'float-element';
+            const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+            element.innerHTML = randomIcon;
+            
+            // موقع عشوائي
+            const left = Math.random() * 100;
+            const top = Math.random() * 100;
+            const size = 15 + Math.random() * 25;
+            const duration = 12 + Math.random() * 15;
+            const delay = Math.random() * 10;
+            
+            element.style.left = left + '%';
+            element.style.top = top + '%';
+            element.style.fontSize = size + 'px';
+            element.style.animationDuration = duration + 's';
+            element.style.animationDelay = delay + 's';
+            
+            container.appendChild(element);
+        }
+    }
+    
+    // تحديث شريط الإعلانات كل 5 ثواني
+    let announcementIndex = 0;
+    const announcements = [
+        '🎁 توصيل مجاني للطلبات فوق 100,000 د.ع',
+        '🔥 خصم 15% على أول طلب - كود: WELCOME15',
+        '✅ ضمان استرجاع 30 يوم - ارتياحك يهمنا',
+        '📦 شحن سريع لجميع المحافظات',
+        '⭐ تقييم 4.9/5 من أكثر من 1000 عميل'
+    ];
+    
+    function rotateAnnouncement() {
+        const announcementBar = document.querySelector('.announcement-bar');
+        if (announcementBar) {
+            announcementIndex = (announcementIndex + 1) % announcements.length;
+            announcementBar.innerHTML = `<i data-lucide="truck" class="w-4 h-4 inline"></i> ${announcements[announcementIndex]} <i data-lucide="heart" class="w-4 h-4 inline mx-2"></i> <i data-lucide="shield-check" class="w-4 h-4 inline"></i>`;
+            // إعادة تهيئة أيقونات lucide
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    }
+    
+    // تشغيل العناصر المتطايرة بعد تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        createFloatingElements();
+        setInterval(rotateAnnouncement, 5000);
+    });
+    
     const productsData = {{ products | tojson | safe }};
     let cart = [];
     let currentProductId = null;
