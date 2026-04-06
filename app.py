@@ -20,7 +20,7 @@ except ImportError:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
-BOOKINGS_FILE = os.path.join(BASE_DIR, "bookings.json")  # ملف للحجوزات
+BOOKINGS_FILE = os.path.join(BASE_DIR, "bookings.json")
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 app.secret_key = os.environ.get('SECRET_KEY', 'change-this-in-production')
@@ -39,12 +39,11 @@ if SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY:
     except Exception as e:
         print(f"⚠️ فشل الاتصال بـ Supabase Storage: {e}")
 
-# ========== بيانات حساب الأدمن (مخفية) ==========
+# ========== بيانات حساب الأدمن ==========
 ADMIN_EMAIL = "admin@turkishstore.com"
 ADMIN_PASSWORD = "Turk!sh@dm!n2025#Secure"
 ADMIN_PASSWORD_HASH = generate_password_hash(ADMIN_PASSWORD)
 
-# التحقق من وجود قاعدة بيانات PostgreSQL على Render
 DATABASE_URL = os.environ.get('DATABASE_URL')
 USE_POSTGRES = bool(DATABASE_URL)
 
@@ -52,7 +51,6 @@ print(f"🔍 استخدام PostgreSQL: {USE_POSTGRES}")
 
 # ========== دوال التعامل مع الحجوزات ==========
 def load_bookings():
-    """تحميل جميع الحجوزات"""
     if os.path.exists(BOOKINGS_FILE):
         try:
             with open(BOOKINGS_FILE, 'r', encoding='utf-8') as f:
@@ -62,12 +60,10 @@ def load_bookings():
     return []
 
 def save_bookings(bookings):
-    """حفظ الحجوزات"""
     with open(BOOKINGS_FILE, 'w', encoding='utf-8') as f:
         json.dump(bookings, f, ensure_ascii=False, indent=2)
 
 def get_db():
-    """الحصول على اتصال بقاعدة البيانات"""
     try:
         if USE_POSTGRES:
             conn = psycopg2.connect(DATABASE_URL, sslmode='require')
@@ -99,7 +95,8 @@ def init_db():
                 price REAL NOT NULL,
                 old_price REAL DEFAULT 0,
                 image TEXT,
-                category TEXT DEFAULT 'عام'
+                category TEXT DEFAULT 'عام',
+                bulk_discounts TEXT DEFAULT '[]'
             )
         """)
         cursor.execute("""
@@ -142,7 +139,8 @@ def init_db():
                 price REAL NOT NULL,
                 old_price REAL DEFAULT 0,
                 image TEXT,
-                category TEXT DEFAULT 'عام'
+                category TEXT DEFAULT 'عام',
+                bulk_discounts TEXT DEFAULT '[]'
             )
         """)
         cursor.execute("""
@@ -187,6 +185,7 @@ def migrate_db():
     try:
         if USE_POSTGRES:
             cursor.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS old_price REAL DEFAULT 0")
+            cursor.execute("ALTER TABLE products ADD COLUMN IF NOT EXISTS bulk_discounts TEXT DEFAULT '[]'")
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_name TEXT")
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone TEXT")
             cursor.execute("ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_address TEXT")
@@ -196,12 +195,16 @@ def migrate_db():
             cursor.execute("PRAGMA table_info(products)")
             columns = cursor.fetchall()
             has_old_price = False
+            has_bulk_discounts = False
             for col in columns:
                 if col['name'] == 'old_price':
                     has_old_price = True
-                    break
+                if col['name'] == 'bulk_discounts':
+                    has_bulk_discounts = True
             if not has_old_price:
                 cursor.execute("ALTER TABLE products ADD COLUMN old_price REAL DEFAULT 0")
+            if not has_bulk_discounts:
+                cursor.execute("ALTER TABLE products ADD COLUMN bulk_discounts TEXT DEFAULT '[]'")
             
             cursor.execute("PRAGMA table_info(orders)")
             order_columns = cursor.fetchall()
@@ -295,18 +298,22 @@ def products():
         cursor.execute("SELECT * FROM products ORDER BY id DESC")
     items = cursor.fetchall()
     
-    # جلب جميع الصور لكل منتج (الرئيسية والإضافية)
     products_list = []
     for product in items:
         product_dict = dict(product)
-        # جلب الصور الإضافية من جدول product_images
         cursor.execute(f"SELECT filename FROM product_images WHERE product_id = {placeholder} ORDER BY id", (product['id'],))
         extra_images = cursor.fetchall()
         product_dict['extra_images'] = [img['filename'] for img in extra_images] if extra_images else []
-        # جلب الصورة الرئيسية
         product_dict['main_image'] = product_dict.get('image')
         if 'old_price' not in product_dict:
             product_dict['old_price'] = None
+        if 'bulk_discounts' not in product_dict or not product_dict['bulk_discounts']:
+            product_dict['bulk_discounts'] = []
+        else:
+            try:
+                product_dict['bulk_discounts'] = json.loads(product_dict['bulk_discounts'])
+            except:
+                product_dict['bulk_discounts'] = []
         products_list.append(product_dict)
     
     conn.close()
@@ -329,7 +336,6 @@ def product_detail(pid):
         flash("المنتج غير موجود.", "danger")
         return redirect(url_for("products"))
     
-    # تجهيز جميع الصور (الرئيسية والإضافية)
     all_images = []
     if item["image"]:
         all_images.append(item["image"])
@@ -338,24 +344,29 @@ def product_detail(pid):
             all_images.append(img['filename'])
     
     main_image = item["image"] if item["image"] else (imgs[0]["filename"] if imgs else None)
-    return render_template("product_detail.html", p=item, images=imgs, main_image=main_image, all_images=all_images)
+    
+    # معالجة خصم الكميات
+    bulk_discounts = []
+    if item.get('bulk_discounts'):
+        try:
+            bulk_discounts = json.loads(item['bulk_discounts'])
+        except:
+            bulk_discounts = []
+    
+    return render_template("product_detail.html", p=item, images=imgs, main_image=main_image, all_images=all_images, bulk_discounts=bulk_discounts)
 
-# ========== نظام الحجوزات (العميل يرسل الاسم ورقم الهاتف والعنوان فقط) ==========
+# ========== نظام الحجوزات ==========
 @app.route("/api/create-booking", methods=["POST"])
 def create_booking():
-    """إنشاء حجز جديد - يرسل العميل الاسم ورقم الهاتف والعنوان فقط"""
     try:
         data = request.json
-        
         name = data.get('name', '').strip()
         phone = data.get('phone', '').strip()
         address = data.get('address', '').strip()
         
-        # التحقق من وجود جميع الحقول
         if not name or not phone or not address:
             return jsonify({'success': False, 'message': 'جميع الحقول مطلوبة (الاسم، رقم الهاتف، العنوان)'}), 400
         
-        # إنشاء الحجز
         booking = {
             'id': int(datetime.now().timestamp()),
             'name': name,
@@ -363,10 +374,9 @@ def create_booking():
             'address': address,
             'created_at': datetime.now().isoformat(),
             'read': False,
-            'status': 'pending'  # pending, confirmed, completed, cancelled
+            'status': 'pending'
         }
         
-        # حفظ الحجز
         bookings = load_bookings()
         bookings.append(booking)
         save_bookings(bookings)
@@ -379,10 +389,8 @@ def create_booking():
 @app.route("/api/bookings", methods=["GET"])
 @admin_required
 def api_get_bookings():
-    """جلب جميع الحجوزات - للأدمن فقط"""
     try:
         bookings = load_bookings()
-        # ترتيب من الأحدث للأقدم
         bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
         return jsonify(bookings)
     except Exception as e:
@@ -391,7 +399,6 @@ def api_get_bookings():
 @app.route("/api/bookings/<int:booking_id>/update", methods=["POST"])
 @admin_required
 def update_booking_status(booking_id):
-    """تحديث حالة الحجز - للأدمن فقط"""
     try:
         data = request.json
         status = data.get('status')
@@ -411,7 +418,6 @@ def update_booking_status(booking_id):
 @app.route("/api/bookings/<int:booking_id>/mark-read", methods=["POST"])
 @admin_required
 def mark_booking_read(booking_id):
-    """تحديد الحجز كمقروء - للأدمن فقط"""
     try:
         bookings = load_bookings()
         for booking in bookings:
@@ -607,17 +613,14 @@ def api_update_order():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ========== حذف طلب ==========
 @app.route("/api/orders/delete/<int:order_id>", methods=["DELETE"])
 @admin_required
 def api_delete_order(order_id):
-    """حذف طلب من قاعدة البيانات"""
     try:
         conn = get_db()
         cursor = conn.cursor()
         placeholder = get_placeholder()
         
-        # التحقق من وجود الطلب
         cursor.execute(f"SELECT id FROM orders WHERE id = {placeholder}", (order_id,))
         order = cursor.fetchone()
         
@@ -625,7 +628,6 @@ def api_delete_order(order_id):
             conn.close()
             return jsonify({'success': False, 'error': 'الطلب غير موجود'}), 404
         
-        # حذف الطلب
         cursor.execute(f"DELETE FROM orders WHERE id = {placeholder}", (order_id,))
         conn.commit()
         conn.close()
@@ -715,7 +717,7 @@ def user_logout():
 def user_profile():
     return render_template("user_profile.html")
 
-# ========== نظام الأدمن (مخفي) ==========
+# ========== نظام الأدمن ==========
 @app.route("/admin/login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -753,7 +755,6 @@ def admin_dashboard():
     cursor.execute("SELECT COUNT(*) as count FROM orders")
     orders_count = cursor.fetchone()
     
-    # جلب عدد الحجوزات غير المقروءة
     bookings = load_bookings()
     unread_bookings = len([b for b in bookings if not b.get('read', False)])
     
@@ -768,7 +769,6 @@ def admin_dashboard():
 @app.route("/admin/bookings")
 @admin_required
 def admin_bookings():
-    """صفحة الحجوزات للأدمن"""
     bookings = load_bookings()
     bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
     return render_template("admin_bookings.html", bookings=bookings)
@@ -805,7 +805,7 @@ def admin_users():
     conn.close()
     return render_template("admin_users.html", users=users)
 
-# ========== دالة إضافة المنتج المعدلة (مع رفع الصور إلى Supabase ودعم الصور المتعددة) ==========
+# ========== دالة إضافة المنتج المعدلة (مع دعم خصم الكميات) ==========
 @app.route("/admin/add", methods=["GET", "POST"])
 @admin_required
 def admin_add():
@@ -822,6 +822,7 @@ def admin_add():
         price = request.form.get("price", "").strip()
         old_price = request.form.get("old_price", "").strip()
         category = request.form.get("category", "").strip()
+        bulk_discounts_json = request.form.get("bulk_discounts", "[]")
         image_filename = None
 
         files = request.files.getlist("images")
@@ -830,7 +831,6 @@ def admin_add():
         # رفع الصور إلى Supabase
         if files and supabase:
             try:
-                # رفع الصورة الرئيسية
                 ext = files[0].filename.split('.')[-1] if '.' in files[0].filename else 'jpg'
                 unique_name = f"{uuid.uuid4()}.{ext}"
                 file_content = files[0].read()
@@ -838,18 +838,16 @@ def admin_add():
                 image_filename = unique_name
                 print(f"✅ تم رفع الصورة الرئيسية {unique_name} إلى Supabase")
                 
-                # رفع الصور الإضافية (حتى 4 صور)
                 if len(files) > 1:
-                    for i, f in enumerate(files[1:5]):  # حد أقصى 4 صور إضافية
+                    for i, f in enumerate(files[1:5]):
                         ext2 = f.filename.split('.')[-1] if '.' in f.filename else 'jpg'
                         unique_name2 = f"{uuid.uuid4()}.{ext2}"
-                        f.seek(0)  # إعادة تعيين المؤشر لقراءة الملف مرة أخرى
+                        f.seek(0)
                         file_content2 = f.read()
                         supabase.storage.from_("products").upload(unique_name2, file_content2)
                         print(f"✅ تم رفع الصورة الإضافية {unique_name2} إلى Supabase")
             except Exception as e:
                 print(f"❌ خطأ في رفع الصورة إلى Supabase: {e}")
-                # في حالة الفشل، نستخدم التخزين المحلي كنسخة احتياطية
                 image_filename = files[0].filename
                 for f in files:
                     try:
@@ -858,7 +856,6 @@ def admin_add():
                     except Exception as e2:
                         print(f"❌ خطأ في حفظ الصورة محلياً: {e2}")
         elif files:
-            # تخزين محلي إذا لم يكن Supabase متاحاً
             image_filename = files[0].filename
             for f in files:
                 try:
@@ -884,19 +881,18 @@ def admin_add():
             
             if USE_POSTGRES:
                 cursor.execute(
-                    f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}) RETURNING id",
-                    (name, description, price_val, old_price_val, image_filename, category)
+                    f"INSERT INTO products (name, description, price, old_price, image, category, bulk_discounts) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}) RETURNING id",
+                    (name, description, price_val, old_price_val, image_filename, category, bulk_discounts_json)
                 )
                 result = cursor.fetchone()
                 pid = result['id']
             else:
                 cursor.execute(
-                    f"INSERT INTO products (name, description, price, old_price, image, category) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
-                    (name, description, price_val, old_price_val, image_filename, category)
+                    f"INSERT INTO products (name, description, price, old_price, image, category, bulk_discounts) VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})",
+                    (name, description, price_val, old_price_val, image_filename, category, bulk_discounts_json)
                 )
                 pid = cursor.lastrowid
             
-            # حفظ الصور الإضافية في جدول product_images
             if files and len(files) > 1:
                 if supabase:
                     for i, f in enumerate(files[1:5]):
@@ -925,7 +921,7 @@ def admin_add():
 
     return render_template("add_product.html", categories=categories)
 
-# ========== دالة تعديل المنتج المعدلة (مع دعم Supabase والصور المتعددة) ==========
+# ========== دالة تعديل المنتج المعدلة ==========
 @app.route("/admin/edit/<int:pid>", methods=["GET", "POST"])
 @admin_required
 def admin_edit(pid):
@@ -952,6 +948,7 @@ def admin_edit(pid):
         price = request.form.get("price", "").strip()
         old_price = request.form.get("old_price", "").strip()
         category = request.form.get("category", "").strip()
+        bulk_discounts_json = request.form.get("bulk_discounts", "[]")
         remove_image = request.form.get("remove_image", "0") == "1"
 
         if not name or not price or not category:
@@ -960,7 +957,6 @@ def admin_edit(pid):
 
         image_filename = product["image"]
         
-        # حذف الصورة القديمة من Supabase إذا تم طلب الحذف
         if remove_image and image_filename and supabase:
             try:
                 supabase.storage.from_("products").remove([image_filename])
@@ -972,10 +968,8 @@ def admin_edit(pid):
         files = request.files.getlist("images")
         files = [f for f in files if getattr(f, "filename", "")]
         
-        # رفع الصور الجديدة إلى Supabase
         if files and supabase:
             try:
-                # رفع الصورة الرئيسية الجديدة
                 ext = files[0].filename.split('.')[-1] if '.' in files[0].filename else 'jpg'
                 unique_name = f"{uuid.uuid4()}.{ext}"
                 file_content = files[0].read()
@@ -992,7 +986,6 @@ def admin_edit(pid):
                     except Exception as e2:
                         print(f"❌ خطأ في حفظ الصورة محلياً: {e2}")
         elif files:
-            # تخزين محلي إذا لم يكن Supabase متاحاً
             image_filename = files[0].filename
             for f in files:
                 f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
@@ -1008,8 +1001,8 @@ def admin_edit(pid):
         cursor2 = conn2.cursor()
         placeholder = get_placeholder()
         cursor2.execute(
-            f"UPDATE products SET name={placeholder}, description={placeholder}, price={placeholder}, old_price={placeholder}, image={placeholder}, category={placeholder} WHERE id={placeholder}",
-            (name, description, price_val, old_price_val, image_filename, category, pid)
+            f"UPDATE products SET name={placeholder}, description={placeholder}, price={placeholder}, old_price={placeholder}, image={placeholder}, category={placeholder}, bulk_discounts={placeholder} WHERE id={placeholder}",
+            (name, description, price_val, old_price_val, image_filename, category, bulk_discounts_json, pid)
         )
         
         conn2.commit()
@@ -1028,7 +1021,6 @@ def admin_delete(pid):
     cursor.execute(f"SELECT image FROM products WHERE id = {placeholder}", (pid,))
     row = cursor.fetchone()
     
-    # حذف الصورة من Supabase
     if row and row["image"] and supabase:
         try:
             supabase.storage.from_("products").remove([row["image"]])
@@ -1036,7 +1028,6 @@ def admin_delete(pid):
         except Exception as e:
             print(f"⚠️ لم نتمكن من حذف الصورة من Supabase: {e}")
     
-    # حذف الصور الإضافية
     cursor.execute(f"SELECT filename FROM product_images WHERE product_id = {placeholder}", (pid,))
     extra_images = cursor.fetchall()
     for img in extra_images:
@@ -1061,7 +1052,6 @@ def uploaded_file(filename):
 # ========== Routes لإصلاح قاعدة البيانات ==========
 @app.route("/fix-db")
 def fix_db():
-    """إصلاح قاعدة البيانات وإضافة الأعمدة المفقودة"""
     try:
         migrate_db()
         return """
@@ -1081,7 +1071,6 @@ def fix_db():
 
 @app.route("/fix-orders")
 def fix_orders():
-    """إصلاح جدول الطلبات"""
     try:
         conn = get_db()
         cursor = conn.cursor()

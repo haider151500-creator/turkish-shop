@@ -433,6 +433,113 @@
             border-bottom: 1px dashed #f59e0b;
         }
         
+        /* تنسيق قسم خصم الكمية */
+        .bulk-discount-section {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #3b82f6;
+        }
+        .bulk-discount-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+        .bulk-discount-header i {
+            font-size: 24px;
+            color: #3b82f6;
+            transition: transform 0.3s ease;
+        }
+        .bulk-discount-header h4 {
+            margin: 0;
+            font-weight: 700;
+            color: #1e40af;
+        }
+        .bulk-discount-body {
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        .bulk-discount-body.show {
+            display: block;
+        }
+        .bulk-discount-input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+        .bulk-discount-input-group .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .bulk-discount-item {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .bulk-discount-item .form-control {
+            flex: 1;
+            min-width: 100px;
+        }
+        .btn-add-bulk {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 9999px;
+            padding: 8px 20px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-add-bulk:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+        .btn-remove-bulk {
+            background: #ef4444;
+            border: none;
+            border-radius: 9999px;
+            padding: 6px 15px;
+            color: white;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        .btn-remove-bulk:hover {
+            transform: scale(1.05);
+            background: #dc2626;
+        }
+        .bulk-preview {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .bulk-preview-item {
+            display: inline-block;
+            background: #e0e7ff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 13px;
+        }
+        .bulk-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #3b82f6;
+        }
+        
         @media (max-width: 768px) {
             .add-body { padding: 25px; }
             .add-header h2 { font-size: 1.4rem; }
@@ -452,6 +559,9 @@
                 overflow-y: auto;
             }
             .discount-input-group {
+                flex-direction: column;
+            }
+            .bulk-discount-input-group {
                 flex-direction: column;
             }
         }
@@ -534,12 +644,12 @@
                         <small class="text-muted">💰 اختر العملة المناسبة للمنتج</small>
                     </div>
 
-                    <!-- قسم الخصم -->
+                    <!-- قسم الخصم العادي -->
                     <div class="discount-section">
                         <div class="discount-toggle">
                             <div class="discount-header" onclick="toggleDiscount()">
                                 <i class='bx bx-gift' id="discountIcon"></i>
-                                <h4>🏷️ إضافة خصم على المنتج</h4>
+                                <h4>🏷️ خصم على المنتج (سعر واحد)</h4>
                             </div>
                             <label class="switch">
                                 <input type="checkbox" id="discountToggle" onchange="toggleDiscountEnable()">
@@ -563,8 +673,47 @@
                                 <div class="final-price" id="previewFinalPrice">0 د.ع</div>
                                 <small class="text-muted">💰 السعر بعد الخصم</small>
                             </div>
-                            <input type="hidden" name="old_price_display" id="oldPriceDisplay" value="">
                         </div>
+                    </div>
+
+                    <!-- قسم خصم الكميات (قطعتين فما فوق) -->
+                    <div class="bulk-discount-section">
+                        <div class="bulk-switch">
+                            <div class="bulk-discount-header" onclick="toggleBulkDiscount()">
+                                <i class='bx bx-purchase-tag' id="bulkDiscountIcon"></i>
+                                <h4>📦 خصم على الكميات (قطعتين فما فوق)</h4>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="bulkDiscountToggle" onchange="toggleBulkDiscountEnable()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div id="bulkDiscountBody" class="bulk-discount-body">
+                            <div class="bulk-discount-input-group">
+                                <div class="form-group">
+                                    <label class="form-label small">عدد القطع المطلوبة</label>
+                                    <input type="number" id="bulkMinQty" class="form-control" placeholder="مثال: 2" min="2" step="1" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label small">نسبة الخصم (%)</label>
+                                    <input type="number" id="bulkPercent" class="form-control" placeholder="مثال: 15" min="0" max="100" step="1" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn-add-bulk" id="addBulkDiscountBtn" onclick="addBulkDiscount()" disabled>➕ إضافة</button>
+                                </div>
+                            </div>
+                            <div id="bulkDiscountsList" class="mt-3">
+                                <!-- سيتم إضافة مستويات الخصم هنا -->
+                            </div>
+                            <div class="bulk-preview" id="bulkPreview">
+                                <strong>📊 معاينة الخصم على الكميات:</strong>
+                                <div id="bulkPreviewContent" class="mt-2">
+                                    <span class="text-muted">لم يتم إضافة أي خصم على الكميات</span>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2">💡 مثال: إذا حددت 2 قطعة وخصم 15%، سيحصل الزبون الذي يشتري قطعتين أو أكثر على خصم 15% على كل قطعة</small>
+                        </div>
+                        <input type="hidden" name="bulk_discounts" id="bulkDiscountsHidden" value="">
                     </div>
 
                     <!-- رفع الصور -->
@@ -604,6 +753,8 @@
         let selectedCategory = null;
         let deleteConfirmations = {};
         let discountEnabled = false;
+        let bulkDiscountEnabled = false;
+        let bulkDiscounts = []; // تخزين مستويات الخصم { minQty: 2, percent: 15 }
         let currentPrice = 0;
         let currentCurrencySymbol = 'IQD';
 
@@ -773,9 +924,10 @@
                 currentPrice = parseFloat(document.getElementById('price_iqd').value) || 0;
             }
             updateDiscountPreview();
+            updateBulkPreview();
         }
         
-        // ---------- إدارة الخصم ----------
+        // ---------- إدارة الخصم العادي ----------
         function toggleDiscount() {
             const body = document.getElementById('discountBody');
             const icon = document.getElementById('discountIcon');
@@ -885,14 +1037,159 @@
             }
         }
         
+        // ---------- إدارة خصم الكميات ----------
+        function toggleBulkDiscount() {
+            const body = document.getElementById('bulkDiscountBody');
+            const icon = document.getElementById('bulkDiscountIcon');
+            body.classList.toggle('show');
+            if (body.classList.contains('show')) {
+                icon.style.transform = 'rotate(90deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        function toggleBulkDiscountEnable() {
+            const toggle = document.getElementById('bulkDiscountToggle');
+            const minQtyInput = document.getElementById('bulkMinQty');
+            const percentInput = document.getElementById('bulkPercent');
+            const addBtn = document.getElementById('addBulkDiscountBtn');
+            
+            bulkDiscountEnabled = toggle.checked;
+            
+            if (bulkDiscountEnabled) {
+                minQtyInput.disabled = false;
+                percentInput.disabled = false;
+                addBtn.disabled = false;
+            } else {
+                minQtyInput.disabled = true;
+                percentInput.disabled = true;
+                addBtn.disabled = true;
+                bulkDiscounts = [];
+                renderBulkDiscountsList();
+                updateBulkPreview();
+                document.getElementById('bulkDiscountsHidden').value = '';
+            }
+        }
+        
+        function addBulkDiscount() {
+            if (!bulkDiscountEnabled) return;
+            
+            const minQty = parseInt(document.getElementById('bulkMinQty').value);
+            const percent = parseFloat(document.getElementById('bulkPercent').value);
+            
+            if (isNaN(minQty) || minQty < 2) {
+                showToast('⚠️ الرجاء إدخال عدد قطع صحيح (2 فأكثر)', 'error');
+                return;
+            }
+            if (isNaN(percent) || percent <= 0 || percent > 100) {
+                showToast('⚠️ الرجاء إدخال نسبة خصم صحيحة (1-100)', 'error');
+                return;
+            }
+            
+            // التحقق من عدم وجود نفس العدد مسبقاً
+            const existing = bulkDiscounts.find(d => d.minQty === minQty);
+            if (existing) {
+                showToast(`⚠️ يوجد بالفعل خصم لـ ${minQty} قطعة`, 'error');
+                return;
+            }
+            
+            bulkDiscounts.push({ minQty: minQty, percent: percent });
+            // ترتيب تصاعدي حسب عدد القطع
+            bulkDiscounts.sort((a, b) => a.minQty - b.minQty);
+            
+            renderBulkDiscountsList();
+            updateBulkPreview();
+            
+            // تفريغ الحقول
+            document.getElementById('bulkMinQty').value = '';
+            document.getElementById('bulkPercent').value = '';
+            
+            showToast(`✅ تم إضافة خصم ${percent}% عند شراء ${minQty} قطعة فأكثر`, 'success');
+        }
+        
+        function removeBulkDiscount(index) {
+            bulkDiscounts.splice(index, 1);
+            renderBulkDiscountsList();
+            updateBulkPreview();
+            showToast('🗑️ تم إزالة الخصم', 'info');
+        }
+        
+        function renderBulkDiscountsList() {
+            const container = document.getElementById('bulkDiscountsList');
+            if (!container) return;
+            
+            if (bulkDiscounts.length === 0) {
+                container.innerHTML = '<div class="text-muted text-center py-2">لا توجد خصومات على الكميات</div>';
+                return;
+            }
+            
+            let html = '<div class="mt-2">';
+            bulkDiscounts.forEach((discount, idx) => {
+                html += `
+                    <div class="bulk-discount-item">
+                        <span style="flex:1;"><strong>🛒 ${discount.minQty} قطعة فأكثر</strong></span>
+                        <span style="flex:1; color:#16a34a; font-weight:bold;">🔥 خصم ${discount.percent}%</span>
+                        <button type="button" class="btn-remove-bulk" onclick="removeBulkDiscount(${idx})">✖ إزالة</button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+            
+            // تحديث الحقل المخفي
+            document.getElementById('bulkDiscountsHidden').value = JSON.stringify(bulkDiscounts);
+        }
+        
+        function updateBulkPreview() {
+            const previewContainer = document.getElementById('bulkPreviewContent');
+            if (!previewContainer) return;
+            
+            if (!bulkDiscountEnabled || bulkDiscounts.length === 0) {
+                previewContainer.innerHTML = '<span class="text-muted">لا توجد خصومات على الكميات</span>';
+                return;
+            }
+            
+            let price = 0;
+            if (currentCurrency === 'usd') {
+                price = parseFloat(document.getElementById('price_usd').value) || 0;
+            } else {
+                price = parseFloat(document.getElementById('price_iqd').value) || 0;
+            }
+            
+            const currencySymbol = currentCurrency === 'usd' ? '$' : 'د.ع';
+            let html = '';
+            
+            bulkDiscounts.forEach(discount => {
+                const discountAmount = (price * discount.percent) / 100;
+                const finalPrice = price - discountAmount;
+                html += `
+                    <div class="bulk-preview-item">
+                        📦 ${discount.minQty}+ قطعة → 
+                        <span style="text-decoration:line-through; color:#9ca3af;">${price.toLocaleString()} ${currencySymbol}</span>
+                        <span style="color:#16a34a; font-weight:bold;"> ${finalPrice.toLocaleString()} ${currencySymbol}</span>
+                        (خصم ${discount.percent}%)
+                    </div>
+                `;
+            });
+            
+            previewContainer.innerHTML = html;
+        }
+        
         // الاستماع لتغيرات حقل السعر
         document.getElementById('price_usd')?.addEventListener('input', function() {
             currentPrice = parseFloat(this.value) || 0;
-            if (currentCurrency === 'usd') updateDiscountPreview();
+            if (currentCurrency === 'usd') {
+                updateDiscountPreview();
+                updateBulkPreview();
+            }
         });
         document.getElementById('price_iqd')?.addEventListener('input', function() {
             currentPrice = parseFloat(this.value) || 0;
-            if (currentCurrency === 'iqd') updateDiscountPreview();
+            if (currentCurrency === 'iqd') {
+                updateDiscountPreview();
+                updateBulkPreview();
+            }
         });
         
         // ---------- إدارة الصور ----------
@@ -1009,7 +1306,7 @@
                     price = parseFloat(price);
                 }
                 
-                // معالجة الخصم
+                // معالجة الخصم العادي
                 if (discountEnabled) {
                     const discountPercent = parseFloat(document.getElementById('discountPercent')?.value) || 0;
                     if (discountPercent > 0 && discountPercent <= 100) {
@@ -1061,6 +1358,10 @@
         // تهيئة قسم الخصم
         const discountBody = document.getElementById('discountBody');
         if (discountBody) discountBody.classList.add('show');
+        
+        // تهيئة قسم خصم الكميات
+        const bulkDiscountBody = document.getElementById('bulkDiscountBody');
+        if (bulkDiscountBody) bulkDiscountBody.classList.add('show');
     </script>
 </body>
 </html>
