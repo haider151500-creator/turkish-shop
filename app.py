@@ -607,6 +607,34 @@ def api_update_order():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# ========== حذف طلب ==========
+@app.route("/api/orders/delete/<int:order_id>", methods=["DELETE"])
+@admin_required
+def api_delete_order(order_id):
+    """حذف طلب من قاعدة البيانات"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        placeholder = get_placeholder()
+        
+        # التحقق من وجود الطلب
+        cursor.execute(f"SELECT id FROM orders WHERE id = {placeholder}", (order_id,))
+        order = cursor.fetchone()
+        
+        if not order:
+            conn.close()
+            return jsonify({'success': False, 'error': 'الطلب غير موجود'}), 404
+        
+        # حذف الطلب
+        cursor.execute(f"DELETE FROM orders WHERE id = {placeholder}", (order_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': f'تم حذف الطلب رقم {order_id} بنجاح'})
+    except Exception as e:
+        print(f"❌ خطأ في حذف الطلب: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # ========== نظام تسجيل الدخول للعملاء ==========
 @app.route("/user/login", methods=["GET", "POST"])
 def user_login():
@@ -1023,7 +1051,7 @@ def admin_delete(pid):
     conn.commit()
     conn.close()
 
-    flash("تم حذف المنتج.", "info")
+    flash("✅ تم حذف المنتج بنجاح.", "success")
     return redirect(url_for("admin_dashboard"))
 
 @app.route("/uploads/<path:filename>")
