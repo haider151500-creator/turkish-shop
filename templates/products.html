@@ -10,49 +10,12 @@
     <style>
         * { font-family: 'Noto Kufi Arabic', sans-serif; }
         
-        /* تأثير الفراشات/النجوم المتطايرة */
-        .floating-elements {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
-        
-        .float-element {
-            position: absolute;
-            font-size: 20px;
-            opacity: 0.6;
-            animation: floatAround 15s linear infinite;
-            pointer-events: none;
-        }
-        
-        @keyframes floatAround {
-            0% {
-                transform: translate(0, 0) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.6;
-            }
-            90% {
-                opacity: 0.6;
-            }
-            100% {
-                transform: translate(100px, -100px) rotate(360deg);
-                opacity: 0;
-            }
-        }
-        
-        /* شريط العروض المتحرك */
+        /* شريط العبارة المتحرك */
         .marquee-container {
-            background: linear-gradient(135deg, #ff6b6b, #f59e0b);
+            background: linear-gradient(135deg, #1976d2, #1565c0);
             overflow: hidden;
             white-space: nowrap;
-            padding: 10px 0;
+            padding: 12px 0;
             position: relative;
             z-index: 5;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -60,16 +23,17 @@
         
         .marquee-content {
             display: inline-block;
-            animation: marquee 20s linear infinite;
+            animation: marquee 15s linear infinite;
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            color: white;
         }
         
         .marquee-content span {
-            margin: 0 30px;
+            margin: 0 40px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
         
         @keyframes marquee {
@@ -115,12 +79,6 @@
         .product-card:nth-child(4) { animation-delay: 0.4s; }
         .product-card:nth-child(5) { animation-delay: 0.5s; }
         .product-card:nth-child(6) { animation-delay: 0.6s; }
-        
-        /* توهج للصورة عند التحميل */
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
         
         .product-card img {
             transition: transform 0.5s ease;
@@ -382,37 +340,35 @@
         .gallery-prev { left: 20px; }
         .gallery-next { right: 20px; }
         
-        /* تأثيرات إضافية للشريط العلوي */
-        .announcement-bar {
-            background: linear-gradient(135deg, #ff6b6b, #f59e0b);
+        /* علامة الخصم */
+        .discount-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
-            text-align: center;
-            padding: 8px;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            position: relative;
-            z-index: 51;
-        }
-        
-        .announcement-bar i {
-            margin: 0 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            z-index: 15;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body class="h-full bg-[#f8f9fa] text-gray-800 antialiased">
   
-  <!-- شريط الإعلانات المتحرك -->
-  <div class="announcement-bar">
-    <i data-lucide="truck" class="w-4 h-4 inline"></i>
-    توصيل مجاني للطلبات فوق 100,000 د.ع
-    <i data-lucide="heart" class="w-4 h-4 inline mx-2"></i>
-    خصم 15% على أول طلب
-    <i data-lucide="shield-check" class="w-4 h-4 inline mx-2"></i>
-    ضمان استرجاع 30 يوم
+  <!-- شريط العبارة المتحرك -->
+  <div class="marquee-container">
+    <div class="marquee-content">
+      <span>✨ أفضل المنتجات والبضائع العالمية ✨</span>
+      <span>⭐ جودة موثوقة - أسعار تنافسية - شحن سريع ⭐</span>
+      <span>🌍 مركز الثقة للمنتجات والبضائع العالمية 🌍</span>
+      <span>✨ أفضل المنتجات والبضائع العالمية ✨</span>
+      <span>⭐ جودة موثوقة - أسعار تنافسية - شحن سريع ⭐</span>
+      <span>🌍 مركز الثقة للمنتجات والبضائع العالمية 🌍</span>
+    </div>
   </div>
-  
-  <!-- العناصر المتطايرة (فراشات/نجوم) -->
-  <div class="floating-elements" id="floatingElements"></div>
   
   <div id="app" class="w-full h-full overflow-auto relative" style="z-index: 1;">
     <nav class="sticky top-0 z-50 bg-[#1565c0] shadow-md border-b border-white/20">
@@ -636,62 +592,6 @@
   </div>
 
   <script>
-    // إنشاء العناصر المتطايرة (فراشات/نجوم)
-    function createFloatingElements() {
-        const container = document.getElementById('floatingElements');
-        const icons = ['🦋', '⭐', '✨', '💫', '🌟', '🪶', '🍃', '🌸', '🎈', '🔮'];
-        
-        for (let i = 0; i < 30; i++) {
-            const element = document.createElement('div');
-            element.className = 'float-element';
-            const randomIcon = icons[Math.floor(Math.random() * icons.length)];
-            element.innerHTML = randomIcon;
-            
-            // موقع عشوائي
-            const left = Math.random() * 100;
-            const top = Math.random() * 100;
-            const size = 15 + Math.random() * 25;
-            const duration = 12 + Math.random() * 15;
-            const delay = Math.random() * 10;
-            
-            element.style.left = left + '%';
-            element.style.top = top + '%';
-            element.style.fontSize = size + 'px';
-            element.style.animationDuration = duration + 's';
-            element.style.animationDelay = delay + 's';
-            
-            container.appendChild(element);
-        }
-    }
-    
-    // تحديث شريط الإعلانات كل 5 ثواني
-    let announcementIndex = 0;
-    const announcements = [
-        '🎁 توصيل مجاني للطلبات فوق 100,000 د.ع',
-        '🔥 خصم 15% على أول طلب - كود: WELCOME15',
-        '✅ ضمان استرجاع 30 يوم - ارتياحك يهمنا',
-        '📦 شحن سريع لجميع المحافظات',
-        '⭐ تقييم 4.9/5 من أكثر من 1000 عميل'
-    ];
-    
-    function rotateAnnouncement() {
-        const announcementBar = document.querySelector('.announcement-bar');
-        if (announcementBar) {
-            announcementIndex = (announcementIndex + 1) % announcements.length;
-            announcementBar.innerHTML = `<i data-lucide="truck" class="w-4 h-4 inline"></i> ${announcements[announcementIndex]} <i data-lucide="heart" class="w-4 h-4 inline mx-2"></i> <i data-lucide="shield-check" class="w-4 h-4 inline"></i>`;
-            // إعادة تهيئة أيقونات lucide
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        }
-    }
-    
-    // تشغيل العناصر المتطايرة بعد تحميل الصفحة
-    document.addEventListener('DOMContentLoaded', function() {
-        createFloatingElements();
-        setInterval(rotateAnnouncement, 5000);
-    });
-    
     const productsData = {{ products | tojson | safe }};
     let cart = [];
     let currentProductId = null;
@@ -724,7 +624,7 @@
       emptyDiv.classList.add("hidden");
       grid.innerHTML = productList.map((p, idx) => {
         const discount = p.old_price ? Math.round(((p.old_price - p.price) / p.old_price) * 100) : 0;
-        const discountBadge = discount > 0 ? `<span class="absolute top-2 right-2 bg-red-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md">-${discount}%</span>` : '';
+        const discountBadge = discount > 0 ? `<span class="discount-badge">🔥 -${discount}%</span>` : '';
         const formattedPrice = p.price.toLocaleString();
         const imageUrl = p.image ? `https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/${p.image}` : null;
         return `
@@ -793,7 +693,6 @@
       }
     }
 
-    // دالة مشاركة المنتج - تم تعديلها لإرسال الرابط فقط بدون السعر
     function shareProduct(id, name, price) {
       const productUrl = window.location.origin + '/product/' + id;
       if (navigator.share) {
@@ -973,7 +872,6 @@
         <img src="${img}" class="image-gallery-thumb ${idx === 0 ? 'active' : ''}" onclick="changeMainImage(${idx})" onerror="this.src='https://placehold.co/400x400/1976d2/white?text=خطأ'">
       `).join("");
       
-      // إضافة حدث النقر على الصورة الرئيسية لفتح المعرض الكامل
       mainImg.onclick = function() {
         const currentSrc = mainImg.src;
         const index = currentProductImages.findIndex(img => img === currentSrc);
