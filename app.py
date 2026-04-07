@@ -355,7 +355,7 @@ def product_detail(pid):
     
     return render_template("product_detail.html", p=item, images=imgs, main_image=main_image, all_images=all_images, bulk_discounts=bulk_discounts)
 
-# ========== نظام الحجوزات ==========
+# ========== نظام الحجوزات (معدل لاستقبال بيانات المنتج) ==========
 @app.route("/api/create-booking", methods=["POST"])
 def create_booking():
     try:
@@ -363,6 +363,12 @@ def create_booking():
         name = data.get('name', '').strip()
         phone = data.get('phone', '').strip()
         address = data.get('address', '').strip()
+        product_name = data.get('product_name', '').strip()
+        product_price = data.get('product_price', 0)
+        quantity = data.get('quantity', 1)
+        total = data.get('total', 0)
+        notes = data.get('notes', '').strip()
+        product_id = data.get('product_id', 0)
         
         if not name or not phone or not address:
             return jsonify({'success': False, 'message': 'جميع الحقول مطلوبة (الاسم، رقم الهاتف، العنوان)'}), 400
@@ -372,6 +378,12 @@ def create_booking():
             'name': name,
             'phone': phone,
             'address': address,
+            'product_name': product_name,
+            'product_price': product_price,
+            'quantity': quantity,
+            'total': total,
+            'notes': notes,
+            'product_id': product_id,
             'created_at': datetime.now().isoformat(),
             'read': False,
             'status': 'pending'
