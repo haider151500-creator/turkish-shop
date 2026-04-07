@@ -35,7 +35,7 @@
 .description-expanded::-webkit-scrollbar-thumb{background:#1976d2;border-radius:10px;}
 
 /* Buttons styling - unified rounded corners */
-.btn-primary, .btn-outline-secondary, .btn-whatsapp, .btn-sm{
+.btn-primary, .btn-outline-secondary, .btn-whatsapp, .btn-booking, .btn-sm{
     border-radius: 9999px !important;
     transition: all 0.3s ease !important;
 }
@@ -70,6 +70,17 @@
     background: linear-gradient(135deg, #30d96e, #15a085) !important;
     box-shadow: 0 4px 12px rgba(37,211,102,0.4);
 }
+.btn-booking{
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+}
+.btn-booking:hover{
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+}
 
 /* Main image styling */
 .main-img-container{
@@ -82,6 +93,25 @@
 .main-img{
     cursor: pointer;
     transition: all 0.3s ease;
+}
+
+/* خصم الكميات */
+.bulk-discount-info {
+    background: #fef3c7;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin: 15px 0;
+    text-align: center;
+}
+.bulk-discount-tag {
+    background: #f59e0b;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    display: inline-block;
+    margin: 3px;
 }
 
 /* Responsive adjustments */
@@ -141,12 +171,22 @@
         {% endif %}
         
         <div class="mb-4">
-          <span class="h1 fw-bold text-primary">{{ '%.0f'|format(p.price) }} د.ع</span>
+          <span class="h1 fw-bold text-primary" id="productPriceDisplay">{{ '%.0f'|format(p.price) }} د.ع</span>
           {% if p.old_price and p.old_price > p.price %}
           <span class="text-muted text-decoration-line-through ms-2">{{ '%.0f'|format(p.old_price) }} د.ع</span>
           <span class="badge bg-danger ms-2 rounded-pill">-{{ ((p.old_price - p.price) / p.old_price * 100)|round|int }}%</span>
           {% endif %}
         </div>
+        
+        <!-- عرض خصم الكميات -->
+        {% if bulk_discounts and bulk_discounts|length > 0 %}
+        <div class="bulk-discount-info">
+          <span class="fw-bold text-warning">📦 خصم على الكميات:</span><br>
+          {% for discount in bulk_discounts %}
+          <span class="bulk-discount-tag">🛒 {{ discount.minQty }}+ قطعة خصم {{ discount.percent }}%</span>
+          {% endfor %}
+        </div>
+        {% endif %}
         
         {% if p.description %}
         <div class="mb-4">
@@ -158,12 +198,34 @@
         </div>
         {% endif %}
 
+        <!-- اختيار الكمية -->
+        <div class="mb-4">
+          <label class="fw-bold mb-2">الكمية:</label>
+          <div class="d-flex align-items-center gap-3">
+            <div class="quantity-selector d-flex align-items-center border rounded-pill overflow-hidden">
+              <button type="button" class="btn btn-light border-0 px-3 py-1" onclick="changeQuantity(-1)">-</button>
+              <input type="number" id="productQuantity" value="1" min="1" class="form-control text-center border-0" style="width: 70px;">
+              <button type="button" class="btn btn-light border-0 px-3 py-1" onclick="changeQuantity(1)">+</button>
+            </div>
+            <span class="text-muted">الحد الأدنى: 1</span>
+          </div>
+        </div>
+
+        <!-- السعر بعد الخصم -->
+        <div class="mb-4 p-3 bg-light rounded-4 text-center" id="priceAfterDiscountBox" style="display: none;">
+          <span class="text-muted">السعر بعد الخصم:</span>
+          <span class="h4 fw-bold text-success me-2" id="priceAfterDiscount">0 د.ع</span>
+        </div>
+
         <div class="mt-4 d-flex gap-3 flex-wrap">
-          <button onclick="addToCart({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }})" class="btn btn-primary px-4 py-2">
+          <button onclick="addToCartWithQuantity()" class="btn btn-primary px-4 py-2">
             <i class='bx bx-cart-add'></i> أضف إلى السلة
           </button>
+          <button onclick="openDirectBooking()" class="btn-booking px-4 py-2 rounded-pill">
+            <i class='bx bx-calendar-check'></i> حجز مباشر
+          </button>
           <button onclick="sendWhatsAppProduct('{{ p.name|replace("'", "\\'") }}', {{ p.price }})" class="btn-whatsapp px-4 py-2 rounded-pill">
-            <i class='bx bxl-whatsapp'></i> تواصل عبر واتساب
+            <i class='bx bxl-whatsapp'></i> واتساب
           </button>
           <button onclick="shareProduct({{ p.id }}, '{{ p.name|replace("'", "\\'") }}', {{ p.price }})" class="btn btn-outline-secondary px-4 py-2">
             <i class='bx bx-share-alt'></i> مشاركة
@@ -198,6 +260,50 @@
   {% endif %}
 </div>
 
+<!-- نافذة الحجز المباشر -->
+<div id="directBookingModal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-top-4">
+        <h5 class="modal-title"><i class='bx bx-calendar-check'></i> حجز مباشر</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="text-center mb-3">
+          <h5 id="bookingProductName" class="fw-bold">{{ p.name }}</h5>
+          <p id="bookingProductPrice" class="text-primary fw-bold">{{ '%.0f'|format(p.price) }} د.ع</p>
+        </div>
+        <form id="directBookingForm">
+          <div class="mb-3">
+            <label class="form-label fw-bold">الاسم الكامل *</label>
+            <input type="text" id="bookingName" class="form-control rounded-pill" required placeholder="أدخل اسمك الكامل">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">رقم الهاتف *</label>
+            <input type="tel" id="bookingPhone" class="form-control rounded-pill" required placeholder="أدخل رقم هاتفك">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">العنوان *</label>
+            <textarea id="bookingAddress" class="form-control rounded-3" rows="2" required placeholder="أدخل عنوانك بالكامل"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">الكمية المطلوبة *</label>
+            <input type="number" id="bookingQuantity" min="1" value="1" class="form-control rounded-pill">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">ملاحظات إضافية</label>
+            <textarea id="bookingNotes" class="form-control rounded-3" rows="2" placeholder="أي ملاحظات إضافية..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn-booking rounded-pill px-4 py-2" onclick="submitDirectBooking()">إرسال طلب الحجز</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Lightbox Overlay -->
 <div id="lightbox" class="lb" aria-hidden="true">
   <div class="lb-backdrop" data-action="close" style="position:absolute;inset:0;"></div>
@@ -212,23 +318,75 @@
 <script>
 // رقم واتساب المطلوب
 const WHATSAPP_MESSAGE_LINK = "https://wa.me/message/TVK3PQT626DMO1";
+let currentProductPrice = {{ p.price }};
+let currentBulkDiscounts = {{ bulk_discounts | tojson | safe }};
+let currentProductId = {{ p.id }};
+let currentProductName = "{{ p.name|replace('"', '\\"')|safe }}";
+
+// دالة حساب السعر بعد خصم الكميات
+function calculateBulkDiscount(price, quantity, bulkDiscounts) {
+    if (!bulkDiscounts || bulkDiscounts.length === 0 || quantity < 2) {
+        return price;
+    }
+    const sorted = [...bulkDiscounts].sort((a, b) => b.minQty - a.minQty);
+    for (let discount of sorted) {
+        if (quantity >= discount.minQty) {
+            return price * (1 - discount.percent / 100);
+        }
+    }
+    return price;
+}
+
+// تغيير الكمية
+function changeQuantity(delta) {
+    const input = document.getElementById('productQuantity');
+    let newVal = parseInt(input.value) + delta;
+    if (newVal < 1) newVal = 1;
+    input.value = newVal;
+    updatePriceDisplay();
+}
+
+// تحديث عرض السعر
+function updatePriceDisplay() {
+    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
+    const finalPrice = calculateBulkDiscount(currentProductPrice, quantity, currentBulkDiscounts);
+    const priceAfterDiscountBox = document.getElementById('priceAfterDiscountBox');
+    const priceAfterDiscountSpan = document.getElementById('priceAfterDiscount');
+    
+    if (finalPrice !== currentProductPrice) {
+        priceAfterDiscountBox.style.display = 'block';
+        priceAfterDiscountSpan.innerText = finalPrice.toLocaleString() + ' د.ع';
+    } else {
+        priceAfterDiscountBox.style.display = 'none';
+    }
+}
+
+// إضافة إلى السلة مع الكمية والخصم
+function addToCartWithQuantity() {
+    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
+    let finalPrice = calculateBulkDiscount(currentProductPrice, quantity, currentBulkDiscounts);
+    addToCart(currentProductId, currentProductName, finalPrice, quantity);
+}
 
 // دالة واتساب للمنتج
 function sendWhatsAppProduct(productName, productPrice) {
-    const message = `مرحباً، أرغب في الاستفسار عن المنتج التالي:\n\n✨ اسم المنتج: ${productName}\n💰 السعر: ${productPrice.toLocaleString()} د.ع\n\nأرجو تزويدي بالمزيد من التفاصيل.`;
+    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
+    let finalPrice = calculateBulkDiscount(productPrice, quantity, currentBulkDiscounts);
+    const totalPrice = finalPrice * quantity;
+    const message = `مرحباً، أرغب في الاستفسار عن المنتج التالي:\n\n✨ اسم المنتج: ${productName}\n💰 السعر الأصلي: ${productPrice.toLocaleString()} د.ع\n📦 الكمية: ${quantity}\n💎 السعر بعد الخصم: ${finalPrice.toLocaleString()} د.ع للقطعة\n💰 الإجمالي: ${totalPrice.toLocaleString()} د.ع\n\nأرجو تزويدي بالمزيد من التفاصيل.`;
     const encodedMessage = encodeURIComponent(message);
     window.open(`${WHATSAPP_MESSAGE_LINK}?text=${encodedMessage}`, '_blank');
 }
 
 // دالة إضافة إلى السلة
-function addToCart(id, name, price) {
+function addToCart(id, name, price, quantity = 1) {
     fetch('/api/add-to-cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: id, product_name: name, product_price: price, quantity: 1 })
+        body: JSON.stringify({ product_id: id, product_name: name, product_price: price, quantity: quantity })
     }).then(response => response.json()).then(data => {
         if(data.success){
-            showToast(`✨ تم إضافة "${name}" إلى السلة`, "success");
+            showToast(`✨ تم إضافة ${quantity} × "${name}" إلى السلة`, "success");
             setTimeout(() => { window.location.href = '/products'; }, 1200);
         }
     }).catch(error => {
@@ -263,6 +421,76 @@ function copyToClipboard(text) {
     });
 }
 
+// ========== دوال الحجز المباشر ==========
+function openDirectBooking() {
+    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
+    let finalPrice = calculateBulkDiscount(currentProductPrice, quantity, currentBulkDiscounts);
+    const totalPrice = finalPrice * quantity;
+    
+    document.getElementById('bookingProductName').innerText = currentProductName;
+    let priceText = `${finalPrice.toLocaleString()} د.ع للقطعة (الإجمالي: ${totalPrice.toLocaleString()} د.ع)`;
+    if (currentBulkDiscounts && currentBulkDiscounts.length > 0 && quantity >= 2) {
+        priceText += ` (بعد خصم الكميات)`;
+    }
+    document.getElementById('bookingProductPrice').innerHTML = priceText;
+    document.getElementById('bookingQuantity').value = quantity;
+    document.getElementById('bookingName').value = '';
+    document.getElementById('bookingPhone').value = '';
+    document.getElementById('bookingAddress').value = '';
+    document.getElementById('bookingNotes').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('directBookingModal'));
+    modal.show();
+}
+
+async function submitDirectBooking() {
+    const name = document.getElementById('bookingName').value.trim();
+    const phone = document.getElementById('bookingPhone').value.trim();
+    const address = document.getElementById('bookingAddress').value.trim();
+    const quantity = parseInt(document.getElementById('bookingQuantity').value) || 1;
+    const notes = document.getElementById('bookingNotes').value.trim();
+    
+    if (!name || !phone || !address) {
+        showToast("⚠️ يرجى تعبئة جميع الحقول المطلوبة", "warning");
+        return;
+    }
+    
+    let finalPrice = calculateBulkDiscount(currentProductPrice, quantity, currentBulkDiscounts);
+    const totalPrice = finalPrice * quantity;
+    
+    const bookingData = {
+        name: name,
+        phone: phone,
+        address: address,
+        product_name: currentProductName,
+        product_price: finalPrice,
+        quantity: quantity,
+        total: totalPrice,
+        notes: notes,
+        product_id: currentProductId
+    };
+    
+    try {
+        const response = await fetch('/api/create-booking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingData)
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(`✅ تم إرسال طلب حجز "${currentProductName}" بنجاح!`, "success");
+            const modal = bootstrap.Modal.getInstance(document.getElementById('directBookingModal'));
+            modal.hide();
+        } else {
+            showToast(`❌ ${data.message || 'حدث خطأ'}`, "error");
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast("❌ حدث خطأ في الاتصال", "error");
+    }
+}
+
 // دالة عرض الإشعارات
 function showToast(msg, type = "info") {
     let toastContainer = document.getElementById('toastContainer');
@@ -288,7 +516,7 @@ const style = document.createElement('style');
 style.textContent = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
 document.head.appendChild(style);
 
-// Lightbox functionality - تم تحسينها لتعمل بشكل صحيح عند النقر على الصورة
+// Lightbox functionality
 (function(){
   const lb = document.getElementById('lightbox');
   const imgEl = lb.querySelector('.lb-img');
@@ -300,7 +528,6 @@ document.head.appendChild(style);
   let galleryImages = [];
   let currentIndex = -1;
 
-  // بناء قائمة الصور
   function buildGallery(){
     galleryImages = [];
     if(mainImg && mainImg.src) galleryImages.push(mainImg.src);
@@ -310,7 +537,6 @@ document.head.appendChild(style);
     });
   }
 
-  // فتح الصورة في الـ Lightbox
   function openLightbox(index){
     if(index < 0 || index >= galleryImages.length) return;
     currentIndex = index;
@@ -320,7 +546,6 @@ document.head.appendChild(style);
     document.body.style.overflow = 'hidden';
   }
 
-  // إغلاق الـ Lightbox
   function closeLightbox(){
     lb.classList.remove('show');
     lb.setAttribute('aria-hidden', 'true');
@@ -328,21 +553,18 @@ document.head.appendChild(style);
     document.body.style.overflow = '';
   }
 
-  // الصورة السابقة
   function prevImage(){
     if(galleryImages.length < 2) return;
     currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
     imgEl.src = galleryImages[currentIndex];
   }
 
-  // الصورة التالية
   function nextImage(){
     if(galleryImages.length < 2) return;
     currentIndex = (currentIndex + 1) % galleryImages.length;
     imgEl.src = galleryImages[currentIndex];
   }
 
-  // ربط الأحداث
   btnClose.addEventListener('click', closeLightbox);
   lb.addEventListener('click', (e) => { 
     if(e.target === lb || e.target.classList.contains('lb-backdrop')) closeLightbox(); 
@@ -350,7 +572,6 @@ document.head.appendChild(style);
   btnPrev.addEventListener('click', prevImage);
   btnNext.addEventListener('click', nextImage);
 
-  // النقر على الصورة الرئيسية
   if(mainImg){ 
     mainImg.addEventListener('click', (e) => { 
       e.preventDefault(); 
@@ -360,7 +581,6 @@ document.head.appendChild(style);
     }); 
   }
   
-  // النقر على الصور المصغرة
   thumbButtons.forEach((btn, idx) => {
     btn.addEventListener('click', (e) => { 
       e.preventDefault(); 
@@ -372,7 +592,6 @@ document.head.appendChild(style);
     });
   });
 
-  // التنقل باستخدام键盘
   document.addEventListener('keydown', (e) => {
     if(!lb.classList.contains('show')) return;
     if(e.key === 'Escape') closeLightbox();
@@ -412,5 +631,16 @@ document.head.appendChild(style);
         }
     }
 })();
+
+// تهيئة عرض السعر عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    updatePriceDisplay();
+    
+    // إضافة مستمع لتغير الكمية
+    const quantityInput = document.getElementById('productQuantity');
+    if (quantityInput) {
+        quantityInput.addEventListener('change', updatePriceDisplay);
+    }
+});
 </script>
 {% endblock %}

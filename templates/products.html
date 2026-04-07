@@ -99,12 +99,9 @@
         .toast-slide { animation: slideIn 0.4s cubic-bezier(0.34,1.2,0.64,1), slideOut 0.4s ease 2.7s forwards; }
         @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes slideOut { to { transform: translateX(120%); opacity: 0; } }
-        .btn-primary, .btn-secondary, .btn-whatsapp, .btn-booking, .btn-cart-add {
+        .btn-primary, .btn-secondary, .btn-whatsapp, .btn-booking {
             border-radius: 9999px;
             transition: all 0.3s ease;
-            font-weight: 500;
-            font-size: 12px;
-            padding: 6px 12px;
         }
         .btn-primary {
             background: linear-gradient(135deg, #1976d2, #1565c0);
@@ -145,16 +142,6 @@
             transform: scale(1.05);
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             box-shadow: 0 4px 12px rgba(245,158,11,0.4);
-        }
-        .btn-cart-add {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
-            color: white;
-            box-shadow: 0 2px 8px rgba(25,118,210,0.3);
-        }
-        .btn-cart-add:hover {
-            transform: scale(1.05);
-            background: linear-gradient(135deg, #1e88e5, #1976d2);
-            box-shadow: 0 4px 12px rgba(25,118,210,0.4);
         }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -279,63 +266,43 @@
             transform: scale(1.1);
         }
         
-        .booking-btn {
+        .booking-icon-btn {
             background: linear-gradient(135deg, #f59e0b, #d97706);
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            padding: 6px 10px;
+            width: 36px;
+            height: 36px;
             border-radius: 9999px;
-            color: white;
-            font-size: 12px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
         }
-        .booking-btn:hover {
-            transform: scale(1.05);
+        .booking-icon-btn:hover {
+            transform: scale(1.1);
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
         }
         
-        .whatsapp-product-btn {
+        .whatsapp-icon-btn {
             background: linear-gradient(135deg, #25D366, #128C7E);
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            padding: 6px 10px;
+            width: 36px;
+            height: 36px;
             border-radius: 9999px;
-            color: white;
-            font-size: 12px;
             display: flex;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
         }
-        .whatsapp-product-btn:hover {
-            transform: scale(1.05);
+        .whatsapp-icon-btn:hover {
+            transform: scale(1.1);
             background: linear-gradient(135deg, #30d96e, #15a085);
         }
         
-        .add-to-cart-btn {
-            background: linear-gradient(135deg, #1976d2, #1565c0);
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            padding: 6px 12px;
-            border-radius: 9999px;
-            color: white;
-            font-size: 12px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .add-to-cart-btn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(135deg, #1e88e5, #1976d2);
-        }
+        /* تم إزالة زر إضافة للسلة من الواجهة الرئيسية - يبقى فقط داخل النافذة المنبثقة */
         
         .product-modal-overlay {
             background: rgba(0,0,0,0.6);
@@ -454,6 +421,7 @@
             display: flex;
             gap: 6px;
             align-items: center;
+            justify-content: flex-end;
         }
     </style>
 </head>
@@ -822,18 +790,13 @@
                   <span class="price-usd">≈ ${(p.price / 1300).toFixed(0)} $</span>
                 </div>
                 <div class="product-actions">
-                  <button onclick="event.stopPropagation(); openDirectBooking(${p.id})" class="booking-btn" title="حجز مباشر">
-                    <i data-lucide="calendar-check" class="w-4 h-4"></i>
-                    <span>حجز</span>
+                  <button onclick="event.stopPropagation(); openDirectBooking(${p.id})" class="booking-icon-btn" title="حجز مباشر">
+                    <i data-lucide="calendar-check" class="w-4 h-4 text-white"></i>
                   </button>
-                  <button onclick="event.stopPropagation(); sendWhatsAppProduct('${p.name.replace(/'/g, "\\'")}', ${p.price})" class="whatsapp-product-btn" title="تواصل عبر واتساب">
-                    <i data-lucide="message-circle" class="w-4 h-4"></i>
-                    <span>واتساب</span>
+                  <button onclick="event.stopPropagation(); sendWhatsAppProduct('${p.name.replace(/'/g, "\\'")}', ${p.price})" class="whatsapp-icon-btn" title="تواصل عبر واتساب">
+                    <i data-lucide="message-circle" class="w-4 h-4 text-white"></i>
                   </button>
-                  <button onclick="event.stopPropagation(); addToCartSimple(${p.id}, '${p.name.replace(/'/g, "\\'")}', ${p.price})" class="add-to-cart-btn" title="أضف إلى السلة">
-                    <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-                    <span>إضافة للسلة</span>
-                  </button>
+                  <!-- تم إزالة زر إضافة للسلة من الواجهة الرئيسية -->
                 </div>
               </div>
               ${bulkDiscountsHtml}
@@ -947,38 +910,7 @@
       }
     }
 
-    function addToCartSimple(id, name, price) {
-      const product = products.find(p => p.id === id);
-      const quantity = 1;
-      let finalPrice = price;
-      if (product && product.bulk_discounts && product.bulk_discounts.length > 0) {
-        finalPrice = calculateBulkDiscount(price, quantity, product.bulk_discounts);
-      }
-      addToCart(id, name, finalPrice, quantity);
-    }
-
-    function changeModalQty(delta) {
-      const input = document.getElementById('modalQuantity');
-      if (!input) return;
-      let newVal = parseInt(input.value) + delta;
-      if (newVal < 1) newVal = 1;
-      input.value = newVal;
-      updateModalPrice();
-    }
-
-    function updateModalPrice() {
-      if (!currentProductData) return;
-      const quantity = parseInt(document.getElementById('modalQuantity').value) || 1;
-      let finalPrice = currentProductData.price;
-      if (currentProductData.bulk_discounts && currentProductData.bulk_discounts.length > 0) {
-        finalPrice = calculateBulkDiscount(currentProductData.price, quantity, currentProductData.bulk_discounts);
-      }
-      const priceSpan = document.getElementById('productPrice');
-      if (priceSpan) {
-        priceSpan.innerText = finalPrice.toLocaleString() + " د.ع";
-      }
-    }
-
+    // تم إزالة دالة addToCartSimple من الواجهة الرئيسية - تبقى فقط داخل النافذة المنبثقة
     function addToCartFromModalWithQty() {
       if (currentProductData) {
         const qtyInput = document.getElementById('modalQuantity');
