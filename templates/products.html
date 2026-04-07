@@ -302,8 +302,6 @@
             background: linear-gradient(135deg, #30d96e, #15a085);
         }
         
-        /* تم إزالة زر إضافة للسلة من الواجهة الرئيسية - يبقى فقط داخل النافذة المنبثقة */
-        
         .product-modal-overlay {
             background: rgba(0,0,0,0.6);
             backdrop-filter: blur(3px);
@@ -796,7 +794,6 @@
                   <button onclick="event.stopPropagation(); sendWhatsAppProduct('${p.name.replace(/'/g, "\\'")}', ${p.price})" class="whatsapp-icon-btn" title="تواصل عبر واتساب">
                     <i data-lucide="message-circle" class="w-4 h-4 text-white"></i>
                   </button>
-                  <!-- تم إزالة زر إضافة للسلة من الواجهة الرئيسية -->
                 </div>
               </div>
               ${bulkDiscountsHtml}
@@ -910,7 +907,6 @@
       }
     }
 
-    // تم إزالة دالة addToCartSimple من الواجهة الرئيسية - تبقى فقط داخل النافذة المنبثقة
     function addToCartFromModalWithQty() {
       if (currentProductData) {
         const qtyInput = document.getElementById('modalQuantity');

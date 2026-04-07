@@ -198,13 +198,13 @@
         </div>
         {% endif %}
 
-        <!-- اختيار الكمية -->
+        <!-- اختيار الكمية مع أزرار + و - -->
         <div class="mb-4">
           <label class="fw-bold mb-2">الكمية:</label>
           <div class="d-flex align-items-center gap-3">
             <div class="quantity-selector d-flex align-items-center border rounded-pill overflow-hidden">
               <button type="button" class="btn btn-light border-0 px-3 py-1" onclick="changeQuantity(-1)">-</button>
-              <input type="number" id="productQuantity" value="1" min="1" class="form-control text-center border-0" style="width: 70px;">
+              <input type="number" id="productQuantity" value="1" min="1" class="form-control text-center border-0" style="width: 70px;" onchange="updatePriceDisplay()">
               <button type="button" class="btn btn-light border-0 px-3 py-1" onclick="changeQuantity(1)">+</button>
             </div>
             <span class="text-muted">الحد الأدنى: 1</span>
@@ -264,7 +264,7 @@
 <div id="directBookingModal" class="modal fade" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4">
-      <div class="modal-header bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-top-4">
+      <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 16px 16px 0 0;">
         <h5 class="modal-title"><i class='bx bx-calendar-check'></i> حجز مباشر</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
