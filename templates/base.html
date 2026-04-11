@@ -335,6 +335,66 @@
 
 <div id="toastContainer" class="toast-container-custom"></div>
 
+<!-- نافذة الحجز المباشر العامة (ستظهر عند الحاجة) -->
+<div id="globalBookingModal" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 16px 16px 0 0;">
+        <h5 class="modal-title"><i class='bx bx-calendar-check'></i> حجز مباشر</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="text-center mb-3">
+          <h5 id="globalBookingProductName" class="fw-bold"></h5>
+          <p id="globalBookingProductPrice" class="text-primary fw-bold"></p>
+        </div>
+        <form id="globalBookingForm">
+          <div class="mb-3">
+            <label class="form-label fw-bold">الاسم الكامل *</label>
+            <input type="text" id="globalBookingName" class="form-control rounded-pill" required placeholder="أدخل اسمك الكامل">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">رقم الهاتف *</label>
+            <input type="tel" id="globalBookingPhone" class="form-control rounded-pill" required placeholder="أدخل رقم هاتفك">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">العنوان *</label>
+            <textarea id="globalBookingAddress" class="form-control rounded-3" rows="2" required placeholder="أدخل عنوانك بالكامل"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">الكمية المطلوبة *</label>
+            <input type="number" id="globalBookingQuantity" min="1" value="1" class="form-control rounded-pill">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold">ملاحظات إضافية</label>
+            <textarea id="globalBookingNotes" class="form-control rounded-3" rows="2" placeholder="أي ملاحظات إضافية..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn-booking rounded-pill px-4 py-2" onclick="submitGlobalBooking()">إرسال طلب الحجز</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.btn-booking {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    border: none !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+    border-radius: 9999px !important;
+    transition: all 0.3s ease !important;
+}
+.btn-booking:hover {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+}
+</style>
+
 <nav class="navbar navbar-expand-lg fixed-top">
   <div class="container">
     <a class="navbar-brand" href="{{ url_for('index') }}">
@@ -428,6 +488,109 @@
 const WHATSAPP_MESSAGE_LINK = "https://wa.me/message/TVK3PQT626DMO1";
 const WHATSAPP_NUMBER = "9647707772142";
 
+// متغيرات عامة للحجز المباشر
+let currentBookingProduct = null;
+
+// دالة فتح نافذة الحجز المباشر
+function openDirectBookingModal(productId, productName, productPrice, quantity = 1, bulkDiscounts = []) {
+    currentBookingProduct = {
+        id: productId,
+        name: productName,
+        price: productPrice,
+        bulk_discounts: bulkDiscounts
+    };
+    
+    // حساب السعر بعد الخصم إذا كان هناك خصم على الكميات
+    let finalPrice = productPrice;
+    let priceText = `${finalPrice.toLocaleString()} د.ع`;
+    
+    document.getElementById('globalBookingProductName').innerText = productName;
+    document.getElementById('globalBookingProductPrice').innerHTML = priceText;
+    document.getElementById('globalBookingQuantity').value = quantity;
+    document.getElementById('globalBookingName').value = '';
+    document.getElementById('globalBookingPhone').value = '';
+    document.getElementById('globalBookingAddress').value = '';
+    document.getElementById('globalBookingNotes').value = '';
+    
+    const modal = new bootstrap.Modal(document.getElementById('globalBookingModal'));
+    modal.show();
+}
+
+// دالة إرسال الحجز المباشر (موحدة)
+async function submitGlobalBooking() {
+    const name = document.getElementById('globalBookingName').value.trim();
+    const phone = document.getElementById('globalBookingPhone').value.trim();
+    const address = document.getElementById('globalBookingAddress').value.trim();
+    const quantity = parseInt(document.getElementById('globalBookingQuantity').value) || 1;
+    const notes = document.getElementById('globalBookingNotes').value.trim();
+    
+    if (!name || !phone || !address) {
+        showToast("⚠️ يرجى تعبئة جميع الحقول المطلوبة", "warning");
+        return;
+    }
+    
+    if (!currentBookingProduct) {
+        showToast("❌ حدث خطأ في المنتج", "error");
+        return;
+    }
+    
+    // حساب السعر بعد الخصم إذا كان هناك خصم على الكميات
+    let finalPrice = currentBookingProduct.price;
+    if (currentBookingProduct.bulk_discounts && currentBookingProduct.bulk_discounts.length > 0) {
+        finalPrice = calculateBulkDiscountGlobal(currentBookingProduct.price, quantity, currentBookingProduct.bulk_discounts);
+    }
+    const totalPrice = finalPrice * quantity;
+    
+    // بيانات الحجز المباشر بصيغة متوافقة مع /checkout
+    const bookingData = {
+        is_direct_booking: true,
+        customer_name: name,
+        customer_phone: phone,
+        customer_address: address,
+        customer_notes: notes,
+        product_id: currentBookingProduct.id,
+        product_name: currentBookingProduct.name,
+        product_price: finalPrice,
+        quantity: quantity,
+        total_amount: totalPrice
+    };
+    
+    try {
+        const response = await fetch('/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingData)
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast(`✅ تم إرسال طلب حجز "${currentBookingProduct.name}" بنجاح!`, "success");
+            const modal = bootstrap.Modal.getInstance(document.getElementById('globalBookingModal'));
+            modal.hide();
+            currentBookingProduct = null;
+        } else {
+            showToast(`❌ ${data.error || 'حدث خطأ'}`, "error");
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast("❌ حدث خطأ في الاتصال", "error");
+    }
+}
+
+// دالة حساب السعر بعد خصم الكميات (نسخة عامة)
+function calculateBulkDiscountGlobal(price, quantity, bulkDiscounts) {
+    if (!bulkDiscounts || bulkDiscounts.length === 0 || quantity < 2) {
+        return price;
+    }
+    const sorted = [...bulkDiscounts].sort((a, b) => b.minQty - a.minQty);
+    for (let discount of sorted) {
+        if (quantity >= discount.minQty) {
+            return price * (1 - discount.percent / 100);
+        }
+    }
+    return price;
+}
+
 // دالة واتساب للمنتج
 function sendWhatsAppProduct(productName, productPrice) {
     const message = `مرحباً، أرغب في الاستفسار عن المنتج التالي:\n\nاسم المنتج: ${productName}\nالسعر: ${productPrice.toLocaleString()} د.ع\n\nأرجو تزويدي بالمزيد من التفاصيل.`;
@@ -486,6 +649,10 @@ function addToCart(productId, productName, productPrice, quantity = 1) {
                 } else {
                     cartCount.classList.add('hidden');
                 }
+            }
+            // تحديث واجهة السلة إذا كانت مفتوحة
+            if (typeof renderCartDrawerItems === 'function') {
+                renderCartDrawerItems();
             }
         }
     }).catch(error => {
@@ -559,6 +726,9 @@ function toggleCartDrawer() {
         overlay.classList.remove('hidden');
         setTimeout(() => overlay.classList.remove('opacity-0'), 10);
         drawer.style.transform = 'translateX(0)';
+        if (typeof renderCartDrawerItems === 'function') {
+            renderCartDrawerItems();
+        }
     } else {
         overlay.classList.add('opacity-0');
         drawer.style.transform = 'translateX(100%)';

@@ -141,7 +141,7 @@
         }
         
         /* بطاقات الطلبات */
-        .order-card, .booking-card {
+        .order-card {
             background: white;
             border-radius: 15px;
             overflow: hidden;
@@ -150,12 +150,12 @@
             transition: all 0.3s ease;
         }
         
-        .order-card:hover, .booking-card:hover {
+        .order-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
         
-        .order-header, .booking-header {
+        .order-header {
             background: linear-gradient(135deg, #1976d2, #42a5f5);
             color: white;
             padding: 15px 20px;
@@ -165,32 +165,24 @@
             flex-wrap: wrap;
         }
         
-        .booking-header {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
-        
-        .order-body, .booking-body {
+        .order-body {
             padding: 20px;
         }
         
-        .order-info, .booking-info {
+        .order-info {
             background: #f8f9fa;
             padding: 15px;
             border-radius: 10px;
             margin-bottom: 15px;
         }
         
-        .order-info p, .booking-info p {
+        .order-info p {
             margin-bottom: 8px;
         }
         
-        .order-info i, .booking-info i {
+        .order-info i {
             color: #1976d2;
             width: 25px;
-        }
-        
-        .booking-info i {
-            color: #f59e0b;
         }
         
         .order-products {
@@ -235,7 +227,7 @@
             text-align: left;
         }
         
-        .order-status, .booking-status {
+        .order-status {
             display: inline-block;
             padding: 5px 15px;
             border-radius: 20px;
@@ -258,11 +250,6 @@
             color: #721c24;
         }
         
-        .status-confirmed {
-            background: #cce5ff;
-            color: #004085;
-        }
-        
         .btn-sm-custom {
             padding: 5px 15px;
             border-radius: 20px;
@@ -282,20 +269,6 @@
         .btn-primary-custom:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(25,118,210,0.3);
-        }
-        
-        .btn-booking-custom {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            border: none;
-            border-radius: 10px;
-            padding: 8px 20px;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-booking-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(245,158,11,0.3);
         }
         
         .product-card .card-footer {
@@ -361,14 +334,14 @@
             }
         }
         
-        .empty-orders, .empty-bookings {
+        .empty-orders {
             text-align: center;
             padding: 60px 20px;
             background: white;
             border-radius: 15px;
         }
         
-        .empty-orders i, .empty-bookings i {
+        .empty-orders i {
             font-size: 64px;
             color: #ccc;
             margin-bottom: 20px;
@@ -401,20 +374,9 @@
             transform: translateY(-2px);
         }
         
-        .booking-product-details {
-            background: #fff8e7;
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 15px;
-            border-right: 3px solid #f59e0b;
-        }
-        
-        .booking-product-details p {
-            margin-bottom: 5px;
-        }
-        
-        .badge-unread {
-            background: #dc3545;
+        /* تنسيق خاص للطلبات القادمة من الحجز المباشر */
+        .order-badge-direct {
+            background: #f59e0b;
             color: white;
             font-size: 10px;
             padding: 2px 8px;
@@ -439,10 +401,6 @@
     <div class="nav flex-column">
         <a class="nav-link" href="#" onclick="showSection('products')">
             <i class='bx bx-package'></i> المنتجات
-        </a>
-        <a class="nav-link" href="#" onclick="showSection('bookings')">
-            <i class='bx bx-calendar-check'></i> الحجوزات
-            <span class="badge bg-danger ms-auto" id="bookingsBadge" style="display: none;">0</span>
         </a>
         <a class="nav-link" href="#" onclick="showSection('orders')">
             <i class='bx bx-shopping-bag'></i> الطلبات
@@ -510,56 +468,30 @@
         {% endif %}
     </div>
 
-    <!-- قسم الحجوزات -->
-    <div id="bookingsSection" style="display: none;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3><i class='bx bx-calendar-check'></i> إدارة الحجوزات</h3>
-            <button class="btn btn-booking-custom" onclick="loadBookings()">
-                <i class='bx bx-refresh'></i> تحديث
-            </button>
-        </div>
-        <div id="bookingsList">
-            <div class="loading"><i class="bx bx-loader-alt bx-spin"></i> جاري تحميل الحجوزات...</div>
-        </div>
-    </div>
-
     <!-- قسم الإحصائيات الرئيسية -->
     <div id="dashboardSection" style="display: none;">
         <div class="row g-3 mb-4">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="stat-card text-center">
                     <i class='bx bx-package bx-lg text-primary'></i>
                     <h3>{{ products|length }}</h3>
                     <p class="text-muted mb-0">إجمالي المنتجات</p>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card text-center">
-                    <i class='bx bx-calendar-check bx-lg text-warning'></i>
-                    <h3 id="totalBookings">0</h3>
-                    <p class="text-muted mb-0">إجمالي الحجوزات</p>
-                </div>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="stat-card text-center">
                     <i class='bx bx-shopping-bag bx-lg text-primary'></i>
                     <h3 id="totalOrders">0</h3>
                     <p class="text-muted mb-0">إجمالي الطلبات</p>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="stat-card text-center">
                     <i class='bx bx-trending-up bx-lg text-primary'></i>
                     <h3 id="totalRevenue">0</h3>
                     <p class="text-muted mb-0">إجمالي الإيرادات</p>
                 </div>
             </div>
-        </div>
-        
-        <!-- آخر الحجوزات -->
-        <div class="mt-4">
-            <h4><i class='bx bx-time'></i> آخر الحجوزات</h4>
-            <div id="recentBookings"></div>
         </div>
         
         <!-- آخر الطلبات -->
@@ -569,7 +501,7 @@
         </div>
     </div>
 
-    <!-- قسم الطلبات -->
+    <!-- قسم الطلبات (موحد للطلبات العادية والحجوزات المباشرة) -->
     <div id="ordersSection" style="display: none;">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h3><i class='bx bx-shopping-bag'></i> جميع الطلبات</h3>
@@ -590,243 +522,7 @@
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 
 <script>
-let allBookings = [];
-
-// ========== دوال الحجوزات ==========
-async function loadBookings() {
-    const bookingsList = document.getElementById('bookingsList');
-    if (bookingsList) {
-        bookingsList.innerHTML = '<div class="loading"><i class="bx bx-loader-alt bx-spin"></i> جاري تحميل الحجوزات...</div>';
-    }
-    
-    try {
-        const response = await fetch('/api/bookings');
-        const data = await response.json();
-        
-        if (Array.isArray(data)) {
-            allBookings = data;
-            displayBookings(data);
-            updateBookingStats(data);
-        } else if (data.error) {
-            throw new Error(data.error);
-        } else {
-            allBookings = [];
-            displayBookings([]);
-            updateBookingStats([]);
-        }
-    } catch (error) {
-        console.error('خطأ في جلب الحجوزات:', error);
-        if (bookingsList) {
-            bookingsList.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class='bx bx-error-circle'></i> حدث خطأ في تحميل الحجوزات
-                    <button class="btn btn-sm btn-primary mt-2" onclick="loadBookings()">إعادة المحاولة</button>
-                </div>
-            `;
-        }
-    }
-}
-
-function displayBookings(bookings) {
-    const container = document.getElementById('bookingsList');
-    if (!container) return;
-    
-    if (!bookings || bookings.length === 0) {
-        container.innerHTML = `
-            <div class="empty-bookings">
-                <i class='bx bx-calendar-check'></i>
-                <h5>لا توجد حجوزات بعد</h5>
-                <p class="text-muted">الحجوزات الجديدة ستظهر هنا</p>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '';
-    bookings.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    
-    bookings.forEach(booking => {
-        const statusClass = booking.status === 'confirmed' ? 'status-confirmed' : 
-                           booking.status === 'completed' ? 'status-completed' : 
-                           booking.status === 'cancelled' ? 'status-cancelled' : 'status-pending';
-        const statusText = booking.status === 'confirmed' ? 'مؤكد' : 
-                          booking.status === 'completed' ? 'مكتمل' : 
-                          booking.status === 'cancelled' ? 'ملغي' : 'قيد الانتظار';
-        
-        let bookingDate = '';
-        try {
-            bookingDate = booking.created_at ? new Date(booking.created_at).toLocaleString('ar-SA') : 'غير محدد';
-        } catch(e) {
-            bookingDate = 'غير محدد';
-        }
-        
-        const productName = booking.product_name || 'منتج غير محدد';
-        const productPrice = booking.product_price || 0;
-        const quantity = booking.quantity || 1;
-        const total = booking.total || (productPrice * quantity);
-        const notes = booking.notes || '';
-        
-        html += `
-            <div class="booking-card ${!booking.read ? 'border-warning' : ''}">
-                <div class="booking-header">
-                    <div>
-                        <strong><i class='bx bx-calendar-check'></i> حجز رقم: ${booking.id || '?'}</strong>
-                        <span class="booking-status ${statusClass} me-2">${statusText}</span>
-                        ${!booking.read ? '<span class="badge-unread">جديد</span>' : ''}
-                    </div>
-                    <div>
-                        <small>${bookingDate}</small>
-                    </div>
-                </div>
-                <div class="booking-body">
-                    <div class="booking-info">
-                        <p><i class='bx bx-user'></i> <strong>الاسم:</strong> ${escapeHtml(booking.name)}</p>
-                        <p><i class='bx bx-phone'></i> <strong>رقم الهاتف:</strong> ${escapeHtml(booking.phone)}</p>
-                        <p><i class='bx bx-location-plus'></i> <strong>العنوان:</strong> ${escapeHtml(booking.address)}</p>
-                    </div>
-                    
-                    <div class="booking-product-details">
-                        <p><i class='bx bx-package'></i> <strong>المنتج:</strong> ${escapeHtml(productName)}</p>
-                        <p><i class='bx bx-dollar-circle'></i> <strong>سعر القطعة:</strong> ${productPrice.toLocaleString()} د.ع</p>
-                        <p><i class='bx bx-cart'></i> <strong>الكمية:</strong> ${quantity}</p>
-                        <p><i class='bx bx-calculator'></i> <strong>الإجمالي:</strong> <span class="fw-bold text-success">${total.toLocaleString()} د.ع</span></p>
-                        ${notes ? `<p><i class='bx bx-note'></i> <strong>ملاحظات:</strong> ${escapeHtml(notes)}</p>` : ''}
-                    </div>
-                    
-                    <div class="mt-3 d-flex gap-2 justify-content-end flex-wrap">
-                        ${!booking.read ? `<button class="btn btn-sm btn-info btn-sm-custom" onclick="markBookingRead(${booking.id})">
-                            <i class='bx bx-envelope-open'></i> تعليم كمقروء
-                        </button>` : ''}
-                        <button class="btn btn-sm btn-success btn-sm-custom" onclick="updateBookingStatus(${booking.id}, 'confirmed')" ${booking.status === 'confirmed' ? 'disabled' : ''}>
-                            <i class='bx bx-check-circle'></i> تأكيد
-                        </button>
-                        <button class="btn btn-sm btn-primary btn-sm-custom" onclick="updateBookingStatus(${booking.id}, 'completed')" ${booking.status === 'completed' ? 'disabled' : ''}>
-                            <i class='bx bx-check-double'></i> إكمال
-                        </button>
-                        <button class="btn btn-sm btn-danger btn-sm-custom" onclick="updateBookingStatus(${booking.id}, 'cancelled')" ${booking.status === 'cancelled' ? 'disabled' : ''}>
-                            <i class='bx bx-x-circle'></i> إلغاء
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-}
-
-async function updateBookingStatus(bookingId, status) {
-    try {
-        const response = await fetch(`/api/bookings/${bookingId}/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: status })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showAlert(`✅ تم تحديث حالة الحجز بنجاح`, "success");
-            loadBookings();
-            if (document.getElementById('dashboardSection').style.display !== 'none') {
-                loadDashboardStats();
-            }
-        } else {
-            showAlert(`❌ ${data.error || 'فشل في تحديث الحالة'}`, "danger");
-        }
-    } catch (error) {
-        console.error('خطأ في تحديث الحالة:', error);
-        showAlert("❌ حدث خطأ في الاتصال", "danger");
-    }
-}
-
-async function markBookingRead(bookingId) {
-    try {
-        const response = await fetch(`/api/bookings/${bookingId}/mark-read`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            loadBookings();
-            if (document.getElementById('dashboardSection').style.display !== 'none') {
-                loadDashboardStats();
-            }
-        }
-    } catch (error) {
-        console.error('خطأ:', error);
-    }
-}
-
-function displayRecentBookings(bookings) {
-    const container = document.getElementById('recentBookings');
-    if (!container) return;
-    
-    if (!bookings || bookings.length === 0) {
-        container.innerHTML = '<p class="text-muted text-center py-4">لا توجد حجوزات بعد</p>';
-        return;
-    }
-    
-    const recentBookings = bookings.slice(0, 5);
-    let html = '<div class="row">';
-    recentBookings.forEach(booking => {
-        const productName = booking.product_name || 'منتج غير محدد';
-        const total = booking.total || 0;
-        let bookingDate = '';
-        try {
-            bookingDate = booking.created_at ? new Date(booking.created_at).toLocaleString('ar-SA') : 'غير محدد';
-        } catch(e) {
-            bookingDate = 'غير محدد';
-        }
-        
-        html += `
-            <div class="col-md-12 mb-3">
-                <div class="booking-card">
-                    <div class="booking-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong>حجز رقم: ${booking.id || '?'}</strong>
-                            <small>${bookingDate}</small>
-                        </div>
-                        <p><i class='bx bx-user'></i> ${escapeHtml(booking.name)}</p>
-                        <p><i class='bx bx-package'></i> ${escapeHtml(productName)}</p>
-                        <p class="fw-bold">الإجمالي: ${total.toLocaleString()} د.ع</p>
-                        <button class="btn btn-sm btn-booking-custom" onclick="showSection('bookings')">
-                            عرض التفاصيل
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    html += '</div>';
-    container.innerHTML = html;
-}
-
-function updateBookingStats(bookings) {
-    if (!bookings || bookings.length === 0) {
-        document.getElementById('totalBookings').innerText = '0';
-        document.getElementById('bookingsBadge').style.display = 'none';
-        displayRecentBookings([]);
-        return;
-    }
-    
-    const totalBookings = bookings.length;
-    const unreadBookings = bookings.filter(b => !b.read).length;
-    
-    document.getElementById('totalBookings').innerText = totalBookings;
-    
-    const bookingsBadge = document.getElementById('bookingsBadge');
-    if (unreadBookings > 0) {
-        bookingsBadge.style.display = 'inline-block';
-        bookingsBadge.innerText = unreadBookings;
-    } else {
-        bookingsBadge.style.display = 'none';
-    }
-    
-    displayRecentBookings(bookings);
-}
-
-// ========== دوال الطلبات ==========
+// ========== دوال الطلبات (موحدة للطلبات العادية والحجوزات المباشرة) ==========
 async function loadOrders() {
     const ordersList = document.getElementById('ordersList');
     if (ordersList) {
@@ -846,7 +542,7 @@ async function loadOrders() {
                     <div class="empty-orders">
                         <i class='bx bx-shopping-bag'></i>
                         <h5>لا توجد طلبات بعد</h5>
-                        <p class="text-muted">الطلبات الجديدة ستظهر هنا</p>
+                        <p class="text-muted">الطلبات الجديدة ستظهر هنا (سواء من السلة أو الحجز المباشر)</p>
                     </div>
                 `;
             }
@@ -873,7 +569,7 @@ function displayOrders(orders) {
             <div class="empty-orders">
                 <i class='bx bx-shopping-bag'></i>
                 <h5>لا توجد طلبات بعد</h5>
-                <p class="text-muted">الطلبات الجديدة ستظهر هنا</p>
+                <p class="text-muted">الطلبات الجديدة ستظهر هنا (سواء من السلة أو الحجز المباشر)</p>
             </div>
         `;
         return;
@@ -899,6 +595,9 @@ function displayOrders(orders) {
         const customerPhone = order.customer_phone || 'غير محدد';
         const customerAddress = order.customer_address || 'غير محدد';
         const customerNotes = order.customer_notes || '';
+        
+        // التحقق مما إذا كان الطلب من الحجز المباشر (يحتوي على منتج واحد فقط)
+        const isDirectBooking = order.items && Array.isArray(order.items) && order.items.length === 1;
         
         let itemsHtml = `
             <div class="order-product-item header">
@@ -934,6 +633,7 @@ function displayOrders(orders) {
                     <div>
                         <strong><i class='bx bx-receipt'></i> طلب رقم: ${order.id || '?'}</strong>
                         <span class="order-status ${statusClass} me-2">${statusText}</span>
+                        ${isDirectBooking ? '<span class="order-badge-direct"><i class="bx bx-calendar-check"></i> حجز مباشر</span>' : ''}
                     </div>
                     <div>
                         <small>${orderDate}</small>
@@ -1018,7 +718,6 @@ function displayRecentOrders(orders) {
     let html = '<div class="row">';
     recentOrders.forEach(order => {
         const customerName = order.customer_name || 'غير محدد';
-        const customerPhone = order.customer_phone || 'غير محدد';
         const totalAmount = order.total_amount || 0;
         let orderDate = '';
         try {
@@ -1027,16 +726,20 @@ function displayRecentOrders(orders) {
             orderDate = 'غير محدد';
         }
         
+        const isDirectBooking = order.items && Array.isArray(order.items) && order.items.length === 1;
+        
         html += `
             <div class="col-md-12 mb-3">
                 <div class="order-card">
                     <div class="order-body">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong>طلب رقم: ${order.id || '?'}</strong>
+                            <strong>
+                                طلب رقم: ${order.id || '?'}
+                                ${isDirectBooking ? '<span class="order-badge-direct"><i class="bx bx-calendar-check"></i> حجز</span>' : ''}
+                            </strong>
                             <small>${orderDate}</small>
                         </div>
                         <p><i class='bx bx-user'></i> ${escapeHtml(customerName)}</p>
-                        <p><i class='bx bx-phone'></i> ${escapeHtml(customerPhone)}</p>
                         <p class="fw-bold">المجموع: ${totalAmount.toLocaleString()} د.ع</p>
                         <button class="btn btn-sm btn-primary-custom" onclick="showSection('orders')">
                             عرض التفاصيل
@@ -1104,19 +807,10 @@ async function updateOrderStatus(orderId, status) {
 // ========== دوال الإحصائيات ==========
 async function loadDashboardStats() {
     try {
-        const [ordersRes, bookingsRes] = await Promise.all([
-            fetch('/api/orders'),
-            fetch('/api/bookings')
-        ]);
-        
+        const ordersRes = await fetch('/api/orders');
         const ordersData = await ordersRes.json();
-        const bookingsData = await bookingsRes.json();
-        
         const orders = ordersData.success && ordersData.orders ? ordersData.orders : [];
-        const bookings = Array.isArray(bookingsData) ? bookingsData : [];
-        
         updateOrderStats(orders);
-        updateBookingStats(bookings);
     } catch (error) {
         console.error('خطأ في تحميل الإحصائيات:', error);
     }
@@ -1127,12 +821,10 @@ function showSection(section) {
     const dashboardDiv = document.getElementById('dashboardSection');
     const ordersDiv = document.getElementById('ordersSection');
     const productsDiv = document.getElementById('productsSection');
-    const bookingsDiv = document.getElementById('bookingsSection');
     
     if (dashboardDiv) dashboardDiv.style.display = 'none';
     if (ordersDiv) ordersDiv.style.display = 'none';
     if (productsDiv) productsDiv.style.display = 'none';
-    if (bookingsDiv) bookingsDiv.style.display = 'none';
     
     if (section === 'dashboard' && dashboardDiv) {
         dashboardDiv.style.display = 'block';
@@ -1142,9 +834,6 @@ function showSection(section) {
         loadOrders();
     } else if (section === 'products' && productsDiv) {
         productsDiv.style.display = 'block';
-    } else if (section === 'bookings' && bookingsDiv) {
-        bookingsDiv.style.display = 'block';
-        loadBookings();
     }
     
     const navLinks = document.querySelectorAll('.sidebar .nav-link');
@@ -1152,12 +841,10 @@ function showSection(section) {
     
     if (section === 'products') {
         if (navLinks[0]) navLinks[0].classList.add('active');
-    } else if (section === 'bookings') {
-        if (navLinks[1]) navLinks[1].classList.add('active');
     } else if (section === 'orders') {
-        if (navLinks[2]) navLinks[2].classList.add('active');
+        if (navLinks[1]) navLinks[1].classList.add('active');
     } else if (section === 'dashboard') {
-        if (navLinks[3]) navLinks[3].classList.add('active');
+        if (navLinks[2]) navLinks[2].classList.add('active');
     }
 }
 
@@ -1189,7 +876,6 @@ function escapeHtml(text) {
 document.addEventListener('DOMContentLoaded', function() {
     showSection('products');
     loadOrders();
-    loadBookings();
 });
 </script>
 

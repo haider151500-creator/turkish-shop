@@ -838,6 +838,7 @@
         currentBookingProduct = null;
     }
 
+    // ========== دالة الحجز المباشر المعدلة - ترسل إلى /checkout ==========
     async function submitDirectBooking(event) {
         event.preventDefault();
         
@@ -863,20 +864,22 @@
         }
         const totalPrice = finalPrice * quantity;
         
+        // بيانات الحجز المباشر بصيغة متوافقة مع /checkout
         const bookingData = {
-            name: name,
-            phone: phone,
-            address: address,
+            is_direct_booking: true,
+            customer_name: name,
+            customer_phone: phone,
+            customer_address: address,
+            customer_notes: notes,
+            product_id: currentBookingProduct.id,
             product_name: currentBookingProduct.name,
             product_price: finalPrice,
             quantity: quantity,
-            total: totalPrice,
-            notes: notes,
-            product_id: currentBookingProduct.id
+            total_amount: totalPrice
         };
         
         try {
-            const response = await fetch('/api/create-booking', {
+            const response = await fetch('/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bookingData)
@@ -887,7 +890,7 @@
                 showToast(`✅ تم إرسال طلب حجز "${currentBookingProduct.name}" بنجاح!`, "success");
                 closeDirectBookingModal();
             } else {
-                showToast(`❌ ${data.message || 'حدث خطأ'}`, "error");
+                showToast(`❌ ${data.error || 'حدث خطأ'}`, "error");
             }
         } catch (error) {
             console.error('Error:', error);

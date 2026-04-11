@@ -20,7 +20,6 @@ except ImportError:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "database.db")
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
-BOOKINGS_FILE = os.path.join(BASE_DIR, "bookings.json")
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 app.secret_key = os.environ.get('SECRET_KEY', 'change-this-in-production')
@@ -48,20 +47,6 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 USE_POSTGRES = bool(DATABASE_URL)
 
 print(f"🔍 استخدام PostgreSQL: {USE_POSTGRES}")
-
-# ========== دوال التعامل مع الحجوزات ==========
-def load_bookings():
-    if os.path.exists(BOOKINGS_FILE):
-        try:
-            with open(BOOKINGS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except:
-            return []
-    return []
-
-def save_bookings(bookings):
-    with open(BOOKINGS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(bookings, f, ensure_ascii=False, indent=2)
 
 def get_db():
     try:
@@ -355,93 +340,6 @@ def product_detail(pid):
     
     return render_template("product_detail.html", p=item, images=imgs, main_image=main_image, all_images=all_images, bulk_discounts=bulk_discounts)
 
-# ========== نظام الحجوزات (معدل لاستقبال بيانات المنتج) ==========
-@app.route("/api/create-booking", methods=["POST"])
-def create_booking():
-    try:
-        data = request.json
-        name = data.get('name', '').strip()
-        phone = data.get('phone', '').strip()
-        address = data.get('address', '').strip()
-        product_name = data.get('product_name', '').strip()
-        product_price = data.get('product_price', 0)
-        quantity = data.get('quantity', 1)
-        total = data.get('total', 0)
-        notes = data.get('notes', '').strip()
-        product_id = data.get('product_id', 0)
-        
-        if not name or not phone or not address:
-            return jsonify({'success': False, 'message': 'جميع الحقول مطلوبة (الاسم، رقم الهاتف، العنوان)'}), 400
-        
-        booking = {
-            'id': int(datetime.now().timestamp()),
-            'name': name,
-            'phone': phone,
-            'address': address,
-            'product_name': product_name,
-            'product_price': product_price,
-            'quantity': quantity,
-            'total': total,
-            'notes': notes,
-            'product_id': product_id,
-            'created_at': datetime.now().isoformat(),
-            'read': False,
-            'status': 'pending'
-        }
-        
-        bookings = load_bookings()
-        bookings.append(booking)
-        save_bookings(bookings)
-        
-        return jsonify({'success': True, 'message': 'تم إرسال طلب الحجز بنجاح'})
-    except Exception as e:
-        print(f"❌ خطأ في إنشاء الحجز: {e}")
-        return jsonify({'success': False, 'message': str(e)}), 500
-
-@app.route("/api/bookings", methods=["GET"])
-@admin_required
-def api_get_bookings():
-    try:
-        bookings = load_bookings()
-        bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-        return jsonify(bookings)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route("/api/bookings/<int:booking_id>/update", methods=["POST"])
-@admin_required
-def update_booking_status(booking_id):
-    try:
-        data = request.json
-        status = data.get('status')
-        
-        bookings = load_bookings()
-        for booking in bookings:
-            if booking['id'] == booking_id:
-                booking['status'] = status
-                booking['updated_at'] = datetime.now().isoformat()
-                save_bookings(bookings)
-                return jsonify({'success': True})
-        
-        return jsonify({'success': False, 'message': 'الحجز غير موجود'}), 404
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route("/api/bookings/<int:booking_id>/mark-read", methods=["POST"])
-@admin_required
-def mark_booking_read(booking_id):
-    try:
-        bookings = load_bookings()
-        for booking in bookings:
-            if booking['id'] == booking_id:
-                booking['read'] = True
-                save_bookings(bookings)
-                return jsonify({'success': True})
-        
-        return jsonify({'success': False, 'message': 'الحجز غير موجود'}), 404
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
 # ========== API للسلة ==========
 @app.route("/api/add-to-cart", methods=["POST"])
 def api_add_to_cart():
@@ -513,57 +411,91 @@ def api_remove_from_cart():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ========== دالة إتمام الطلب ==========
+# ========== دالة إتمام الطلب (موحدة للسلة والحجز المباشر) ==========
 @app.route("/checkout", methods=["POST"])
 def checkout():
     try:
-        cart = session.get('cart', [])
-        if not cart:
-            return jsonify({'success': False, 'error': 'السلة فارغة'}), 400
-        
         data = request.json
         if not data:
             return jsonify({'success': False, 'error': 'بيانات غير صالحة'}), 400
-        
-        customer_name = data.get('customer_name', '').strip()
-        customer_phone = data.get('customer_phone', '').strip()
-        customer_address = data.get('customer_address', '').strip()
-        customer_notes = data.get('customer_notes', '').strip()
-        
-        if not customer_name or not customer_phone or not customer_address:
-            return jsonify({'success': False, 'error': 'الرجاء تعبئة جميع البيانات المطلوبة'}), 400
-        
-        total = 0
-        for item in cart:
-            item_total = item['price'] * item['qty']
-            total += item_total
-        
+
+        # التحقق من نوع الطلب: من السلة أم حجز مباشر؟
+        is_direct_booking = data.get('is_direct_booking', False)
+        cart_items = []
+
+        if is_direct_booking:
+            # --- حالة الحجز المباشر: إنشاء عنصر واحد من بيانات الحجز ---
+            customer_name = data.get('customer_name', '').strip()
+            customer_phone = data.get('customer_phone', '').strip()
+            customer_address = data.get('customer_address', '').strip()
+            customer_notes = data.get('customer_notes', '').strip()
+            product_id = data.get('product_id')
+            product_name = data.get('product_name', '').strip()
+            product_price = data.get('product_price', 0)
+            quantity = data.get('quantity', 1)
+
+            if not customer_name or not customer_phone or not customer_address or not product_name:
+                return jsonify({'success': False, 'error': 'جميع الحقول مطلوبة للحجز المباشر'}), 400
+
+            # إنشاء عنصر سلة مؤقت من بيانات الحجز
+            cart_items = [{
+                'id': product_id,
+                'name': product_name,
+                'price': float(product_price),
+                'qty': int(quantity)
+            }]
+            total = float(product_price) * int(quantity)
+            user_id = session.get('user_id', 0)
+
+        else:
+            # --- حالة السلة العادية ---
+            cart_items = session.get('cart', [])
+            if not cart_items:
+                return jsonify({'success': False, 'error': 'السلة فارغة'}), 400
+
+            customer_name = data.get('customer_name', '').strip()
+            customer_phone = data.get('customer_phone', '').strip()
+            customer_address = data.get('customer_address', '').strip()
+            customer_notes = data.get('customer_notes', '').strip()
+            user_id = session.get('user_id', 0)
+
+            if not customer_name or not customer_phone or not customer_address:
+                return jsonify({'success': False, 'error': 'الرجاء تعبئة جميع البيانات المطلوبة'}), 400
+
+            # حساب المجموع الكلي
+            total = 0
+            for item in cart_items:
+                item_total = item['price'] * item['qty']
+                total += item_total
+
+        # --- حفظ الطلب في قاعدة البيانات (موحد لكل من السلة والحجز المباشر) ---
         conn = get_db()
         cursor = conn.cursor()
         placeholder = get_placeholder()
-        
-        user_id = session.get('user_id', 0)
-        cart_json = json.dumps(cart, ensure_ascii=False)
-        
+        cart_json = json.dumps(cart_items, ensure_ascii=False)
+
         cursor.execute(
-            f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address, customer_notes) 
-               VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
-            (user_id, cart_json, total, customer_name, customer_phone, customer_address, customer_notes)
+            f"""INSERT INTO orders (user_id, items, total, customer_name, customer_phone, customer_address, customer_notes, status) 
+               VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})""",
+            (user_id, cart_json, total, customer_name, customer_phone, customer_address, customer_notes, 'pending')
         )
-        
+
         conn.commit()
-        
+
         if USE_POSTGRES:
             cursor.execute("SELECT LASTVAL()")
             order_id = cursor.fetchone()['lastval']
         else:
             order_id = cursor.lastrowid
-        
+
         conn.close()
-        
-        session.pop('cart', None)
-        return jsonify({'success': True, 'order_id': order_id})
-        
+
+        # إذا كان الطلب من السلة، نقوم بتفريغها
+        if not is_direct_booking:
+            session.pop('cart', None)
+
+        return jsonify({'success': True, 'order_id': order_id, 'message': 'تم إرسال الطلب بنجاح'})
+
     except Exception as e:
         print(f"❌ خطأ في إتمام الطلب: {e}")
         traceback.print_exc()
@@ -767,23 +699,11 @@ def admin_dashboard():
     cursor.execute("SELECT COUNT(*) as count FROM orders")
     orders_count = cursor.fetchone()
     
-    bookings = load_bookings()
-    unread_bookings = len([b for b in bookings if not b.get('read', False)])
-    
     conn.close()
     return render_template("admin_dashboard.html", 
                           products=items, 
                           users_count=users_count['count'], 
-                          orders_count=orders_count['count'],
-                          bookings=bookings,
-                          unread_bookings=unread_bookings)
-
-@app.route("/admin/bookings")
-@admin_required
-def admin_bookings():
-    bookings = load_bookings()
-    bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-    return render_template("admin_bookings.html", bookings=bookings)
+                          orders_count=orders_count['count'])
 
 @app.route("/admin/orders")
 @admin_required
@@ -817,7 +737,7 @@ def admin_users():
     conn.close()
     return render_template("admin_users.html", users=users)
 
-# ========== دالة إضافة المنتج المعدلة (مع دعم خصم الكميات) ==========
+# ========== دالة إضافة المنتج ==========
 @app.route("/admin/add", methods=["GET", "POST"])
 @admin_required
 def admin_add():
@@ -933,7 +853,7 @@ def admin_add():
 
     return render_template("add_product.html", categories=categories)
 
-# ========== دالة تعديل المنتج المعدلة ==========
+# ========== دالة تعديل المنتج ==========
 @app.route("/admin/edit/<int:pid>", methods=["GET", "POST"])
 @admin_required
 def admin_edit(pid):

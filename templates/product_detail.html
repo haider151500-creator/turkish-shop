@@ -221,7 +221,7 @@
           <button onclick="addToCartWithQuantity()" class="btn btn-primary px-4 py-2">
             <i class='bx bx-cart-add'></i> أضف إلى السلة
           </button>
-          <button onclick="openDirectBooking()" class="btn-booking px-4 py-2 rounded-pill">
+          <button onclick="openDirectBookingFromDetail()" class="btn-booking px-4 py-2 rounded-pill">
             <i class='bx bx-calendar-check'></i> حجز مباشر
           </button>
           <button onclick="sendWhatsAppProduct('{{ p.name|replace("'", "\\'") }}', {{ p.price }})" class="btn-whatsapp px-4 py-2 rounded-pill">
@@ -258,50 +258,6 @@
   {% else %}
     <div class="alert alert-danger text-center rounded-4 p-5">⚠️ المنتج غير موجود.</div>
   {% endif %}
-</div>
-
-<!-- نافذة الحجز المباشر -->
-<div id="directBookingModal" class="modal fade" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4">
-      <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border-radius: 16px 16px 0 0;">
-        <h5 class="modal-title"><i class='bx bx-calendar-check'></i> حجز مباشر</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body p-4">
-        <div class="text-center mb-3">
-          <h5 id="bookingProductName" class="fw-bold">{{ p.name }}</h5>
-          <p id="bookingProductPrice" class="text-primary fw-bold">{{ '%.0f'|format(p.price) }} د.ع</p>
-        </div>
-        <form id="directBookingForm">
-          <div class="mb-3">
-            <label class="form-label fw-bold">الاسم الكامل *</label>
-            <input type="text" id="bookingName" class="form-control rounded-pill" required placeholder="أدخل اسمك الكامل">
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">رقم الهاتف *</label>
-            <input type="tel" id="bookingPhone" class="form-control rounded-pill" required placeholder="أدخل رقم هاتفك">
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">العنوان *</label>
-            <textarea id="bookingAddress" class="form-control rounded-3" rows="2" required placeholder="أدخل عنوانك بالكامل"></textarea>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">الكمية المطلوبة *</label>
-            <input type="number" id="bookingQuantity" min="1" value="1" class="form-control rounded-pill">
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-bold">ملاحظات إضافية</label>
-            <textarea id="bookingNotes" class="form-control rounded-3" rows="2" placeholder="أي ملاحظات إضافية..."></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">إلغاء</button>
-        <button type="button" class="btn-booking rounded-pill px-4 py-2" onclick="submitDirectBooking()">إرسال طلب الحجز</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- Lightbox Overlay -->
@@ -421,73 +377,17 @@ function copyToClipboard(text) {
     });
 }
 
-// ========== دوال الحجز المباشر ==========
-function openDirectBooking() {
+// ========== دوال الحجز المباشر (تستخدم النافذة العامة من base.html) ==========
+function openDirectBookingFromDetail() {
     const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
     let finalPrice = calculateBulkDiscount(currentProductPrice, quantity, currentBulkDiscounts);
-    const totalPrice = finalPrice * quantity;
     
-    document.getElementById('bookingProductName').innerText = currentProductName;
-    let priceText = `${finalPrice.toLocaleString()} د.ع للقطعة (الإجمالي: ${totalPrice.toLocaleString()} د.ع)`;
-    if (currentBulkDiscounts && currentBulkDiscounts.length > 0 && quantity >= 2) {
-        priceText += ` (بعد خصم الكميات)`;
-    }
-    document.getElementById('bookingProductPrice').innerHTML = priceText;
-    document.getElementById('bookingQuantity').value = quantity;
-    document.getElementById('bookingName').value = '';
-    document.getElementById('bookingPhone').value = '';
-    document.getElementById('bookingAddress').value = '';
-    document.getElementById('bookingNotes').value = '';
-    
-    const modal = new bootstrap.Modal(document.getElementById('directBookingModal'));
-    modal.show();
-}
-
-async function submitDirectBooking() {
-    const name = document.getElementById('bookingName').value.trim();
-    const phone = document.getElementById('bookingPhone').value.trim();
-    const address = document.getElementById('bookingAddress').value.trim();
-    const quantity = parseInt(document.getElementById('bookingQuantity').value) || 1;
-    const notes = document.getElementById('bookingNotes').value.trim();
-    
-    if (!name || !phone || !address) {
-        showToast("⚠️ يرجى تعبئة جميع الحقول المطلوبة", "warning");
-        return;
-    }
-    
-    let finalPrice = calculateBulkDiscount(currentProductPrice, quantity, currentBulkDiscounts);
-    const totalPrice = finalPrice * quantity;
-    
-    const bookingData = {
-        name: name,
-        phone: phone,
-        address: address,
-        product_name: currentProductName,
-        product_price: finalPrice,
-        quantity: quantity,
-        total: totalPrice,
-        notes: notes,
-        product_id: currentProductId
-    };
-    
-    try {
-        const response = await fetch('/api/create-booking', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bookingData)
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            showToast(`✅ تم إرسال طلب حجز "${currentProductName}" بنجاح!`, "success");
-            const modal = bootstrap.Modal.getInstance(document.getElementById('directBookingModal'));
-            modal.hide();
-        } else {
-            showToast(`❌ ${data.message || 'حدث خطأ'}`, "error");
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast("❌ حدث خطأ في الاتصال", "error");
+    // استدعاء الدالة العامة من base.html
+    if (typeof openDirectBookingModal === 'function') {
+        openDirectBookingModal(currentProductId, currentProductName, finalPrice, quantity, currentBulkDiscounts);
+    } else {
+        // fallback في حالة عدم وجود الدالة العامة
+        showToast("⚠️ حدث خطأ في النظام، يرجى تحديث الصفحة", "warning");
     }
 }
 
