@@ -264,6 +264,52 @@
       transition: all 0.2s ease-in-out;
     }
 
+    /* مكون الكمية الموحد */
+    .quantity-control {
+      display: inline-flex;
+      align-items: center;
+      background: #f1f5f9;
+      border-radius: 9999px;
+      overflow: hidden;
+      direction: ltr;
+    }
+    .quantity-btn {
+      background: white;
+      border: none;
+      width: 36px;
+      height: 36px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1976d2;
+    }
+    .quantity-btn:hover {
+      background: #1976d2;
+      color: white;
+      transform: scale(1.05);
+    }
+    .quantity-input {
+      width: 50px;
+      text-align: center;
+      background: transparent;
+      border: none;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 8px 0;
+    }
+    .quantity-input:focus {
+      outline: none;
+    }
+    input[type=number].quantity-input::-webkit-inner-spin-button,
+    input[type=number].quantity-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       body {
@@ -303,6 +349,16 @@
         padding: 10px 18px;
         font-size: 13px;
       }
+      
+      .quantity-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+      }
+      .quantity-input {
+        width: 40px;
+        font-size: 14px;
+      }
     }
 
     /* Custom scrollbar */
@@ -335,7 +391,7 @@
 
 <div id="toastContainer" class="toast-container-custom"></div>
 
-<!-- نافذة الحجز المباشر العامة (ستظهر عند الحاجة) -->
+<!-- نافذة الحجز المباشر العامة -->
 <div id="globalBookingModal" class="modal fade" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-4">
@@ -363,7 +419,11 @@
           </div>
           <div class="mb-3">
             <label class="form-label fw-bold">الكمية المطلوبة *</label>
-            <input type="number" id="globalBookingQuantity" min="1" value="1" class="form-control rounded-pill">
+            <div class="quantity-control">
+              <button type="button" class="quantity-btn" onclick="changeGlobalBookingQty(-1)">−</button>
+              <input type="number" id="globalBookingQuantity" class="quantity-input" value="1" min="1">
+              <button type="button" class="quantity-btn" onclick="changeGlobalBookingQty(1)">+</button>
+            </div>
           </div>
           <div class="mb-3">
             <label class="form-label fw-bold">ملاحظات إضافية</label>
@@ -484,12 +544,19 @@
 <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.min.js') }}"></script>
 
 <script>
-// رقم الواتساب المطلوب
+// ========== دوال عامة ==========
 const WHATSAPP_MESSAGE_LINK = "https://wa.me/message/TVK3PQT626DMO1";
-const WHATSAPP_NUMBER = "9647707772142";
 
 // متغيرات عامة للحجز المباشر
 let currentBookingProduct = null;
+
+// دالة تغيير الكمية في نافذة الحجز
+function changeGlobalBookingQty(delta) {
+    const input = document.getElementById('globalBookingQuantity');
+    let newVal = parseInt(input.value) + delta;
+    if (newVal < 1) newVal = 1;
+    input.value = newVal;
+}
 
 // دالة فتح نافذة الحجز المباشر
 function openDirectBookingModal(productId, productName, productPrice, quantity = 1, bulkDiscounts = []) {
@@ -541,7 +608,6 @@ async function submitGlobalBooking() {
     }
     const totalPrice = finalPrice * quantity;
     
-    // بيانات الحجز المباشر بصيغة متوافقة مع /checkout
     const bookingData = {
         is_direct_booking: true,
         customer_name: name,
@@ -639,18 +705,6 @@ function addToCart(productId, productName, productPrice, quantity = 1) {
         if (data.success) {
             showToast(`✨ تم إضافة ${quantity} × "${productName}" إلى السلة`, "success");
             loadCartCount();
-            // تحديث عداد السلة في الصفحة الرئيسية إذا وجد
-            const cartCount = document.getElementById('cartCount');
-            if (cartCount) {
-                const totalItems = data.cart_count;
-                if (totalItems > 0) {
-                    cartCount.innerText = totalItems;
-                    cartCount.classList.remove('hidden');
-                } else {
-                    cartCount.classList.add('hidden');
-                }
-            }
-            // تحديث واجهة السلة إذا كانت مفتوحة
             if (typeof renderCartDrawerItems === 'function') {
                 renderCartDrawerItems();
             }
@@ -736,11 +790,6 @@ function toggleCartDrawer() {
     }
 }
 
-// تحميل السلة عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-    loadCartCount();
-});
-
 // إضافة CSS للحركة
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
@@ -791,6 +840,11 @@ window.addEventListener('load', function() {
             }, 500);
         }
     }, 500);
+});
+
+// تحميل السلة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    loadCartCount();
 });
 </script>
 
