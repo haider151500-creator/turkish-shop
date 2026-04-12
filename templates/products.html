@@ -1029,18 +1029,14 @@
       }
     }
 
+    // ========== دالة المشاركة المعدلة (تفتح المنتج في نفس الصفحة) ==========
     function shareProduct(id, name, price) {
-      const productUrl = window.location.origin + '/product/' + id;
-      if (navigator.share) {
-        navigator.share({
-          title: name,
-          url: productUrl
-        }).catch(() => {
-          copyToClipboard(productUrl);
-        });
-      } else {
+        // نسخ الرابط إلى الحافظة أولاً
+        const productUrl = window.location.origin + '/product/' + id;
         copyToClipboard(productUrl);
-      }
+        
+        // ثم فتح نافذة المنتج المنبثقة بدلاً من الانتقال إلى صفحة جديدة
+        openProductModal(id);
     }
 
     function copyToClipboard(text) {

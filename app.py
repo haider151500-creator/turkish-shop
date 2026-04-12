@@ -307,6 +307,7 @@ def products():
     
     return render_template("products.html", products=products_list, categories=categories_list, active_cat=cat)
 
+# ========== صفحة تفاصيل المنتج المنفصلة (للمشاركة) ==========
 @app.route("/product/<int:pid>")
 def product_detail(pid):
     conn = get_db()
