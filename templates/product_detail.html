@@ -192,8 +192,7 @@ input[type=number].quantity-input::-webkit-outer-spin-button {
                  src="https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ main_image if main_image else (images[0].filename if images else '') }}" 
                  alt="{{ p.name }}" 
                  class="main-img object-fit-contain p-3 rounded-4" 
-                 style="width:100%;height:100%;cursor:zoom-in;"
-                 onclick="openLightboxGallery(0)">
+                 style="width:100%;height:100%;cursor:zoom-in;">
           </div>
         </div>
 
@@ -251,9 +250,9 @@ input[type=number].quantity-input::-webkit-outer-spin-button {
         <div class="mb-4">
           <label class="fw-bold mb-2">الكمية:</label>
           <div class="quantity-control">
-            <button type="button" class="quantity-btn" id="decreaseQtyBtn">−</button>
-            <input type="number" id="productQuantity" class="quantity-input" value="1" min="1">
-            <button type="button" class="quantity-btn" id="increaseQtyBtn">+</button>
+            <button type="button" class="quantity-btn" onclick="changeDetailQuantity(-1)">−</button>
+            <input type="number" id="productQuantity" class="quantity-input" value="1" min="1" onchange="updatePriceDisplay()">
+            <button type="button" class="quantity-btn" onclick="changeDetailQuantity(1)">+</button>
           </div>
         </div>
 
@@ -264,16 +263,16 @@ input[type=number].quantity-input::-webkit-outer-spin-button {
         </div>
 
         <div class="mt-4 d-flex gap-3 flex-wrap">
-          <button id="addToCartBtn" class="btn btn-primary px-4 py-2">
+          <button onclick="addToCartWithQuantity()" class="btn btn-primary px-4 py-2">
             <i class='bx bx-cart-add'></i> أضف إلى السلة
           </button>
-          <button id="directBookingBtn" class="btn-booking px-4 py-2 rounded-pill">
+          <button onclick="openDirectBookingFromDetail()" class="btn-booking px-4 py-2 rounded-pill">
             <i class='bx bx-calendar-check'></i> حجز مباشر
           </button>
-          <button id="whatsappBtn" class="btn-whatsapp px-4 py-2 rounded-pill">
+          <button onclick="sendWhatsAppProductDetail()" class="btn-whatsapp px-4 py-2 rounded-pill">
             <i class='bx bxl-whatsapp'></i> واتساب
           </button>
-          <button id="shareBtn" class="btn btn-outline-secondary px-4 py-2">
+          <button onclick="shareProductDetail()" class="btn btn-outline-secondary px-4 py-2">
             <i class='bx bx-share-alt'></i> مشاركة
           </button>
         </div>
@@ -340,6 +339,7 @@ if (galleryImages.length === 0) {
 // ========== دوال الكمية ==========
 function changeDetailQuantity(delta) {
     const input = document.getElementById('productQuantity');
+    if (!input) return;
     let newVal = parseInt(input.value) + delta;
     if (newVal < 1) newVal = 1;
     input.value = newVal;
@@ -389,7 +389,6 @@ function changeMainImage(index) {
         }
         currentImageIndex = index;
         
-        // تحديث النشاط في الصور المصغرة
         document.querySelectorAll('.thumb').forEach((thumb, i) => {
             if (i === index) {
                 thumb.classList.add('active');
@@ -406,7 +405,9 @@ function openLightboxGallery(index) {
     
     const lb = document.getElementById('lightbox');
     const imgEl = lb.querySelector('.lb-img');
-    imgEl.src = galleryImages[index];
+    if (imgEl) {
+        imgEl.src = galleryImages[index];
+    }
     currentImageIndex = index;
     lb.classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -422,14 +423,14 @@ function prevImage() {
     currentImageIndex--;
     if (currentImageIndex < 0) currentImageIndex = galleryImages.length - 1;
     const imgEl = document.getElementById('lightbox').querySelector('.lb-img');
-    imgEl.src = galleryImages[currentImageIndex];
+    if (imgEl) imgEl.src = galleryImages[currentImageIndex];
 }
 
 function nextImage() {
     currentImageIndex++;
     if (currentImageIndex >= galleryImages.length) currentImageIndex = 0;
     const imgEl = document.getElementById('lightbox').querySelector('.lb-img');
-    imgEl.src = galleryImages[currentImageIndex];
+    if (imgEl) imgEl.src = galleryImages[currentImageIndex];
 }
 
 // ========== دوال المنتج ==========
@@ -455,7 +456,7 @@ function addToCart(id, name, price, quantity = 1) {
     });
 }
 
-function sendWhatsAppProduct() {
+function sendWhatsAppProductDetail() {
     const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
     let finalPrice = calculateBulkDiscount(currentProductPrice, quantity, currentBulkDiscounts);
     const totalPrice = finalPrice * quantity;
@@ -464,7 +465,7 @@ function sendWhatsAppProduct() {
     window.open(`${WHATSAPP_MESSAGE_LINK}?text=${encodedMessage}`, '_blank');
 }
 
-function shareProduct() {
+function shareProductDetail() {
     const productUrl = window.location.origin + '/product/' + currentProductId;
     copyToClipboard(productUrl);
 }
@@ -477,7 +478,7 @@ function copyToClipboard(text) {
     });
 }
 
-function openDirectBooking() {
+function openDirectBookingFromDetail() {
     const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
     let finalPrice = calculateBulkDiscount(currentProductPrice, quantity, currentBulkDiscounts);
     
@@ -537,50 +538,51 @@ function initReadMore() {
     }
 }
 
-// ========== تهيئة الأحداث ==========
-document.addEventListener('DOMContentLoaded', function() {
-    // تهيئة أزرار الكمية
-    document.getElementById('decreaseQtyBtn').addEventListener('click', () => changeDetailQuantity(-1));
-    document.getElementById('increaseQtyBtn').addEventListener('click', () => changeDetailQuantity(1));
-    document.getElementById('productQuantity').addEventListener('change', updatePriceDisplay);
-    
-    // تهيئة أزرار المنتج
-    document.getElementById('addToCartBtn').addEventListener('click', addToCartWithQuantity);
-    document.getElementById('directBookingBtn').addEventListener('click', openDirectBooking);
-    document.getElementById('whatsappBtn').addEventListener('click', sendWhatsAppProduct);
-    document.getElementById('shareBtn').addEventListener('click', shareProduct);
-    
-    // تهيئة Lightbox
+// ========== تهيئة أحداث Lightbox ==========
+function initLightbox() {
     const mainImg = document.getElementById('mainProductImage');
     if (mainImg) {
-        mainImg.addEventListener('click', () => openLightboxGallery(0));
+        mainImg.onclick = function() { openLightboxGallery(0); };
     }
     
-    // تهيئة أزرار Lightbox
     const lb = document.getElementById('lightbox');
-    const btnClose = lb.querySelector('.lb-close');
-    const btnPrev = lb.querySelector('.lb-prev');
-    const btnNext = lb.querySelector('.lb-next');
-    const backdrop = lb.querySelector('.lb-backdrop');
+    if (lb) {
+        const btnClose = lb.querySelector('.lb-close');
+        const btnPrev = lb.querySelector('.lb-prev');
+        const btnNext = lb.querySelector('.lb-next');
+        const backdrop = lb.querySelector('.lb-backdrop');
+        
+        if (btnClose) btnClose.onclick = closeLightbox;
+        if (backdrop) backdrop.onclick = closeLightbox;
+        if (btnPrev) btnPrev.onclick = prevImage;
+        if (btnNext) btnNext.onclick = nextImage;
+    }
     
-    btnClose.addEventListener('click', closeLightbox);
-    if (backdrop) backdrop.addEventListener('click', closeLightbox);
-    btnPrev.addEventListener('click', prevImage);
-    btnNext.addEventListener('click', nextImage);
-    
-    // التحكم بالأسهم من لوحة المفاتيح
-    document.addEventListener('keydown', (e) => {
-        if(!lb.classList.contains('show')) return;
+    document.onkeydown = function(e) {
+        const lb = document.getElementById('lightbox');
+        if(!lb || !lb.classList.contains('show')) return;
         if(e.key === 'Escape') closeLightbox();
         if(e.key === 'ArrowLeft') prevImage();
         if(e.key === 'ArrowRight') nextImage();
-    });
-    
-    // تهيئة عرض السعر
+    };
+}
+
+// ========== التهيئة عند تحميل الصفحة ==========
+document.addEventListener('DOMContentLoaded', function() {
     updatePriceDisplay();
-    
-    // تهيئة زر عرض المزيد
     initReadMore();
+    initLightbox();
+    
+    // إضافة مستمع لتغير الكمية
+    const quantityInput = document.getElementById('productQuantity');
+    if (quantityInput) {
+        quantityInput.addEventListener('change', updatePriceDisplay);
+    }
 });
+
+// إضافة CSS للحركة
+const style = document.createElement('style');
+style.textContent = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+document.head.appendChild(style);
 </script>
 {% endblock %}
