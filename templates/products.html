@@ -1029,14 +1029,12 @@
       }
     }
 
-    // ========== دالة المشاركة المعدلة (تفتح المنتج في نفس الصفحة) ==========
+    // ========== دالة المشاركة المعدلة (فقط نسخ الرابط - لا تفتح المنتج) ==========
     function shareProduct(id, name, price) {
-        // نسخ الرابط إلى الحافظة أولاً
+        // نسخ الرابط إلى الحافظة فقط
         const productUrl = window.location.origin + '/product/' + id;
         copyToClipboard(productUrl);
-        
-        // ثم فتح نافذة المنتج المنبثقة بدلاً من الانتقال إلى صفحة جديدة
-        openProductModal(id);
+        // لا نفتح نافذة المنتج
     }
 
     function copyToClipboard(text) {
