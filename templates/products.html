@@ -190,6 +190,26 @@
             margin: 0;
         }
         
+        /* زر الحذف في السلة */
+        .cart-remove-btn {
+            background: #fee2e2;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #dc2626;
+        }
+        .cart-remove-btn:hover {
+            background: #dc2626;
+            color: white;
+            transform: scale(1.05);
+        }
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #1976d2 0%, #1565c0 100%); border-radius: 10px; }
@@ -472,6 +492,7 @@
         @media (max-width: 768px) {
             .quantity-btn { width: 30px; height: 30px; font-size: 16px; }
             .quantity-input { width: 40px; font-size: 14px; }
+            .cart-remove-btn { width: 30px; height: 30px; }
         }
     </style>
 </head>
@@ -1030,6 +1051,23 @@
       });
     }
 
+    // دالة حذف منتج من السلة
+    function removeFromCart(productId) {
+      fetch('/api/remove-from-cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId })
+      }).then(response => response.json()).then(data => {
+        if (data.success) {
+          showToast("🗑️ تم حذف المنتج من السلة", "success");
+          loadCart();
+        }
+      }).catch(error => {
+        console.error('Error:', error);
+        showToast("❌ حدث خطأ", "error");
+      });
+    }
+
     function addToCart(id, name, price, quantity = 1) {
       fetch('/api/add-to-cart', {
         method: 'POST', 
@@ -1044,50 +1082,6 @@
           loadCart();
         }
       }).catch(error => { console.error('Error:', error); showToast("❌ حدث خطأ", "error"); });
-    }
-
-    function updateCartItemQty(id, change) {
-      const idx = cart.findIndex(i => i.id === id);
-      if (idx === -1) return;
-      
-      const currentQty = cart[idx].qty;
-      const newQty = currentQty + change;
-      
-      if (newQty <= 0) {
-        fetch('/api/remove-from-cart', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ product_id: id }) 
-        }).then(response => response.json()).then(data => { 
-          if (data.success) { 
-            loadCart();
-          } 
-        }).catch(error => { console.error('Error:', error); showToast("❌ حدث خطأ", "error"); });
-      } else {
-        const product = products.find(p => p.id === id);
-        let newPrice = product ? product.price : cart[idx].price;
-        if (product && product.bulk_discounts && product.bulk_discounts.length > 0) {
-          newPrice = calculateBulkDiscount(product.price, newQty, product.bulk_discounts);
-        }
-        
-        fetch('/api/add-to-cart', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product_id: id, product_name: cart[idx].name, product_price: newPrice, quantity: change })
-        }).then(response => response.json()).then(data => {
-          if (data.success) {
-            loadCart();
-          }
-        }).catch(error => { console.error('Error:', error); showToast("❌ حدث خطأ", "error"); });
-      }
-    }
-
-    function decreaseQty(id) {
-      updateCartItemQty(id, -1);
-    }
-
-    function increaseQty(id) {
-      updateCartItemQty(id, 1);
     }
 
     function filterProducts() {
@@ -1334,11 +1328,9 @@
             <p class="text-xs text-[#1976d2] font-bold mt-1">${item.price.toLocaleString()} د.ع (للقطعة)</p>
             <p class="text-xs text-green-600 font-bold">المجموع: ${itemTotal.toLocaleString()} د.ع</p>
           </div>
-          <div class="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
-            <button onclick="decreaseQty(${item.id})" class="w-7 h-7 rounded-full bg-white hover:bg-red-50 hover:text-red-600 flex items-center justify-center text-lg font-bold shadow-sm transition-all">−</button>
-            <span class="text-sm font-bold w-6 text-center">${item.qty}</span>
-            <button onclick="increaseQty(${item.id})" class="w-7 h-7 rounded-full bg-white hover:bg-green-50 hover:text-green-600 flex items-center justify-center text-lg font-bold shadow-sm transition-all">+</button>
-          </div>
+          <button onclick="removeFromCart(${item.id})" class="cart-remove-btn" title="حذف المنتج">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
         </div>`;
       }).join("");
       
