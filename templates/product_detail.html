@@ -1,604 +1,445 @@
-{% extends "base.html" %}
-{% block content %}
-<style>
-/* Lightbox */
-.lb{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:1050;backdrop-filter:blur(5px);}
-.lb.show{display:flex}
-.lb-img{max-width:90vw;max-height:90vh;border-radius:20px;box-shadow:0 25px 60px rgba(0,0,0,.5);background:#fff}
-.lb-close{position:absolute;top:16px;right:20px;border:0;background:#fff;border-radius:999px;width:40px;height:40px;font-size:28px;line-height:40px;cursor:pointer;transition:all 0.3s ease;}
-.lb-close:hover{background:#1976d2;color:white;transform:scale(1.1);}
-.lb-prev,.lb-next{position:absolute;top:50%;transform:translateY(-50%);border:0;background:rgba(255,255,255,.9);width:44px;height:44px;border-radius:999px;font-size:22px;cursor:pointer;transition:all 0.3s ease;}
-.lb-prev:hover,.lb-next:hover{background:#1976d2;color:white;transform:scale(1.1);}
-.lb-prev{left:20px}
-.lb-next{right:20px}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ p.name }} - مركز الثقة</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        * { font-family: 'Noto Kufi Arabic', sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
+        
+        .product-card {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .quantity-control {
+            display: inline-flex;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .quantity-btn {
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1976d2;
+        }
+        .quantity-btn:hover { background: #1976d2; color: white; }
+        .quantity-input {
+            width: 60px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 8px 0;
+        }
+        .quantity-input:focus { outline: none; }
+        
+        .btn-custom {
+            border-radius: 9999px;
+            padding: 10px 24px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+        }
+        .btn-custom:hover { transform: scale(1.05); }
+        .btn-primary { background: linear-gradient(135deg, #1976d2, #1565c0); color: white; }
+        .btn-booking { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .btn-whatsapp { background: linear-gradient(135deg, #25D366, #128C7E); color: white; }
+        
+        .gallery-thumbs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        .thumb {
+            background: none;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .thumb.active, .thumb:hover { border-color: #1976d2; transform: scale(1.05); }
+        .thumb img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; }
+        
+        .main-img { cursor: pointer; width: 100%; height: 100%; object-fit: contain; }
+        
+        .desc-collapse { max-height: 120px; overflow-y: auto; }
+        .desc-expand { max-height: none; }
+        .read-more { color: #1976d2; cursor: pointer; font-size: 13px; margin-top: 8px; display: inline-block; }
+        
+        .lb {
+            position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,.9); z-index: 9999;
+        }
+        .lb.show { display: flex; }
+        .lb-img { max-width: 90vw; max-height: 90vh; border-radius: 16px; }
+        .lb-close, .lb-prev, .lb-next {
+            position: absolute; background: white; border: none; border-radius: 50%;
+            width: 45px; height: 45px; cursor: pointer; font-size: 24px;
+        }
+        .lb-close { top: 20px; right: 20px; }
+        .lb-prev { left: 20px; top: 50%; transform: translateY(-50%); }
+        .lb-next { right: 20px; top: 50%; transform: translateY(-50%); }
+        
+        .toast-msg {
+            position: fixed; bottom: 20px; right: 20px; z-index: 10000;
+            background: #22c55e; color: white; padding: 12px 24px;
+            border-radius: 9999px; animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .thumb img { width: 50px; height: 50px; }
+            .quantity-btn { width: 35px; height: 35px; font-size: 18px; }
+            .quantity-input { width: 45px; font-size: 16px; }
+            .btn-custom { padding: 8px 16px; font-size: 13px; }
+        }
+    </style>
+</head>
+<body>
 
-/* Thumbs */
-.gallery-thumbs{gap:.5rem;flex-wrap:wrap;margin-top:1rem;}
-.gallery-thumbs button{background:none;border:2px solid transparent;border-radius:12px;padding:2px;cursor:pointer;transition:all 0.3s ease;}
-.gallery-thumbs button:hover{border-color:#1976d2;transform:scale(1.05);}
-.gallery-thumbs button.active{border-color:#1976d2;box-shadow:0 0 0 2px rgba(25,118,210,0.3);}
-.gallery-thumbs img{width:70px;height:70px;object-fit:cover;border-radius:8px;display:block;}
-
-/* مكون الكمية الموحد */
-.quantity-control {
-    display: inline-flex;
-    align-items: center;
-    background: #f1f5f9;
-    border-radius: 9999px;
-    overflow: hidden;
-    direction: ltr;
-}
-.quantity-btn {
-    background: white;
-    border: none;
-    width: 36px;
-    height: 36px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #1976d2;
-}
-.quantity-btn:hover {
-    background: #1976d2;
-    color: white;
-    transform: scale(1.05);
-}
-.quantity-input {
-    width: 50px;
-    text-align: center;
-    background: transparent;
-    border: none;
-    font-weight: bold;
-    font-size: 16px;
-    padding: 8px 0;
-}
-.quantity-input:focus {
-    outline: none;
-}
-input[type=number].quantity-input::-webkit-inner-spin-button,
-input[type=number].quantity-input::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-/* Main image styling */
-.main-img-container{
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
-.main-img-container:hover{
-    transform: scale(1.02);
-}
-.main-img{
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-/* خصم الكميات */
-.bulk-discount-info {
-    background: #fef3c7;
-    border-radius: 12px;
-    padding: 8px 12px;
-    margin: 15px 0;
-    text-align: center;
-}
-.bulk-discount-tag {
-    background: #f59e0b;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: bold;
-    display: inline-block;
-    margin: 3px;
-}
-
-/* وصف المنتج */
-.description-text {
-    line-height: 1.7;
-    color: #4b5563;
-    white-space: pre-wrap;
-}
-.description-collapse {
-    max-height: 100px;
-    overflow-y: auto;
-    transition: max-height 0.3s ease;
-}
-.description-expanded {
-    max-height: none;
-    transition: max-height 0.3s ease;
-}
-.read-more-btn {
-    color: #1976d2;
-    cursor: pointer;
-    font-size: 13px;
-    margin-top: 8px;
-    display: inline-block;
-    font-weight: 500;
-}
-.read-more-btn:hover {
-    text-decoration: underline;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .gallery-thumbs img{width:55px;height:55px;}
-    .lb-prev,.lb-next{width:36px;height:36px;font-size:18px;}
-    .lb-close{width:36px;height:36px;font-size:24px;}
-    .quantity-btn { width: 30px; height: 30px; font-size: 16px; }
-    .quantity-input { width: 40px; font-size: 14px; }
-}
-
-/* Card styling */
-.product-card-detail{
-    border-radius: 24px;
-    overflow: hidden;
-    background: white;
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.02);
-}
-</style>
-
-<div class="container my-4">
-  {% if p %}
-  <div class="product-card-detail p-4 p-md-5">
+<div class="product-card p-4 p-md-5">
     <div class="row g-5">
-      <div class="col-md-6">
-        <div class="main-img-container card border-0 shadow-sm rounded-4 mb-3">
-          <div class="ratio ratio-1x1">
-            <img id="mainProductImage" 
-                 src="{% if main_image %}https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ main_image }}{% elif images and images[0] %}https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ images[0].filename }}{% else %}https://placehold.co/400x400/1976d2/white?text=لا+توجد+صورة{% endif %}" 
-                 alt="{{ p.name }}" 
-                 class="main-img object-fit-contain p-3 rounded-4" 
-                 style="width:100%;height:100%;cursor:zoom-in;">
-          </div>
-        </div>
-
-        {% if images and images|length > 0 %}
-        <div class="d-flex gallery-thumbs justify-content-center flex-wrap">
-          {% for im in images %}
-          <button type="button" class="thumb {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}" onclick="changeMainImage({{ loop.index0 }})">
-            <img src="https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ im.filename }}" alt="صورة مصغرة" style="width:70px;height:70px;object-fit:cover;border-radius:8px;">
-          </button>
-          {% endfor %}
-        </div>
-        {% endif %}
-      </div>
-
-      <div class="col-md-6">
-        <h2 class="mb-3 fw-bold" style="color:#1e293b;">{{ p.name }}</h2>
-        
-        {% if p.category %}
-        <div class="mb-3">
-          <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
-            <i class='bx bx-tag me-1'></i> {{ p.category }}
-          </span>
-        </div>
-        {% endif %}
-        
-        <div class="mb-4">
-          <span class="h1 fw-bold text-primary" id="productPriceDisplay">{{ '%.0f'|format(p.price) }} د.ع</span>
-          {% if p.old_price and p.old_price > p.price %}
-          <span class="text-muted text-decoration-line-through ms-2">{{ '%.0f'|format(p.old_price) }} د.ع</span>
-          <span class="badge bg-danger ms-2 rounded-pill">-{{ ((p.old_price - p.price) / p.old_price * 100)|round|int }}%</span>
-          {% endif %}
+        <!-- عمود الصور -->
+        <div class="col-md-6">
+            <div class="ratio ratio-1x1 bg-light rounded-4 mb-3">
+                <img id="mainImage" 
+                     src="https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ main_image if main_image else (images[0].filename if images else '') }}" 
+                     alt="{{ p.name }}" 
+                     class="main-img p-3 rounded-4"
+                     style="cursor:zoom-in">
+            </div>
+            
+            {% if images and images|length > 0 %}
+            <div class="gallery-thumbs">
+                {% for im in images %}
+                <button class="thumb {% if loop.first %}active{% endif %}" onclick="changeImage({{ loop.index0 }})">
+                    <img src="https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ im.filename }}" alt="صورة">
+                </button>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         
-        <!-- عرض خصم الكميات -->
-        {% if bulk_discounts and bulk_discounts|length > 0 %}
-        <div class="bulk-discount-info">
-          <span class="fw-bold text-warning">📦 خصم على الكميات:</span><br>
-          {% for discount in bulk_discounts %}
-          <span class="bulk-discount-tag">🛒 {{ discount.minQty }}+ قطعة خصم {{ discount.percent }}%</span>
-          {% endfor %}
+        <!-- عمود المعلومات -->
+        <div class="col-md-6">
+            <h2 class="fw-bold mb-3">{{ p.name }}</h2>
+            
+            {% if p.category %}
+            <div class="mb-3">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+                    <i class='bx bx-tag'></i> {{ p.category }}
+                </span>
+            </div>
+            {% endif %}
+            
+            <div class="mb-4">
+                <span class="display-5 fw-bold text-primary" id="priceDisplay">{{ '%.0f'|format(p.price) }} د.ع</span>
+                {% if p.old_price and p.old_price > p.price %}
+                <span class="text-muted text-decoration-line-through ms-2">{{ '%.0f'|format(p.old_price) }} د.ع</span>
+                <span class="badge bg-danger ms-2">-{{ ((p.old_price - p.price) / p.old_price * 100)|round|int }}%</span>
+                {% endif %}
+            </div>
+            
+            {% if bulk_discounts and bulk_discounts|length > 0 %}
+            <div class="bg-warning bg-opacity-25 rounded-3 p-3 mb-4 text-center">
+                <span class="fw-bold text-warning">📦 خصم على الكميات:</span><br>
+                {% for d in bulk_discounts %}
+                <span class="badge bg-warning text-dark m-1">🛒 {{ d.minQty }}+ قطعة خصم {{ d.percent }}%</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% if p.description %}
+            <div class="mb-4">
+                <h6 class="fw-bold">📝 الوصف:</h6>
+                <div id="description" class="desc-collapse">{{ p.description|replace('\n', '<br>')|safe }}</div>
+                <span id="readMoreBtn" class="read-more" onclick="toggleDescription()">📖 عرض المزيد</span>
+            </div>
+            {% endif %}
+            
+            <div class="mb-4">
+                <label class="fw-bold mb-2">الكمية:</label>
+                <div class="quantity-control">
+                    <button class="quantity-btn" onclick="changeQty(-1)">−</button>
+                    <input type="number" id="qtyInput" class="quantity-input" value="1" min="1">
+                    <button class="quantity-btn" onclick="changeQty(1)">+</button>
+                </div>
+            </div>
+            
+            <div id="priceAfterBox" class="mb-4 p-3 bg-light rounded-4 text-center" style="display: none;">
+                <span class="text-muted">السعر بعد الخصم:</span>
+                <span class="h4 fw-bold text-success" id="priceAfter">0 د.ع</span>
+            </div>
+            
+            <div class="d-flex gap-3 flex-wrap mt-4">
+                <button class="btn-custom btn-primary" onclick="addToCart()">
+                    <i class='bx bx-cart-add'></i> أضف إلى السلة
+                </button>
+                <button class="btn-custom btn-booking" onclick="directBooking()">
+                    <i class='bx bx-calendar-check'></i> حجز مباشر
+                </button>
+                <button class="btn-custom btn-whatsapp" onclick="sendWhatsApp()">
+                    <i class='bx bxl-whatsapp'></i> واتساب
+                </button>
+                <button class="btn-custom btn-outline-secondary border" onclick="shareProduct()">
+                    <i class='bx bx-share-alt'></i> مشاركة
+                </button>
+            </div>
+            
+            <div class="mt-4">
+                <a href="/products" class="text-muted text-decoration-none">
+                    <i class='bx bx-arrow-back'></i> رجوع للمنتجات
+                </a>
+            </div>
         </div>
-        {% endif %}
-        
-        {% if p.description %}
-        <div class="mb-4">
-          <h6 class="fw-bold mb-2">📝 الوصف:</h6>
-          <div id="descriptionContainer">
-            <div id="descriptionText" class="description-text description-collapse">{{ p.description|replace('\n', '<br>')|safe }}</div>
-            <span id="readMoreBtn" class="read-more-btn">📖 عرض المزيد</span>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- اختيار الكمية -->
-        <div class="mb-4">
-          <label class="fw-bold mb-2">الكمية:</label>
-          <div class="quantity-control">
-            <button type="button" class="quantity-btn" onclick="changeQuantity(-1)">−</button>
-            <input type="number" id="productQuantity" class="quantity-input" value="1" min="1">
-            <button type="button" class="quantity-btn" onclick="changeQuantity(1)">+</button>
-          </div>
-        </div>
-
-        <!-- السعر بعد الخصم -->
-        <div class="mb-4 p-3 bg-light rounded-4 text-center" id="priceAfterDiscountBox" style="display: none;">
-          <span class="text-muted">السعر بعد الخصم:</span>
-          <span class="h4 fw-bold text-success me-2" id="priceAfterDiscount">0 د.ع</span>
-        </div>
-
-        <div class="mt-4 d-flex gap-3 flex-wrap">
-          <button onclick="addToCartAction()" class="btn btn-primary px-4 py-2">
-            <i class='bx bx-cart-add'></i> أضف إلى السلة
-          </button>
-          <button onclick="directBookingAction()" class="btn-booking px-4 py-2 rounded-pill">
-            <i class='bx bx-calendar-check'></i> حجز مباشر
-          </button>
-          <button onclick="whatsappAction()" class="btn-whatsapp px-4 py-2 rounded-pill">
-            <i class='bx bxl-whatsapp'></i> واتساب
-          </button>
-          <button onclick="shareAction()" class="btn btn-outline-secondary px-4 py-2">
-            <i class='bx bx-share-alt'></i> مشاركة
-          </button>
-        </div>
-
-        {% if session.get('is_admin') %}
-        <div class="mt-4 pt-3 border-top">
-          <div class="d-flex gap-2">
-            <a class="btn btn-sm btn-outline-primary rounded-pill" href="{{ url_for('admin_edit', pid=p.id) }}">
-              <i class='bx bx-edit-alt'></i> تعديل
-            </a>
-            <form method="POST" action="{{ url_for('admin_delete', pid=p.id) }}" onsubmit="return confirm('تأكيد حذف المنتج؟');">
-              <button class="btn btn-sm btn-outline-danger rounded-pill">
-                <i class='bx bx-trash'></i> حذف
-              </button>
-            </form>
-          </div>
-        </div>
-        {% endif %}
-
-        <div class="mt-4">
-          <a class="btn btn-link text-muted text-decoration-none p-0" href="{{ url_for('products') }}">
-            <i class='bx bx-arrow-back'></i> رجوع للمنتجات
-          </a>
-        </div>
-      </div>
     </div>
-  </div>
-  {% else %}
-    <div class="alert alert-danger text-center rounded-4 p-5">⚠️ المنتج غير موجود.</div>
-  {% endif %}
 </div>
 
-<!-- Lightbox Overlay -->
-<div id="lightbox" class="lb" aria-hidden="true">
-  <div class="lb-backdrop" style="position:absolute;inset:0;"></div>
-  <img class="lb-img" alt="">
-  <button class="lb-close" title="إغلاق">&times;</button>
-  <button class="lb-prev" title="السابق">&#10094;</button>
-  <button class="lb-next" title="التالي">&#10095;</button>
+<!-- Lightbox -->
+<div id="lightbox" class="lb">
+    <img class="lb-img" alt="">
+    <button class="lb-close" onclick="closeLightbox()">&times;</button>
+    <button class="lb-prev" onclick="prevImage()">&#10094;</button>
+    <button class="lb-next" onclick="nextImage()">&#10095;</button>
 </div>
+
+<div id="toastMessage"></div>
 
 <script>
-// ========== المتغيرات ==========
-const WHATSAPP_MESSAGE_LINK = "https://wa.me/message/TVK3PQT626DMO1";
-let currentProductPrice = {{ p.price }};
-let currentBulkDiscounts = {{ bulk_discounts | tojson | safe }};
-let currentProductId = {{ p.id }};
-let currentProductName = "{{ p.name|replace('"', '\\"')|safe }}";
+// ========== البيانات ==========
+const WHATSAPP_LINK = "https://wa.me/message/TVK3PQT626DMO1";
+let productPrice = {{ p.price }};
+let bulkDiscounts = {{ bulk_discounts | tojson | safe }};
+let productId = {{ p.id }};
+let productName = "{{ p.name|replace('"', '\\"')|safe }}";
 
-// قائمة الصور
-let galleryImages = [];
+// الصور
+let imagesList = [];
 {% if main_image %}
-galleryImages.push("https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ main_image }}");
+imagesList.push("https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ main_image }}");
 {% endif %}
 {% for im in images %}
-galleryImages.push("https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ im.filename }}");
+imagesList.push("https://elxnymtwlducydvnjkth.supabase.co/storage/v1/object/public/products/{{ im.filename }}");
 {% endfor %}
-if (galleryImages.length === 0) {
-    galleryImages.push("https://placehold.co/400x400/1976d2/white?text=لا+توجد+صورة");
+if (imagesList.length === 0) {
+    imagesList.push("https://placehold.co/400x400/1976d2/white?text=صورة");
 }
 
-let currentImageIndex = 0;
+let currentImgIndex = 0;
 
 // ========== دوال الكمية ==========
-function changeQuantity(delta) {
-    const input = document.getElementById('productQuantity');
-    if (!input) return;
+function changeQty(delta) {
+    let input = document.getElementById('qtyInput');
     let newVal = parseInt(input.value) + delta;
     if (newVal < 1) newVal = 1;
     input.value = newVal;
     updatePrice();
 }
 
+function getFinalPrice(qty) {
+    if (!bulkDiscounts || bulkDiscounts.length === 0 || qty < 2) return productPrice;
+    let sorted = [...bulkDiscounts].sort((a, b) => b.minQty - a.minQty);
+    for (let d of sorted) {
+        if (qty >= d.minQty) return productPrice * (1 - d.percent / 100);
+    }
+    return productPrice;
+}
+
 function updatePrice() {
-    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
-    let finalPrice = currentProductPrice;
+    let qty = parseInt(document.getElementById('qtyInput').value) || 1;
+    let finalPrice = getFinalPrice(qty);
+    let priceAfterBox = document.getElementById('priceAfterBox');
+    let priceAfterSpan = document.getElementById('priceAfter');
+    let priceDisplay = document.getElementById('priceDisplay');
     
-    if (currentBulkDiscounts && currentBulkDiscounts.length > 0 && quantity >= 2) {
-        const sorted = [...currentBulkDiscounts].sort((a, b) => b.minQty - a.minQty);
-        for (let discount of sorted) {
-            if (quantity >= discount.minQty) {
-                finalPrice = currentProductPrice * (1 - discount.percent / 100);
-                break;
-            }
-        }
-    }
-    
-    const priceAfterDiscountBox = document.getElementById('priceAfterDiscountBox');
-    const priceAfterDiscountSpan = document.getElementById('priceAfterDiscount');
-    const productPriceDisplay = document.getElementById('productPriceDisplay');
-    
-    if (finalPrice !== currentProductPrice) {
-        if (priceAfterDiscountBox) priceAfterDiscountBox.style.display = 'block';
-        if (priceAfterDiscountSpan) priceAfterDiscountSpan.innerText = finalPrice.toLocaleString() + ' د.ع';
+    if (finalPrice !== productPrice) {
+        priceAfterBox.style.display = 'block';
+        priceAfterSpan.innerText = finalPrice.toLocaleString() + ' د.ع';
     } else {
-        if (priceAfterDiscountBox) priceAfterDiscountBox.style.display = 'none';
+        priceAfterBox.style.display = 'none';
     }
-    
-    if (productPriceDisplay) {
-        productPriceDisplay.innerText = finalPrice.toLocaleString() + ' د.ع';
-    }
+    priceDisplay.innerText = finalPrice.toLocaleString() + ' د.ع';
 }
 
 // ========== دوال الصور ==========
-function changeMainImage(index) {
-    if (index >= 0 && index < galleryImages.length) {
-        const mainImg = document.getElementById('mainProductImage');
-        if (mainImg) {
-            mainImg.src = galleryImages[index];
-        }
-        currentImageIndex = index;
-        
-        document.querySelectorAll('.thumb').forEach((thumb, i) => {
-            if (i === index) {
-                thumb.classList.add('active');
-            } else {
-                thumb.classList.remove('active');
-            }
+function changeImage(index) {
+    if (index >= 0 && index < imagesList.length) {
+        document.getElementById('mainImage').src = imagesList[index];
+        currentImgIndex = index;
+        let thumbs = document.querySelectorAll('.thumb');
+        thumbs.forEach((btn, i) => {
+            if (i === index) btn.classList.add('active');
+            else btn.classList.remove('active');
         });
     }
 }
 
 function openLightbox() {
-    const lb = document.getElementById('lightbox');
-    const imgEl = lb.querySelector('.lb-img');
-    if (imgEl && galleryImages[currentImageIndex]) {
-        imgEl.src = galleryImages[currentImageIndex];
-    }
+    let lb = document.getElementById('lightbox');
+    let img = lb.querySelector('.lb-img');
+    img.src = imagesList[currentImgIndex];
     lb.classList.add('show');
     document.body.style.overflow = 'hidden';
 }
 
 function closeLightbox() {
-    const lb = document.getElementById('lightbox');
-    lb.classList.remove('show');
+    document.getElementById('lightbox').classList.remove('show');
     document.body.style.overflow = '';
 }
 
 function prevImage() {
-    currentImageIndex--;
-    if (currentImageIndex < 0) currentImageIndex = galleryImages.length - 1;
-    const imgEl = document.getElementById('lightbox').querySelector('.lb-img');
-    if (imgEl && galleryImages[currentImageIndex]) {
-        imgEl.src = galleryImages[currentImageIndex];
-    }
+    currentImgIndex--;
+    if (currentImgIndex < 0) currentImgIndex = imagesList.length - 1;
+    document.getElementById('lightbox').querySelector('.lb-img').src = imagesList[currentImgIndex];
 }
 
 function nextImage() {
-    currentImageIndex++;
-    if (currentImageIndex >= galleryImages.length) currentImageIndex = 0;
-    const imgEl = document.getElementById('lightbox').querySelector('.lb-img');
-    if (imgEl && galleryImages[currentImageIndex]) {
-        imgEl.src = galleryImages[currentImageIndex];
-    }
+    currentImgIndex++;
+    if (currentImgIndex >= imagesList.length) currentImgIndex = 0;
+    document.getElementById('lightbox').querySelector('.lb-img').src = imagesList[currentImgIndex];
 }
 
 // ========== دوال الإجراءات ==========
-function addToCartAction() {
-    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
-    let finalPrice = currentProductPrice;
-    
-    if (currentBulkDiscounts && currentBulkDiscounts.length > 0 && quantity >= 2) {
-        const sorted = [...currentBulkDiscounts].sort((a, b) => b.minQty - a.minQty);
-        for (let discount of sorted) {
-            if (quantity >= discount.minQty) {
-                finalPrice = currentProductPrice * (1 - discount.percent / 100);
-                break;
-            }
-        }
-    }
+function addToCart() {
+    let qty = parseInt(document.getElementById('qtyInput').value) || 1;
+    let finalPrice = getFinalPrice(qty);
     
     fetch('/api/add-to-cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            product_id: currentProductId, 
-            product_name: currentProductName, 
-            product_price: finalPrice, 
-            quantity: quantity 
-        })
-    }).then(response => response.json()).then(data => {
-        if(data.success){
-            showToastMessage(`✨ تم إضافة ${quantity} × "${currentProductName}" إلى السلة`, "success");
+        body: JSON.stringify({ product_id: productId, product_name: productName, product_price: finalPrice, quantity: qty })
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            showToast(`✨ تم إضافة ${qty} × "${productName}" إلى السلة`);
             setTimeout(() => { window.location.href = '/products'; }, 1200);
         }
-    }).catch(error => {
-        console.error('Error:', error);
-        showToastMessage("❌ حدث خطأ", "error");
-    });
+    }).catch(() => showToast("❌ حدث خطأ", true));
 }
 
-function whatsappAction() {
-    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
-    let finalPrice = currentProductPrice;
-    
-    if (currentBulkDiscounts && currentBulkDiscounts.length > 0 && quantity >= 2) {
-        const sorted = [...currentBulkDiscounts].sort((a, b) => b.minQty - a.minQty);
-        for (let discount of sorted) {
-            if (quantity >= discount.minQty) {
-                finalPrice = currentProductPrice * (1 - discount.percent / 100);
-                break;
-            }
-        }
-    }
-    
-    const totalPrice = finalPrice * quantity;
-    const message = `مرحباً، أرغب في الاستفسار عن المنتج التالي:\n\n✨ اسم المنتج: ${currentProductName}\n💰 السعر الأصلي: ${currentProductPrice.toLocaleString()} د.ع\n📦 الكمية: ${quantity}\n💎 السعر بعد الخصم: ${finalPrice.toLocaleString()} د.ع للقطعة\n💰 الإجمالي: ${totalPrice.toLocaleString()} د.ع\n\nأرجو تزويدي بالمزيد من التفاصيل.`;
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`${WHATSAPP_MESSAGE_LINK}?text=${encodedMessage}`, '_blank');
+function sendWhatsApp() {
+    let qty = parseInt(document.getElementById('qtyInput').value) || 1;
+    let finalPrice = getFinalPrice(qty);
+    let total = finalPrice * qty;
+    let msg = `مرحباً، أرغب في الاستفسار عن المنتج التالي:\n\n✨ اسم المنتج: ${productName}\n💰 السعر الأصلي: ${productPrice.toLocaleString()} د.ع\n📦 الكمية: ${qty}\n💎 السعر بعد الخصم: ${finalPrice.toLocaleString()} د.ع\n💰 الإجمالي: ${total.toLocaleString()} د.ع`;
+    window.open(`${WHATSAPP_LINK}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function shareAction() {
-    const productUrl = window.location.origin + '/product/' + currentProductId;
-    navigator.clipboard.writeText(productUrl).then(() => {
-        showToastMessage("✅ تم نسخ رابط المنتج", "success");
-    }).catch(() => {
-        showToastMessage("❌ فشل في نسخ الرابط", "error");
-    });
+function shareProduct() {
+    let url = window.location.origin + '/product/' + productId;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast("✅ تم نسخ رابط المنتج");
+    }).catch(() => showToast("❌ فشل في نسخ الرابط", true));
 }
 
-function directBookingAction() {
-    const quantity = parseInt(document.getElementById('productQuantity').value) || 1;
-    let finalPrice = currentProductPrice;
+function directBooking() {
+    let qty = parseInt(document.getElementById('qtyInput').value) || 1;
+    let finalPrice = getFinalPrice(qty);
+    let total = finalPrice * qty;
     
-    if (currentBulkDiscounts && currentBulkDiscounts.length > 0 && quantity >= 2) {
-        const sorted = [...currentBulkDiscounts].sort((a, b) => b.minQty - a.minQty);
-        for (let discount of sorted) {
-            if (quantity >= discount.minQty) {
-                finalPrice = currentProductPrice * (1 - discount.percent / 100);
-                break;
-            }
-        }
-    }
-    
-    const totalPrice = finalPrice * quantity;
-    
-    const name = prompt("الاسم الكامل:");
+    let name = prompt("الاسم الكامل:");
     if (!name) return;
-    const phone = prompt("رقم الهاتف:");
+    let phone = prompt("رقم الهاتف:");
     if (!phone) return;
-    const address = prompt("العنوان:");
+    let address = prompt("العنوان:");
     if (!address) return;
-    
-    const bookingData = {
-        is_direct_booking: true,
-        customer_name: name,
-        customer_phone: phone,
-        customer_address: address,
-        customer_notes: "",
-        product_id: currentProductId,
-        product_name: currentProductName,
-        product_price: finalPrice,
-        quantity: quantity,
-        total_amount: totalPrice
-    };
     
     fetch('/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookingData)
-    }).then(response => response.json()).then(data => {
+        body: JSON.stringify({
+            is_direct_booking: true,
+            customer_name: name,
+            customer_phone: phone,
+            customer_address: address,
+            customer_notes: "",
+            product_id: productId,
+            product_name: productName,
+            product_price: finalPrice,
+            quantity: qty,
+            total_amount: total
+        })
+    }).then(res => res.json()).then(data => {
         if (data.success) {
-            showToastMessage(`✅ تم إرسال طلب حجز "${currentProductName}" بنجاح!`, "success");
+            showToast(`✅ تم إرسال طلب حجز "${productName}" بنجاح!`);
         } else {
-            showToastMessage(`❌ ${data.error || 'حدث خطأ'}`, "error");
+            showToast(`❌ ${data.error || 'حدث خطأ'}`, true);
         }
-    }).catch(error => {
-        console.error('Error:', error);
-        showToastMessage("❌ حدث خطأ في الاتصال", "error");
-    });
+    }).catch(() => showToast("❌ حدث خطأ في الاتصال", true));
 }
 
-function showToastMessage(msg, type = "success") {
-    let toastContainer = document.getElementById('toastContainer');
-    if(!toastContainer){
-        const container = document.createElement('div');
-        container.id = 'toastContainer';
-        container.style.cssText = 'position:fixed;top:80px;right:20px;z-index:9999;';
-        document.body.appendChild(container);
-        toastContainer = container;
+// ========== دوال الوصف ==========
+function toggleDescription() {
+    let desc = document.getElementById('description');
+    let btn = document.getElementById('readMoreBtn');
+    if (desc.classList.contains('desc-collapse')) {
+        desc.classList.remove('desc-collapse');
+        desc.classList.add('desc-expand');
+        btn.innerHTML = '📖 عرض أقل';
+    } else {
+        desc.classList.remove('desc-expand');
+        desc.classList.add('desc-collapse');
+        btn.innerHTML = '📖 عرض المزيد';
     }
-    const toast = document.createElement('div');
-    const bgColor = type === 'success' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 
-                    type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
-                    'linear-gradient(135deg, #1976d2, #1565c0)';
-    toast.style.cssText = `background: ${bgColor}; color: white; padding: 12px 20px; border-radius: 9999px; margin-bottom: 10px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease; direction: rtl;`;
+}
+
+// ========== إشعار ==========
+function showToast(msg, isError = false) {
+    let container = document.getElementById('toastMessage');
+    let toast = document.createElement('div');
+    toast.className = 'toast-msg';
+    toast.style.background = isError ? '#ef4444' : '#22c55e';
     toast.innerHTML = msg;
-    toastContainer.appendChild(toast);
-    setTimeout(() => { toast.remove(); }, 3000);
-}
-
-// ========== دوال النص الطويل ==========
-function initReadMore() {
-    const descText = document.getElementById('descriptionText');
-    const readMoreBtn = document.getElementById('readMoreBtn');
-    
-    if(descText && readMoreBtn){
-        const textLength = descText.innerText.length;
-        if(textLength > 150){
-            descText.classList.add('description-collapse');
-            readMoreBtn.style.display = 'inline-block';
-            readMoreBtn.onclick = function(){
-                if(descText.classList.contains('description-collapse')){
-                    descText.classList.remove('description-collapse');
-                    descText.classList.add('description-expanded');
-                    readMoreBtn.innerHTML = '📖 عرض أقل';
-                } else {
-                    descText.classList.remove('description-expanded');
-                    descText.classList.add('description-collapse');
-                    readMoreBtn.innerHTML = '📖 عرض المزيد';
-                }
-            };
-        } else {
-            readMoreBtn.style.display = 'none';
-        }
-    }
-}
-
-// ========== تهيئة Lightbox ==========
-function initLightbox() {
-    const mainImg = document.getElementById('mainProductImage');
-    if (mainImg) {
-        mainImg.onclick = openLightbox;
-    }
-    
-    const lb = document.getElementById('lightbox');
-    if (lb) {
-        const btnClose = lb.querySelector('.lb-close');
-        const btnPrev = lb.querySelector('.lb-prev');
-        const btnNext = lb.querySelector('.lb-next');
-        const backdrop = lb.querySelector('.lb-backdrop');
-        
-        if (btnClose) btnClose.onclick = closeLightbox;
-        if (backdrop) backdrop.onclick = closeLightbox;
-        if (btnPrev) btnPrev.onclick = prevImage;
-        if (btnNext) btnNext.onclick = nextImage;
-    }
-    
-    document.onkeydown = function(e) {
-        const lb = document.getElementById('lightbox');
-        if(!lb || !lb.classList.contains('show')) return;
-        if(e.key === 'Escape') closeLightbox();
-        if(e.key === 'ArrowLeft') prevImage();
-        if(e.key === 'ArrowRight') nextImage();
-    };
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
 }
 
 // ========== التهيئة ==========
 document.addEventListener('DOMContentLoaded', function() {
     updatePrice();
-    initReadMore();
-    initLightbox();
     
-    const quantityInput = document.getElementById('productQuantity');
-    if (quantityInput) {
-        quantityInput.addEventListener('change', updatePrice);
+    // إعداد Lightbox
+    document.getElementById('mainImage').onclick = openLightbox;
+    
+    // التحكم بالأسهم
+    document.onkeydown = function(e) {
+        let lb = document.getElementById('lightbox');
+        if (!lb.classList.contains('show')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'ArrowRight') nextImage();
+    };
+    
+    // إعداد زر عرض المزيد
+    let desc = document.getElementById('description');
+    let btn = document.getElementById('readMoreBtn');
+    if (desc && desc.innerText.length <= 150) {
+        btn.style.display = 'none';
     }
 });
-
-// إضافة CSS للحركة
-const style = document.createElement('style');
-style.textContent = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
-document.head.appendChild(style);
 </script>
-{% endblock %}
+</body>
+</html>
